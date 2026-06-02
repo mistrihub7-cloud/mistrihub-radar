@@ -1,4 +1,4 @@
-export type WorkerStatus = "Available" | "Busy" | "Offline";
+export type WorkerStatus = "Available Today" | "Busy" | "Not Available";
 
 export type Worker = {
   name: string;
@@ -10,6 +10,8 @@ export type Worker = {
   jobs: number;
   response: string;
   status: WorkerStatus;
+  serviceRadius: 5 | 10 | 15 | 20;
+  distanceKm: number;
 };
 
 export type JobRequest = {
@@ -46,7 +48,9 @@ export const workers: Worker[] = [
     trust: 92,
     jobs: 320,
     response: "12 min",
-    status: "Available"
+    status: "Available Today",
+    serviceRadius: 10,
+    distanceKm: 1.2
   },
   {
     name: "Amit Kumar",
@@ -57,7 +61,9 @@ export const workers: Worker[] = [
     trust: 88,
     jobs: 250,
     response: "15 min",
-    status: "Available"
+    status: "Available Today",
+    serviceRadius: 10,
+    distanceKm: 1.8
   },
   {
     name: "Sanjay Shah",
@@ -68,7 +74,9 @@ export const workers: Worker[] = [
     trust: 85,
     jobs: 190,
     response: "18 min",
-    status: "Busy"
+    status: "Busy",
+    serviceRadius: 15,
+    distanceKm: 2.1
   },
   {
     name: "Vikash Kumar",
@@ -79,7 +87,9 @@ export const workers: Worker[] = [
     trust: 70,
     jobs: 140,
     response: "25 min",
-    status: "Offline"
+    status: "Not Available",
+    serviceRadius: 5,
+    distanceKm: 2.8
   },
   {
     name: "Suraj Kumar",
@@ -90,9 +100,18 @@ export const workers: Worker[] = [
     trust: 90,
     jobs: 210,
     response: "14 min",
-    status: "Available"
+    status: "Available Today",
+    serviceRadius: 15,
+    distanceKm: 3.2
   }
 ];
+
+export const discoveryRules = {
+  cityRadius: "10 km",
+  townRadius: "15 km",
+  workerRadiusOptions: ["5 km", "10 km", "15 km", "20 km"],
+  priority: ["Available Today", "Closest distance", "Highest trust score", "Fast response time"]
+};
 
 export const topWorkers = [
   { name: "Vikram Singh", skill: "Carpenter", rating: "4.9", reviews: 130, trust: 95 },
