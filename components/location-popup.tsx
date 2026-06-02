@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DEFAULT_LOCATION, LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, saveLocationLabel } from "./location-label";
+import { LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, saveLocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 
 type LocationState = "idle" | "loading" | "saved" | "denied" | "unsupported";
 
 export function LocationPopup() {
-  const [area, setArea] = useState(DEFAULT_LOCATION);
+  const [area, setArea] = useState("");
   const [state, setState] = useState<LocationState>("idle");
   const [visible, setVisible] = useState(false);
 
@@ -27,6 +27,10 @@ export function LocationPopup() {
   };
 
   const saveManualArea = () => {
+    if (!area.trim()) {
+      setState("denied");
+      return;
+    }
     saveLocationLabel(area);
     setState("saved");
     setVisible(false);
@@ -82,7 +86,7 @@ export function LocationPopup() {
           className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-bold outline-none focus:border-brand-500"
           id="saved-area"
           onChange={(event) => setArea(event.target.value)}
-          placeholder="Ranchi, Jharkhand"
+          placeholder="Area, city"
           value={area}
         />
 

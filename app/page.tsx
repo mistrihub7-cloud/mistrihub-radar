@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { categories, discoveryRules, topWorkers, workers } from "@/lib/data";
+import { categories, topWorkers, workers } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
 import { LocationLabel } from "@/components/location-label";
 import { Logo } from "@/components/logo";
@@ -68,7 +68,7 @@ function NearbyWorkersPanel() {
       <div className="card p-5">
         <SectionTitle actionHref="/workers" title="Nearby Workers" />
         <p className="mb-4 rounded-2xl bg-brand-50 p-3 text-sm font-bold text-brand-700">
-          Nearby workers serving your area. City search radius: {discoveryRules.cityRadius}.
+          Nearby workers serving your area. Exact distance appears only after GPS data is connected.
         </p>
         <div className="space-y-3">
           {workers.slice(0, 4).map((worker) => (
@@ -99,10 +99,10 @@ function NearbyWorkersPanel() {
       </div>
       <div className="card grid grid-cols-2 gap-6 bg-gradient-to-br from-white to-blue-50 p-6">
         {[
-          ["10k+", "Happy Customers"],
-          ["500+", "Verified Workers"],
-          ["50+", "Service Categories"],
-          ["24/7", "Support Available"]
+          [workers.length.toString(), "Workers Added"],
+          [categories.length.toString(), "Service Categories"],
+          ["Locked", "Contact Before Accept"],
+          ["PWA", "Install Ready"]
         ].map(([value, label]) => (
           <div key={label}>
             <p className="text-2xl font-black text-brand-600">{value}</p>
@@ -136,7 +136,7 @@ export default function HomePage() {
         <div className="space-y-5 md:pt-16">
           <div className="hidden w-fit rounded-lg bg-emerald-50 px-4 py-2 text-sm font-black text-slate-800 md:flex md:items-center md:gap-2">
             <Icon className="h-4 w-4 text-emerald-600" name="shield" />
-            Trusted by 10,000+ Customers
+            Real added workers
           </div>
           <div className="grid grid-cols-[1.1fr_0.9fr] items-center gap-3 md:block">
             <div>
@@ -167,10 +167,10 @@ export default function HomePage() {
           <HeroWorker />
           <div className="-mt-72 ml-auto mr-0 grid w-52 gap-5">
             {[
-              ["Nearby Workers", "120+ Serving Area", "worker"],
-              ["4.8/5", "Average Rating", "star"],
+              ["Nearby Workers", `${workers.length} Added`, "worker"],
+              ["Ratings", "From worker profiles", "star"],
               ["Trusted", "Verified Workers", "shield"],
-              ["24/7 Support", "We are here to help", "bell"]
+              ["Contact Lock", "Before acceptance", "bell"]
             ].map(([title, text, icon]) => (
               <div className="card flex items-center gap-4 p-4" key={title}>
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-600">

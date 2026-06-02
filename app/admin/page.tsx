@@ -2,10 +2,10 @@ import { Icon } from "@/components/simple-icons";
 import { workers } from "@/lib/data";
 
 const cards = [
-  ["Users", "10,240", "user"],
-  ["Workers", "540", "worker"],
-  ["Active Jobs", "82", "jobs"],
-  ["Reports", "12", "bell"]
+  ["Users", "Auth", "user"],
+  ["Workers", String(workers.length), "worker"],
+  ["Active Jobs", "0", "jobs"],
+  ["Reports", "0", "bell"]
 ];
 
 export default function AdminPage() {
@@ -32,12 +32,7 @@ export default function AdminPage() {
           <div className="border-b border-slate-100 p-5">
             <h2 className="text-xl font-black">Recent Job Requests</h2>
           </div>
-          {["MH1256 - Electrician - Accepted", "MH1257 - Plumber - Requested", "MH1258 - AC Repair - On The Way", "MH1259 - Painter - Completed"].map((row) => (
-            <div className="flex items-center justify-between border-b border-slate-100 p-5 text-sm font-bold" key={row}>
-              {row}
-              <button className="text-brand-600">View</button>
-            </div>
-          ))}
+          <div className="p-5 text-sm font-bold text-slate-500">No real job requests connected yet.</div>
         </div>
         <div className="card p-5">
           <h2 className="text-xl font-black">Verification Queue</h2>

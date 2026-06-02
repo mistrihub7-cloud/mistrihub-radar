@@ -26,7 +26,7 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
               <h3 className="truncate font-black text-slate-950">{worker.name}</h3>
               <p className="text-sm font-semibold text-slate-600">{worker.skill}</p>
               <p className="text-sm text-slate-600">{worker.location}, {worker.city}</p>
-              <p className="text-sm text-slate-500">{worker.distance}</p>
+              <p className="text-sm text-slate-500">Serving this area</p>
             </div>
             <span className={`status-pill ${statusClass}`}>{worker.status}</span>
           </div>
@@ -43,13 +43,13 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
         <>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-slate-600">
             <span>
-              <b className="block text-slate-950">{worker.distanceKm} km</b>away
+              <b className="block text-slate-950">{worker.location}</b>Area
             </span>
             <span>
-              <b className="block text-slate-950">{worker.jobs}</b>Jobs
+              <b className="block text-slate-950">{worker.reviews}</b>Reviews
             </span>
             <span>
-              <b className="block text-slate-950">{worker.serviceRadius} km</b>Radius
+              <b className="block text-slate-950">{worker.rating}</b>Rating
             </span>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">

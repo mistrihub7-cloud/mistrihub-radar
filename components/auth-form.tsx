@@ -7,7 +7,7 @@ import { hasSupabaseConfig, supabase } from "@/lib/supabase-client";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
-  const [name, setName] = useState("Vikas Kumar");
+  const [name, setName] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -78,6 +78,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           <input
             className="h-13 w-full rounded-xl border border-slate-200 px-4 py-4 outline-none focus:border-brand-500"
             onChange={(event) => setName(event.target.value)}
+            placeholder="Enter full name"
             value={name}
           />
         </label>

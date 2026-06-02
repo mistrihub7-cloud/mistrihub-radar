@@ -8,7 +8,9 @@ import { discoveryRules, workers } from "@/lib/data";
 const tabs = ["All", "Available Today", "Busy", "Not Available"];
 
 export default function WorkersPage() {
-  const matchingWorkers = [...workers].sort((a, b) => a.distanceKm - b.distanceKm || b.trust - a.trust);
+  const matchingWorkers = [...workers].sort((a, b) => b.trust - a.trust || Number(b.rating) - Number(a.rating));
+  const availableCount = matchingWorkers.filter((worker) => worker.status === "Available Today").length;
+  const topRating = matchingWorkers.reduce((max, worker) => Math.max(max, Number(worker.rating) || 0), 0).toFixed(1);
 
   return (
     <main className="mobile-shell min-h-screen">
@@ -23,8 +25,7 @@ export default function WorkersPage() {
             <p className="text-sm font-black text-brand-600">Nearby Worker Discovery</p>
             <h1 className="mt-1 text-3xl font-black text-slate-950">Workers serving your area</h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Showing real added workers based on user location, service area, service radius, distance, trust score,
-              rating and jobs completed.
+              Showing added workers by service area, availability, trust score and rating. Exact distance and radius will show only after GPS/service-radius data is saved.
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -35,8 +36,8 @@ export default function WorkersPage() {
                 </p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs font-bold text-slate-500">Default radius</p>
-                <p className="mt-1 font-black">City {discoveryRules.cityRadius} / Town {discoveryRules.townRadius}</p>
+                <p className="text-xs font-bold text-slate-500">Distance accuracy</p>
+                <p className="mt-1 font-black">Hidden until GPS is saved</p>
               </div>
             </div>
 
@@ -56,7 +57,7 @@ export default function WorkersPage() {
 
             <div className="mt-5 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
               <b className="block">Emergency requests</b>
-              Matching workers inside service radius receive website and WhatsApp notifications first. Other added workers stay visible for discovery.
+              Matching workers in the saved service area receive website and WhatsApp notifications first. Other added workers stay visible for discovery.
             </div>
           </aside>
 
@@ -84,8 +85,8 @@ export default function WorkersPage() {
             <div className="mb-4 grid grid-cols-3 gap-3">
               {[
                 ["Workers found", matchingWorkers.length.toString()],
-                ["Best distance", "1.2 km"],
-                ["Top trust", "92"]
+                ["Available today", availableCount.toString()],
+                ["Top rating", topRating]
               ].map(([label, value]) => (
                 <div className="rounded-2xl border border-slate-200 bg-white p-3 text-center" key={label}>
                   <p className="text-xl font-black text-brand-600">{value}</p>

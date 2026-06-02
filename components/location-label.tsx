@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 export const LOCATION_KEY = "mistrihub.locationLabel";
 export const LOCATION_LOCK_KEY = "mistrihub.locationLocked";
 export const LOCATION_SKIP_KEY = "mistrihub.locationSkipped";
-export const DEFAULT_LOCATION = "Ranchi, Jharkhand";
+export const DEFAULT_LOCATION = "Set your location";
 
 export function saveLocationLabel(value: string, lockLocation = true) {
   const cleanValue = value.trim() || DEFAULT_LOCATION;
