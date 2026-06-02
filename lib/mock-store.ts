@@ -1,0 +1,121 @@
+import { workers } from "./data";
+
+export type MockRole = "user" | "worker" | "admin";
+
+export type MockAccount = {
+  id: string;
+  role: MockRole;
+  name: string;
+  phone: string;
+  email?: string;
+};
+
+export type MockJobRequest = {
+  id: string;
+  workerId: string;
+  workerName: string;
+  service: string;
+  problem: string;
+  urgency: "Normal" | "Urgent" | "Emergency";
+  preferredDate: string;
+  preferredTime: string;
+  area: string;
+  photoPreview?: string;
+  status: "Requested" | "Accepted" | "On The Way" | "In Progress" | "Completed" | "Cancelled" | "Declined" | "Need More Details";
+  createdAt: string;
+  workerQuestion?: string;
+};
+
+export type WorkerRegistration = MockAccount & {
+  skill: string;
+  experience: string;
+  city: string;
+  area: string;
+  serviceRadius: string;
+  availability: "Available Today" | "Busy" | "Not Available";
+  profilePhoto?: string;
+  idVerificationFile?: string;
+};
+
+const ACCOUNT_KEY = "mistrihub.mock.account";
+const WORKER_PROFILE_KEY = "mistrihub.mock.workerProfile";
+const JOBS_KEY = "mistrihub.mock.jobs";
+const WORKER_SETTINGS_KEY = "mistrihub.mock.workerSettings";
+
+function canStore() {
+  return typeof window !== "undefined";
+}
+
+function readJson<T>(key: string, fallback: T): T {
+  if (!canStore()) return fallback;
+  try {
+    const value = localStorage.getItem(key);
+    return value ? (JSON.parse(value) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson<T>(key: string, value: T) {
+  if (!canStore()) return;
+  localStorage.setItem(key, JSON.stringify(value));
+  window.dispatchEvent(new CustomEvent("mistrihub-mock-change"));
+}
+
+export function getMockAccount() {
+  return readJson<MockAccount | null>(ACCOUNT_KEY, null);
+}
+
+export function saveMockAccount(account: MockAccount) {
+  writeJson(ACCOUNT_KEY, account);
+}
+
+export function saveWorkerRegistration(profile: WorkerRegistration) {
+  saveMockAccount({ id: profile.id, role: "worker", name: profile.name, phone: profile.phone, email: profile.email });
+  writeJson(WORKER_PROFILE_KEY, profile);
+}
+
+export function getWorkerRegistration() {
+  return readJson<WorkerRegistration | null>(WORKER_PROFILE_KEY, null);
+}
+
+export function getMockJobs() {
+  return readJson<MockJobRequest[]>(JOBS_KEY, []);
+}
+
+export function getMockJob(jobId: string) {
+  return getMockJobs().find((job) => job.id === jobId) || null;
+}
+
+export function createMockJob(input: Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">) {
+  const worker = workers.find((item) => item.id === input.workerId) || workers[0];
+  const job: MockJobRequest = {
+    ...input,
+    id: `MH${Date.now().toString().slice(-6)}`,
+    workerId: worker.id,
+    workerName: worker.name,
+    createdAt: new Date().toISOString(),
+    status: "Requested"
+  };
+  writeJson(JOBS_KEY, [job, ...getMockJobs()]);
+  return job;
+}
+
+export function updateMockJob(jobId: string, update: Partial<MockJobRequest>) {
+  const nextJobs = getMockJobs().map((job) => (job.id === jobId ? { ...job, ...update } : job));
+  writeJson(JOBS_KEY, nextJobs);
+  return nextJobs.find((job) => job.id === jobId) || null;
+}
+
+export function getWorkerSettings() {
+  return readJson(WORKER_SETTINGS_KEY, {
+    availability: "Available Today",
+    serviceRadius: "10 km"
+  });
+}
+
+export function saveWorkerSettings(settings: { availability: string; serviceRadius: string }) {
+  writeJson(WORKER_SETTINGS_KEY, settings);
+}
+
+// TODO: Replace this localStorage mock with Supabase tables for users, worker_profiles, job_requests and notifications.

@@ -9,7 +9,7 @@ const items = [
   { label: "Workers", href: "/workers", icon: "worker" },
   { label: "Book", href: "/book", icon: "plus", primary: true },
   { label: "Jobs", href: "/jobs", icon: "jobs" },
-  { label: "Profile", href: "/dashboard", icon: "user" }
+  { label: "Profile", href: "/dashboard/user", icon: "user" }
 ];
 
 export function BottomNav() {

@@ -1,13 +1,14 @@
-import { JobsListClient } from "@/components/jobs-list-client";
 import { MobileTopbar } from "@/components/mobile-topbar";
+import { SignupForm } from "@/components/signup-form";
 
-export default function WorkerRequestPage() {
+export default function WorkerRegisterPage() {
   return (
     <main className="mobile-shell min-h-screen">
-      <MobileTopbar back title="Worker Requests" />
+      <MobileTopbar back title="Join as Worker" />
       <section className="container-page pb-8 pt-2 md:py-10">
         <div className="mx-auto max-w-3xl">
-          <JobsListClient owner="worker" />
+          <h1 className="mb-5 text-3xl font-black">Worker registration</h1>
+          <SignupForm defaultRole="worker" />
         </div>
       </section>
     </main>

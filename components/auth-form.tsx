@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase-client";
+import { saveMockAccount, type MockRole } from "@/lib/mock-store";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -12,6 +13,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<MockRole>("user");
   const isRegister = mode === "register";
 
   function normalizeLoginId(value: string) {
@@ -67,11 +69,39 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       return;
     }
 
-    router.push(isRegister ? "/worker" : "/dashboard");
+    const user = result.data.user;
+    saveMockAccount({
+      id: user?.id || `mock-${Date.now()}`,
+      role,
+      name: (user?.user_metadata?.full_name as string | undefined) || identifier,
+      phone: user?.phone || "",
+      email: user?.email
+    });
+
+    if (role === "admin") {
+      router.push("/admin");
+      return;
+    }
+    router.push(role === "worker" ? "/dashboard/worker" : "/dashboard/user");
   }
 
   return (
     <form className="mt-5 space-y-4" onSubmit={(event) => event.preventDefault()}>
+      <div>
+        <span className="mb-2 block text-sm font-bold">Login role</span>
+        <div className="grid grid-cols-3 gap-2">
+          {(["user", "worker", "admin"] as const).map((item) => (
+            <button
+              className={`h-11 rounded-xl border text-sm font-black ${role === item ? "border-brand-600 bg-brand-50 text-brand-600" : "border-slate-200 bg-white"}`}
+              key={item}
+              onClick={() => setRole(item)}
+              type="button"
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
       {isRegister ? (
         <label className="block">
           <span className="mb-2 block text-sm font-bold">Full Name</span>

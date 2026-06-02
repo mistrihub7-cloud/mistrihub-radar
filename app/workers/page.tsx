@@ -7,8 +7,13 @@ import { discoveryRules, workers } from "@/lib/data";
 
 const tabs = ["All", "Available Today", "Busy", "Not Available"];
 
-export default function WorkersPage() {
-  const matchingWorkers = [...workers].sort((a, b) => b.trust - a.trust || Number(b.rating) - Number(a.rating));
+export default function WorkersPage({ searchParams }: { searchParams?: { status?: string; service?: string } }) {
+  const selectedStatus = searchParams?.status || "All";
+  const selectedService = searchParams?.service || "";
+  const matchingWorkers = [...workers]
+    .filter((worker) => selectedStatus === "All" || worker.status === selectedStatus)
+    .filter((worker) => !selectedService || worker.skill === selectedService)
+    .sort((a, b) => b.trust - a.trust || Number(b.rating) - Number(a.rating));
   const availableCount = matchingWorkers.filter((worker) => worker.status === "Available Today").length;
   const topRating = matchingWorkers.reduce((max, worker) => Math.max(max, Number(worker.rating) || 0), 0).toFixed(1);
 
@@ -66,7 +71,7 @@ export default function WorkersPage() {
               {tabs.map((tab, index) => (
                 <Link
                   className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-black ${
-                    index === 0
+                    selectedStatus === tab
                       ? "border-b-2 border-brand-600 bg-brand-50 text-brand-600"
                       : tab === "Available Today"
                         ? "bg-emerald-50 text-emerald-700"
@@ -74,7 +79,7 @@ export default function WorkersPage() {
                           ? "bg-orange-50 text-orange-700"
                           : "bg-red-50 text-red-700"
                   }`}
-                  href="/workers"
+                  href={`/workers${tab === "All" ? "" : `?status=${encodeURIComponent(tab)}`}`}
                   key={tab}
                 >
                   {tab}
@@ -96,6 +101,7 @@ export default function WorkersPage() {
             </div>
 
             <div className="space-y-4">
+              {!matchingWorkers.length ? <div className="card p-6 text-center text-sm font-bold text-slate-500">No workers found in your area.</div> : null}
               {matchingWorkers.map((worker) => (
                 <WorkerCard key={worker.name} worker={worker} />
               ))}

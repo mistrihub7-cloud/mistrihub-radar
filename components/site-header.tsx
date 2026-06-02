@@ -9,7 +9,7 @@ const links = [
   ["Book Worker", "/book"],
   ["Jobs", "/jobs"],
   ["How It Works", "/#how-it-works"],
-  ["Become a Worker", "/worker"]
+  ["Become a Worker", "/worker/register"]
 ];
 
 export function SiteHeader() {
@@ -39,7 +39,7 @@ export function SiteHeader() {
           <Link className="btn-outline w-24" href="/login">
             Login
           </Link>
-          <Link className="btn-primary w-24" href="/login?mode=register">
+          <Link className="btn-primary w-24" href="/signup">
             Register
           </Link>
         </div>

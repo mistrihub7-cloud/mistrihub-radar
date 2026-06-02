@@ -53,10 +53,10 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
             </span>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <Link className="btn-primary h-10 text-sm" href={`/book?service=${encodeURIComponent(worker.skill)}`}>
+            <Link className="btn-primary h-10 text-sm" href={`/book/${worker.id}`}>
               Send Request
             </Link>
-            <Link className="btn-outline h-10 text-sm" href="/worker-request">
+            <Link className="btn-outline h-10 text-sm" href={`/workers/${worker.id}`}>
               View Details
             </Link>
           </div>

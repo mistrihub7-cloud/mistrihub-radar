@@ -156,7 +156,7 @@ export default function HomePage() {
               <Icon name="location" />
               Find Worker Now
             </Link>
-            <Link className="btn-outline" href="/worker">
+            <Link className="btn-outline" href="/worker/register">
               <Icon name="user" />
               Join as Worker
             </Link>
@@ -212,7 +212,7 @@ export default function HomePage() {
 
       <section className="container-page mt-5 grid gap-5 pb-8 md:grid-cols-[0.85fr_1.15fr]" id="how-it-works">
         <div className="card p-5">
-          <SectionTitle action="Book Now" actionHref="/book" title="How It Works" />
+          <SectionTitle action="Book Now" actionHref="/workers" title="How It Works" />
           <div className="grid grid-cols-4 gap-2 text-center">
             {["Choose Service", "Send Request", "Worker Accepts", "Track & Review"].map((step, index) => (
               <div key={step}>

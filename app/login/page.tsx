@@ -40,7 +40,7 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
               className={`pb-3 text-center font-black ${
                 isRegister ? "border-b-2 border-brand-600 text-brand-600" : "text-slate-600"
               }`}
-              href="/login?mode=register"
+              href="/signup"
             >
               Register
             </Link>
@@ -49,9 +49,9 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
           <AuthForm mode={isRegister ? "register" : "login"} />
 
           <div className="my-5 text-center text-sm text-slate-500">or</div>
-          <button className="flex h-13 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-4 font-black">
+          <button className="flex h-13 w-full cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-slate-200 bg-slate-50 py-4 font-black text-slate-400" disabled type="button">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-50 text-brand-600">G</span>
-            Continue with Google
+            Google login not connected yet
           </button>
           <p className="mt-5 text-center text-xs leading-5 text-slate-500">
             By continuing, you agree to our <span className="font-bold text-brand-600">Terms & Conditions</span> and{" "}

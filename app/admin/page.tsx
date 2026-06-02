@@ -8,6 +8,8 @@ const cards = [
   ["Reports", "0", "bell"]
 ];
 
+const sections = ["Workers", "Users", "Job Requests", "Reports", "Reviews", "Verification Status"];
+
 export default function AdminPage() {
   return (
     <main className="container-page py-8">
@@ -45,6 +47,14 @@ export default function AdminPage() {
             ))}
           </div>
         </div>
+      </div>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        {sections.map((section) => (
+          <div className="card p-5" key={section}>
+            <h2 className="font-black">{section}</h2>
+            <p className="mt-2 text-sm text-slate-500">Backend table connection pending.</p>
+          </div>
+        ))}
       </div>
     </main>
   );

@@ -1,13 +1,13 @@
-import { JobsListClient } from "@/components/jobs-list-client";
 import { MobileTopbar } from "@/components/mobile-topbar";
+import { WorkerDashboardClient } from "@/components/worker-dashboard-client";
 
-export default function WorkerRequestPage() {
+export default function WorkerDashboardPage() {
   return (
     <main className="mobile-shell min-h-screen">
-      <MobileTopbar back title="Worker Requests" />
+      <MobileTopbar title="Worker Dashboard" />
       <section className="container-page pb-8 pt-2 md:py-10">
         <div className="mx-auto max-w-3xl">
-          <JobsListClient owner="worker" />
+          <WorkerDashboardClient />
         </div>
       </section>
     </main>
