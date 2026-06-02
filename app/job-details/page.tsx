@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ContactActions } from "@/components/contact-actions";
 import { MobileTopbar } from "@/components/mobile-topbar";
-import { jobRequest } from "@/lib/data";
+import { jobRequest, workers } from "@/lib/data";
 
 export default function JobDetailsPage() {
+  const assignedWorker = workers[0];
+
   return (
     <main className="mobile-shell min-h-screen">
       <MobileTopbar back title="Job Details" />
@@ -25,7 +27,7 @@ export default function JobDetailsPage() {
 
         <div className="mt-4 space-y-5 md:mt-0">
           <div className="card p-5 text-center">
-            <h2 className="font-black">Rajesh Kumar is on the way</h2>
+            <h2 className="font-black">{assignedWorker.name} is on the way</h2>
             <p className="text-sm text-slate-500">Arriving in 10 mins</p>
           </div>
           <div>

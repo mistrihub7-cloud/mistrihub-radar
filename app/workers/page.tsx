@@ -8,7 +8,7 @@ import { discoveryRules, workers } from "@/lib/data";
 const tabs = ["All", "Available Today", "Busy", "Not Available"];
 
 export default function WorkersPage() {
-  const matchingWorkers = workers.filter((worker) => worker.distanceKm <= worker.serviceRadius);
+  const matchingWorkers = [...workers].sort((a, b) => a.distanceKm - b.distanceKm || b.trust - a.trust);
 
   return (
     <main className="mobile-shell min-h-screen">
@@ -23,7 +23,7 @@ export default function WorkersPage() {
             <p className="text-sm font-black text-brand-600">Nearby Worker Discovery</p>
             <h1 className="mt-1 text-3xl font-black text-slate-950">Workers serving your area</h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Showing trusted workers based on user location, service area, service radius, distance, trust score,
+              Showing real added workers based on user location, service area, service radius, distance, trust score,
               rating and jobs completed.
             </p>
 
@@ -56,7 +56,7 @@ export default function WorkersPage() {
 
             <div className="mt-5 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
               <b className="block">Emergency requests</b>
-              Matching workers inside service radius receive website and WhatsApp notifications. No live movement map is used.
+              Matching workers inside service radius receive website and WhatsApp notifications first. Other added workers stay visible for discovery.
             </div>
           </aside>
 

@@ -25,7 +25,8 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
             <div>
               <h3 className="truncate font-black text-slate-950">{worker.name}</h3>
               <p className="text-sm font-semibold text-slate-600">{worker.skill}</p>
-              <p className="text-sm text-slate-600">{worker.distance}</p>
+              <p className="text-sm text-slate-600">{worker.location}, {worker.city}</p>
+              <p className="text-sm text-slate-500">{worker.distance}</p>
             </div>
             <span className={`status-pill ${statusClass}`}>{worker.status}</span>
           </div>

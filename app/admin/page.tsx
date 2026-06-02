@@ -1,4 +1,5 @@
 import { Icon } from "@/components/simple-icons";
+import { workers } from "@/lib/data";
 
 const cards = [
   ["Users", "10,240", "user"],
@@ -41,9 +42,9 @@ export default function AdminPage() {
         <div className="card p-5">
           <h2 className="text-xl font-black">Verification Queue</h2>
           <div className="mt-4 space-y-3">
-            {["Rajesh Kumar", "Yogesh Kumar", "Pawan Kumar"].map((name) => (
-              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4" key={name}>
-                <span className="font-bold">{name}</span>
+            {workers.slice(0, 3).map((worker) => (
+              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4" key={worker.id}>
+                <span className="font-bold">{worker.name}</span>
                 <span className="status-pill status-available">Review</span>
               </div>
             ))}
