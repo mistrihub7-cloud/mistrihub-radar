@@ -2,12 +2,18 @@
 
 import { useEffect, useState } from "react";
 
-const LOCATION_KEY = "mistrihub.locationLabel";
-const DEFAULT_LOCATION = "Ranchi, Jharkhand";
+export const LOCATION_KEY = "mistrihub.locationLabel";
+export const LOCATION_LOCK_KEY = "mistrihub.locationLocked";
+export const LOCATION_SKIP_KEY = "mistrihub.locationSkipped";
+export const DEFAULT_LOCATION = "Ranchi, Jharkhand";
 
-export function saveLocationLabel(value: string) {
+export function saveLocationLabel(value: string, lockLocation = true) {
   const cleanValue = value.trim() || DEFAULT_LOCATION;
   localStorage.setItem(LOCATION_KEY, cleanValue);
+  if (lockLocation) {
+    localStorage.setItem(LOCATION_LOCK_KEY, "true");
+    localStorage.removeItem(LOCATION_SKIP_KEY);
+  }
   window.dispatchEvent(new CustomEvent("mistrihub-location-change", { detail: cleanValue }));
 }
 

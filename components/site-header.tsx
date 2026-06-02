@@ -18,7 +18,7 @@ export function SiteHeader() {
       <div className="container-page flex h-[74px] items-center justify-between gap-7">
         <div className="flex items-center gap-7">
           <Logo />
-          <Link className="flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800" href="/#location">
+          <Link className="flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800" href="/workers">
             <Icon className="h-4 w-4 text-brand-600" name="location" />
             <LocationLabel />
             <span className="text-slate-400">v</span>

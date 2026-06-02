@@ -2,7 +2,6 @@ import Link from "next/link";
 import { categories, discoveryRules, topWorkers, workers } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
 import { LocationLabel } from "@/components/location-label";
-import { LocationPermission } from "@/components/location-permission";
 import { Logo } from "@/components/logo";
 import { SectionTitle } from "@/components/section-title";
 import { WorkerCard } from "@/components/worker-card";
@@ -161,9 +160,6 @@ export default function HomePage() {
               <Icon name="user" />
               Join as Worker
             </Link>
-          </div>
-          <div id="location">
-            <LocationPermission />
           </div>
         </div>
 

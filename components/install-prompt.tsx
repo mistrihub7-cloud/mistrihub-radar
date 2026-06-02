@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const INSTALL_DISMISSED_KEY = "mistrihub.installPromptDismissed";
+
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -12,12 +14,34 @@ export function InstallPrompt() {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
+    const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+    const isInstalled =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      navigatorWithStandalone.standalone === true;
+    const dismissed = localStorage.getItem(INSTALL_DISMISSED_KEY) === "true";
+
+    if (isInstalled || dismissed) {
+      setHidden(true);
+      return;
+    }
+
     const onPrompt = (installEvent: Event) => {
       installEvent.preventDefault();
       setEvent(installEvent as BeforeInstallPromptEvent);
     };
+    const onInstalled = () => {
+      localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
+      setHidden(true);
+      setEvent(null);
+    };
+
     window.addEventListener("beforeinstallprompt", onPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
 
   if (!event || hidden) {
@@ -33,12 +57,23 @@ export function InstallPrompt() {
           className="btn-primary h-10 flex-1 text-sm"
           onClick={async () => {
             await event.prompt();
+            const choice = await event.userChoice;
+            localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
+            if (choice.outcome === "accepted") {
+              setEvent(null);
+            }
             setHidden(true);
           }}
         >
           Install
         </button>
-        <button className="btn-outline h-10 flex-1 text-sm" onClick={() => setHidden(true)}>
+        <button
+          className="btn-outline h-10 flex-1 text-sm"
+          onClick={() => {
+            localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
+            setHidden(true);
+          }}
+        >
           Later
         </button>
       </div>
