@@ -8,11 +8,28 @@ import { hasSupabaseConfig, supabase } from "@/lib/supabase-client";
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const [name, setName] = useState("Vikas Kumar");
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const isRegister = mode === "register";
+
+  function normalizeLoginId(value: string) {
+    const cleanValue = value.trim();
+    if (cleanValue.includes("@")) {
+      return { type: "email" as const, value: cleanValue };
+    }
+
+    const digits = cleanValue.replace(/\D/g, "");
+    if (digits.length === 10) {
+      return { type: "phone" as const, value: `+91${digits}` };
+    }
+    if (cleanValue.startsWith("+") && digits.length > 10) {
+      return { type: "phone" as const, value: `+${digits}` };
+    }
+
+    return { type: "email" as const, value: cleanValue };
+  }
 
   async function handleSubmit() {
     if (!supabase || !hasSupabaseConfig) {
@@ -20,24 +37,33 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       return;
     }
 
-    if (!email || !password) {
-      setMessage("Email aur password bharna zaroori hai.");
+    if (!identifier || !password) {
+      setMessage("Email/mobile aur password bharna zaroori hai.");
       return;
     }
 
     setLoading(true);
     setMessage("");
+    const loginId = normalizeLoginId(identifier);
     const result = isRegister
-      ? await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: name } }
-        })
-      : await supabase.auth.signInWithPassword({ email, password });
+      ? loginId.type === "phone"
+        ? await supabase.auth.signUp({
+            phone: loginId.value,
+            password,
+            options: { data: { full_name: name } }
+          })
+        : await supabase.auth.signUp({
+            email: loginId.value,
+            password,
+            options: { data: { full_name: name } }
+          })
+      : loginId.type === "phone"
+        ? await supabase.auth.signInWithPassword({ phone: loginId.value, password })
+        : await supabase.auth.signInWithPassword({ email: loginId.value, password });
     setLoading(false);
 
     if (result.error) {
-      setMessage(result.error.message);
+      setMessage(`${result.error.message}. Registered email/mobile aur password check karo.`);
       return;
     }
 
@@ -57,13 +83,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </label>
       ) : null}
       <label className="block">
-        <span className="mb-2 block text-sm font-bold">Email</span>
+        <span className="mb-2 block text-sm font-bold">Email / Mobile Number</span>
         <input
           className="h-13 w-full rounded-xl border border-slate-200 px-4 py-4 outline-none focus:border-brand-500"
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="worker@example.com"
-          type="email"
-          value={email}
+          onChange={(event) => setIdentifier(event.target.value)}
+          placeholder="worker@example.com or 9876543210"
+          type="text"
+          value={identifier}
         />
       </label>
       <label className="block">
