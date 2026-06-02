@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { categories, topWorkers, workers } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
+import { LocationLabel } from "@/components/location-label";
 import { LocationPermission } from "@/components/location-permission";
 import { Logo } from "@/components/logo";
 import { RadarMap } from "@/components/radar-map";
@@ -124,7 +125,7 @@ export default function HomePage() {
             <div>
               <p className="flex items-center gap-1 text-xs font-bold text-slate-700">
                 <Icon className="h-4 w-4 text-brand-600" name="location" />
-                Ranchi, Jharkhand
+                <LocationLabel />
               </p>
               <Logo />
             </div>
@@ -162,7 +163,9 @@ export default function HomePage() {
               Join as Worker
             </Link>
           </div>
-          <LocationPermission />
+          <div id="location">
+            <LocationPermission />
+          </div>
         </div>
 
         <div className="hidden md:block md:pt-6">

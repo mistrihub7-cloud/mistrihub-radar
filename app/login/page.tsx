@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import { Icon } from "@/components/simple-icons";
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: {
+    mode?: string;
+  };
+};
+
+export default function LoginPage({ searchParams }: LoginPageProps) {
+  const isRegister = searchParams?.mode === "register";
+
   return (
     <main className="mobile-shell min-h-screen">
       <section className="container-page flex min-h-screen flex-col justify-center py-10 md:min-h-[calc(100vh-74px)]">
@@ -20,11 +27,31 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-7 grid grid-cols-2 border-b border-slate-200">
-            <button className="border-b-2 border-brand-600 pb-3 font-black text-brand-600">Login</button>
-            <button className="pb-3 font-bold text-slate-600">Register</button>
+            <Link
+              className={`pb-3 text-center font-black ${
+                !isRegister ? "border-b-2 border-brand-600 text-brand-600" : "text-slate-600"
+              }`}
+              href="/login"
+            >
+              Login
+            </Link>
+            <Link
+              className={`pb-3 text-center font-black ${
+                isRegister ? "border-b-2 border-brand-600 text-brand-600" : "text-slate-600"
+              }`}
+              href="/login?mode=register"
+            >
+              Register
+            </Link>
           </div>
 
           <form className="mt-5 space-y-4">
+            {isRegister ? (
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold">Full Name</span>
+                <input className="h-13 w-full rounded-xl border border-slate-200 px-4 py-4 outline-none focus:border-brand-500" defaultValue="Vikas Kumar" />
+              </label>
+            ) : null}
             <label className="block">
               <span className="mb-2 block text-sm font-bold">Mobile Number</span>
               <input className="h-13 w-full rounded-xl border border-slate-200 px-4 py-4 outline-none focus:border-brand-500" defaultValue="+91 9876543210" />
@@ -42,7 +69,7 @@ export default function LoginPage() {
               </Link>
             </div>
             <Link className="btn-primary w-full" href="/dashboard">
-              Login
+              {isRegister ? "Create Account" : "Login"}
             </Link>
           </form>
 

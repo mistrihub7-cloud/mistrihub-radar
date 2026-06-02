@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { saveLocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 
 type LocationState = "idle" | "allowed" | "denied" | "unsupported" | "loading";
@@ -8,6 +9,11 @@ type LocationState = "idle" | "allowed" | "denied" | "unsupported" | "loading";
 export function LocationPermission() {
   const [state, setState] = useState<LocationState>("idle");
   const [area, setArea] = useState("Ranchi, Jharkhand");
+
+  const saveManualArea = (value: string) => {
+    setArea(value);
+    saveLocationLabel(value);
+  };
 
   const requestLocation = () => {
     if (!("geolocation" in navigator)) {
@@ -17,9 +23,12 @@ export function LocationPermission() {
 
     setState("loading");
     navigator.geolocation.getCurrentPosition(
-      () => {
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const detectedArea = `Detected: ${latitude.toFixed(3)}, ${longitude.toFixed(3)}`;
         setState("allowed");
-        setArea("Current location detected");
+        setArea(detectedArea);
+        saveLocationLabel(detectedArea);
       },
       () => setState("denied"),
       { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 }
@@ -46,13 +55,12 @@ export function LocationPermission() {
             {state === "allowed" ? "Location ready" : "Allow location to see nearby workers"}
           </p>
           <p className="text-sm text-slate-500">{helperText}</p>
-          {state === "denied" || state === "unsupported" ? (
-            <input
-              className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:border-brand-500"
-              onChange={(event) => setArea(event.target.value)}
-              value={area}
-            />
-          ) : null}
+          <input
+            className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:border-brand-500"
+            onChange={(event) => saveManualArea(event.target.value)}
+            placeholder="Type area, city"
+            value={area}
+          />
         </div>
       </div>
       <button className="btn-outline h-10 shrink-0 text-sm" onClick={requestLocation} type="button">
