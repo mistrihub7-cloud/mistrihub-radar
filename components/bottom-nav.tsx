@@ -6,7 +6,7 @@ import { Icon } from "./simple-icons";
 
 const items = [
   { label: "Home", href: "/", icon: "home" },
-  { label: "Radar", href: "/radar", icon: "radar" },
+  { label: "Workers", href: "/workers", icon: "worker" },
   { label: "Book", href: "/book", icon: "plus", primary: true },
   { label: "Jobs", href: "/jobs", icon: "jobs" },
   { label: "Profile", href: "/dashboard", icon: "user" }

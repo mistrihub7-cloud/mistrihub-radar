@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { categories, topWorkers, workers } from "@/lib/data";
+import { categories, discoveryRules, topWorkers, workers } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
 import { LocationLabel } from "@/components/location-label";
 import { LocationPermission } from "@/components/location-permission";
 import { Logo } from "@/components/logo";
-import { RadarMap } from "@/components/radar-map";
 import { SectionTitle } from "@/components/section-title";
 import { WorkerCard } from "@/components/worker-card";
 
@@ -27,7 +26,7 @@ function CategoryGrid() {
       {categories.map((category) => (
         <Link
           className="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-card"
-          href={`/book?service=${encodeURIComponent(category.name)}`}
+          href={`/workers?service=${encodeURIComponent(category.name)}`}
           key={category.name}
         >
           <span className={`mx-auto grid h-12 w-12 place-items-center rounded-xl bg-slate-50 ${category.tone}`}>
@@ -64,21 +63,21 @@ function EmergencyBox() {
   );
 }
 
-function DesktopRadarPanel() {
+function NearbyWorkersPanel() {
   return (
     <aside className="hidden space-y-4 xl:block">
       <div className="card p-5">
-        <SectionTitle title="Worker Radar" />
-        <div className="grid grid-cols-[1.1fr_1fr] gap-4">
-          <RadarMap />
-          <div className="space-y-3">
-            {workers.slice(0, 4).map((worker) => (
-              <WorkerCard compact key={worker.name} worker={worker} />
-            ))}
-          </div>
+        <SectionTitle actionHref="/workers" title="Nearby Workers" />
+        <p className="mb-4 rounded-2xl bg-brand-50 p-3 text-sm font-bold text-brand-700">
+          Nearby workers serving your area. City search radius: {discoveryRules.cityRadius}.
+        </p>
+        <div className="space-y-3">
+          {workers.slice(0, 4).map((worker) => (
+            <WorkerCard compact key={worker.name} worker={worker} />
+          ))}
         </div>
-        <Link className="btn-outline mt-4 w-full" href="/radar">
-          View Full Radar
+        <Link className="btn-outline mt-4 w-full" href="/workers">
+          View Nearby Workers
         </Link>
       </div>
       <div className="card grid grid-cols-[1fr_120px] items-center gap-4 p-6">
@@ -154,7 +153,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Link className="btn-primary" href="/radar">
+            <Link className="btn-primary" href="/workers">
               <Icon name="location" />
               Find Worker Now
             </Link>
@@ -172,7 +171,7 @@ export default function HomePage() {
           <HeroWorker />
           <div className="-mt-72 ml-auto mr-0 grid w-52 gap-5">
             {[
-              ["Available Now", "120+ Workers", "radar"],
+              ["Nearby Workers", "120+ Serving Area", "worker"],
               ["4.8/5", "Average Rating", "star"],
               ["Trusted", "Verified Workers", "shield"],
               ["24/7 Support", "We are here to help", "bell"]
@@ -190,7 +189,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <DesktopRadarPanel />
+        <NearbyWorkersPanel />
       </section>
 
       <section className="container-page grid gap-5 md:grid-cols-[1.55fr_0.75fr]">
@@ -206,7 +205,7 @@ export default function HomePage() {
 
       <section className="container-page mt-5">
         <div className="card p-4 md:p-5">
-          <SectionTitle actionHref="/radar" title="Nearby Available Workers" />
+          <SectionTitle actionHref="/workers" title="Nearby Workers" />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {workers.slice(0, 4).map((worker) => (
               <WorkerCard key={worker.name} worker={worker} />
@@ -230,7 +229,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="card p-5">
-          <SectionTitle actionHref="/radar" title="Top Rated Workers" />
+          <SectionTitle actionHref="/workers" title="Top Rated Workers" />
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {topWorkers.map((worker) => (
               <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3" key={worker.name}>

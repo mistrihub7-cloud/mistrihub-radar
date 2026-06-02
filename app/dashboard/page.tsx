@@ -6,7 +6,7 @@ const menu = [
   ["My Bookings", "calendar", "/jobs"],
   ["Job History", "jobs", "/jobs"],
   ["My Reviews", "star", "/dashboard"],
-  ["Saved Workers", "shield", "/radar"],
+  ["Saved Workers", "shield", "/workers"],
   ["Help & Support", "bell", "/dashboard"],
   ["Settings", "settings", "/dashboard"]
 ];

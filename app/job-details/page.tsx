@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ContactActions } from "@/components/contact-actions";
 import { MobileTopbar } from "@/components/mobile-topbar";
-import { Icon } from "@/components/simple-icons";
 import { jobRequest } from "@/lib/data";
 
 export default function JobDetailsPage() {
@@ -9,13 +8,19 @@ export default function JobDetailsPage() {
     <main className="mobile-shell min-h-screen">
       <MobileTopbar back title="Job Details" />
       <section className="container-page pb-8 pt-2 md:grid md:grid-cols-[1fr_0.8fr] md:gap-6 md:py-10">
-        <div className="card map-panel relative min-h-[230px] p-4">
-          <span className="status-pill status-available absolute left-4 top-4">On The Way</span>
-          <span className="absolute bottom-20 left-16 h-4 w-4 rounded-full bg-emerald-600 ring-4 ring-white" />
-          <span className="absolute bottom-28 left-36 h-4 w-4 rounded-full bg-brand-600 ring-4 ring-white" />
-          <span className="absolute right-24 top-20 h-5 w-5 rounded-full bg-orange-600 ring-4 ring-white" />
-          <span className="absolute bottom-24 left-20 h-1 w-36 -rotate-12 rounded-full bg-brand-600" />
-          <span className="absolute right-28 top-28 h-1 w-28 -rotate-12 rounded-full bg-brand-600" />
+        <div className="card min-h-[230px] p-5">
+          <span className="status-pill status-available">On The Way</span>
+          <h1 className="mt-5 text-2xl font-black">Job tracking active</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            MistriHub shows simple job status updates after the worker accepts. Contact stays secure and unlocks only after acceptance.
+          </p>
+          <div className="mt-5 grid grid-cols-3 gap-3 text-center text-sm">
+            {["Accepted", "On The Way", "Contact Unlocked"].map((item) => (
+              <div className="rounded-2xl bg-brand-50 p-3 font-black text-brand-700" key={item}>
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-4 space-y-5 md:mt-0">

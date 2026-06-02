@@ -4,13 +4,13 @@ import { Icon } from "./simple-icons";
 
 export function WorkerCard({ worker, compact = false }: { worker: Worker; compact?: boolean }) {
   const statusClass =
-    worker.status === "Available"
+    worker.status === "Available Today"
       ? "status-available"
       : worker.status === "Busy"
         ? "status-busy"
         : "status-offline";
   const avatarClass =
-    worker.status === "Available"
+    worker.status === "Available Today"
       ? "worker-avatar"
       : worker.status === "Busy"
         ? "worker-avatar busy"
@@ -42,21 +42,21 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
         <>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-slate-600">
             <span>
-              <b className="block text-slate-950">{worker.distance.split(" ")[0]} km</b>away
+              <b className="block text-slate-950">{worker.distanceKm} km</b>away
             </span>
             <span>
               <b className="block text-slate-950">{worker.jobs}</b>Jobs
             </span>
             <span>
-              <b className="block text-slate-950">{worker.response}</b>Response
+              <b className="block text-slate-950">{worker.serviceRadius} km</b>Radius
             </span>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <Link className="btn-primary h-10 text-sm" href="/book">
-              Book Now
-            </Link>
-            <Link className="btn-outline h-10 text-sm" href="/book">
+            <Link className="btn-primary h-10 text-sm" href={`/book?service=${encodeURIComponent(worker.skill)}`}>
               Send Request
+            </Link>
+            <Link className="btn-outline h-10 text-sm" href="/worker-request">
+              View Details
             </Link>
           </div>
         </>
