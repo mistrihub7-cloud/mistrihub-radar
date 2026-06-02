@@ -1,4 +1,4 @@
-# MistriHub Radar
+# MistriHub
 
 Professional mobile-first PWA for finding and booking nearby trusted Indian workers.
 
@@ -21,7 +21,7 @@ npm run start
 ## Pages
 
 - `/` Home
-- `/radar` Worker Radar
+- `/workers` Nearby Worker Discovery
 - `/book` Book Worker
 - `/jobs` Job Tracking
 - `/job-details` Job Details
@@ -41,6 +41,10 @@ MistriHub uses Review Before Accept:
 - Phone and WhatsApp stay locked until the worker accepts.
 - After accept, job status becomes Accepted, contact unlocks and tracking starts.
 - SMS notification is intentionally not added yet.
+
+## Nearby Worker Discovery
+
+MistriHub does not use a live worker radar. Workers are shown by user area, service radius, distance, trust score, rating and completed jobs.
 
 ## Deploy
 
