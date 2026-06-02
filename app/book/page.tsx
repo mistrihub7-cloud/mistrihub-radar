@@ -4,8 +4,17 @@ import { Icon } from "@/components/simple-icons";
 import { WorkerCard } from "@/components/worker-card";
 import { categories, jobRequest, workers } from "@/lib/data";
 
-export default function BookPage() {
+type BookPageProps = {
+  searchParams?: {
+    service?: string;
+    urgency?: string;
+  };
+};
+
+export default function BookPage({ searchParams }: BookPageProps) {
   const worker = workers[0];
+  const selectedService = searchParams?.service ?? jobRequest.service;
+  const selectedUrgency = searchParams?.urgency === "urgent" ? "Urgent" : jobRequest.urgency;
 
   return (
     <main className="mobile-shell min-h-screen">
@@ -36,17 +45,19 @@ export default function BookPage() {
             <span className="mb-2 block font-black">Service category</span>
             <span className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {categories.slice(0, 4).map((category) => (
-                <button
-                  className={`h-12 rounded-2xl border font-black ${
-                    category.name === jobRequest.service
+                <Link
+                  className={`flex h-12 items-center justify-center rounded-2xl border font-black ${
+                    category.name === selectedService
                       ? "border-brand-600 bg-brand-50 text-brand-600"
                       : "border-slate-200 bg-white text-slate-700"
                   }`}
+                  href={`/book?service=${encodeURIComponent(category.name)}${
+                    selectedUrgency === "Urgent" ? "&urgency=urgent" : ""
+                  }`}
                   key={category.name}
-                  type="button"
                 >
                   {category.name}
-                </button>
+                </Link>
               ))}
             </span>
           </label>
@@ -62,12 +73,26 @@ export default function BookPage() {
           <div>
             <span className="mb-2 block font-black">Urgency</span>
             <div className="grid grid-cols-2 gap-3">
-              <button className="h-14 rounded-2xl border border-slate-200 bg-white font-bold" type="button">
+              <Link
+                className={`flex h-14 items-center justify-center rounded-2xl border font-bold ${
+                  selectedUrgency === "Normal"
+                    ? "border-brand-600 bg-brand-50 text-brand-600"
+                    : "border-slate-200 bg-white text-slate-700"
+                }`}
+                href={`/book?service=${encodeURIComponent(selectedService)}`}
+              >
                 Normal
-              </button>
-              <button className="h-14 rounded-2xl border border-red-400 bg-red-50 font-black text-red-600" type="button">
+              </Link>
+              <Link
+                className={`flex h-14 items-center justify-center rounded-2xl border font-black ${
+                  selectedUrgency === "Urgent"
+                    ? "border-red-500 bg-red-50 text-red-600"
+                    : "border-slate-200 bg-white text-slate-700"
+                }`}
+                href={`/book?service=${encodeURIComponent(selectedService)}&urgency=urgent`}
+              >
                 Urgent
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -95,9 +120,10 @@ export default function BookPage() {
                   <span className="h-4 w-4 rounded-full bg-brand-600" />
                 </span>
               ))}
-              <button className="grid h-16 w-16 place-items-center rounded-xl border border-dashed border-slate-400 text-3xl text-slate-500" type="button">
+              <label className="grid h-16 w-16 cursor-pointer place-items-center rounded-xl border border-dashed border-slate-400 text-3xl text-slate-500">
+                <input accept="image/*" className="sr-only" type="file" />
                 +
-              </button>
+              </label>
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { categories, topWorkers, workers } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
+import { LocationPermission } from "@/components/location-permission";
 import { Logo } from "@/components/logo";
 import { RadarMap } from "@/components/radar-map";
 import { SectionTitle } from "@/components/section-title";
@@ -23,7 +24,11 @@ function CategoryGrid() {
   return (
     <div className="grid grid-cols-4 gap-3 md:grid-cols-8">
       {categories.map((category) => (
-        <Link className="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-card" href="/radar" key={category.name}>
+        <Link
+          className="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-card"
+          href={`/book?service=${encodeURIComponent(category.name)}`}
+          key={category.name}
+        >
           <span className={`mx-auto grid h-12 w-12 place-items-center rounded-xl bg-slate-50 ${category.tone}`}>
             <Icon name={category.icon} />
           </span>
@@ -36,16 +41,20 @@ function CategoryGrid() {
 
 function EmergencyBox() {
   const items = [
-    ["Need Electrician Now", "bolt", "text-orange-600", "bg-orange-50"],
-    ["Need Plumber Now", "tap", "text-blue-600", "bg-blue-50"],
-    ["Need Mechanic Now", "tool", "text-emerald-600", "bg-emerald-50"],
-    ["Other Emergency", "bell", "text-violet-600", "bg-violet-50"]
+    ["Need Electrician Now", "Electrician", "bolt", "text-orange-600", "bg-orange-50"],
+    ["Need Plumber Now", "Plumber", "tap", "text-blue-600", "bg-blue-50"],
+    ["Need Mechanic Now", "Mechanic", "tool", "text-emerald-600", "bg-emerald-50"],
+    ["Other Emergency", "Emergency", "bell", "text-violet-600", "bg-violet-50"]
   ];
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {items.map(([label, icon, tone, bg]) => (
-        <Link className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-black ${tone} ${bg}`} href="/book" key={label}>
+      {items.map(([label, service, icon, tone, bg]) => (
+        <Link
+          className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-black ${tone} ${bg}`}
+          href={`/book?service=${encodeURIComponent(service)}&urgency=urgent`}
+          key={label}
+        >
           <Icon name={icon} />
           {label}
         </Link>
@@ -153,18 +162,7 @@ export default function HomePage() {
               Join as Worker
             </Link>
           </div>
-          <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-600">
-                <Icon name="location" />
-              </span>
-              <div>
-                <p className="font-black">Allow location to see nearby workers</p>
-                <p className="text-sm text-slate-500">We use your location to show nearest available workers.</p>
-              </div>
-            </div>
-            <button className="btn-outline h-10 text-sm">Allow Location</button>
-          </div>
+          <LocationPermission />
         </div>
 
         <div className="hidden md:block md:pt-6">
@@ -194,18 +192,18 @@ export default function HomePage() {
 
       <section className="container-page grid gap-5 md:grid-cols-[1.55fr_0.75fr]">
         <div className="card p-4 md:p-5">
-          <SectionTitle title="What service do you need?" />
+          <SectionTitle actionHref="/book" title="What service do you need?" />
           <CategoryGrid />
         </div>
         <div className="card p-4 md:p-5">
-          <SectionTitle action="View All" title="Need Help Now? (Emergency)" />
+          <SectionTitle action="View All" actionHref="/book?urgency=urgent" title="Need Help Now? (Emergency)" />
           <EmergencyBox />
         </div>
       </section>
 
       <section className="container-page mt-5">
         <div className="card p-4 md:p-5">
-          <SectionTitle title="Nearby Available Workers" />
+          <SectionTitle actionHref="/radar" title="Nearby Available Workers" />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {workers.slice(0, 4).map((worker) => (
               <WorkerCard key={worker.name} worker={worker} />
@@ -216,7 +214,7 @@ export default function HomePage() {
 
       <section className="container-page mt-5 grid gap-5 pb-8 md:grid-cols-[0.85fr_1.15fr]" id="how-it-works">
         <div className="card p-5">
-          <SectionTitle title="How It Works" />
+          <SectionTitle action="Book Now" actionHref="/book" title="How It Works" />
           <div className="grid grid-cols-4 gap-2 text-center">
             {["Choose Service", "Send Request", "Worker Accepts", "Track & Review"].map((step, index) => (
               <div key={step}>
@@ -229,7 +227,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="card p-5">
-          <SectionTitle title="Top Rated Workers" />
+          <SectionTitle actionHref="/radar" title="Top Rated Workers" />
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {topWorkers.map((worker) => (
               <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3" key={worker.name}>
