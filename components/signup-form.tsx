@@ -25,18 +25,21 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
   const [profilePhoto, setProfilePhoto] = useState("");
   const [idFile, setIdFile] = useState("");
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   async function submit() {
+    if (submitting) return;
     if (!name.trim() || !phone.trim()) {
       setMessage("Name aur phone number zaroori hai.");
       return;
     }
-    if (role === "worker" && (!experience.trim() || !city.trim() || latitude == null || longitude == null)) {
-      setMessage("Worker ke liye experience, city aur location save karna zaroori hai.");
+    if (role === "worker" && (!experience.trim() || !city.trim())) {
+      setMessage("Worker ke liye experience aur city zaroori hai.");
       return;
     }
 
     setMessage("");
+    setSubmitting(true);
     const id = `local-${Date.now()}`;
 
     if (role === "worker") {
@@ -49,7 +52,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         skill,
         experience,
         city,
-        location,
+        location: location || `Location pending, ${city}`,
         latitude,
         longitude,
         serviceRadius,
@@ -61,6 +64,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       const saveResult = await saveWorkerRegistrationToSupabase(profile);
       if (!saveResult.ok) {
         setMessage(saveResult.error || "Worker profile save nahi hua. Supabase workers table policies check karo.");
+        setSubmitting(false);
         return;
       }
       router.push("/dashboard/worker?created=1");
@@ -71,6 +75,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     saveMockAccount(account);
     await saveProfileToSupabase(account);
     router.push(role === "admin" ? "/admin" : "/dashboard/user?created=1");
+    setSubmitting(false);
   }
 
   function saveWorkerLocation() {
@@ -170,8 +175,8 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       ) : null}
 
       {message ? <p className="mt-4 rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600">{message}</p> : null}
-      <button className="btn-primary mt-5 w-full" onClick={submit} type="button">
-        {role === "worker" ? "Create Worker Profile" : "Create Account"}
+      <button className="btn-primary relative z-10 mt-5 w-full" disabled={submitting} onClick={submit} type="button">
+        {submitting ? "Saving..." : role === "worker" ? "Create Worker Profile" : "Create Account"}
       </button>
       <p className="mt-3 text-xs leading-5 text-slate-500">Authentication is temporarily disabled. Worker registration saves directly to the workers table.</p>
     </div>
