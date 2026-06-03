@@ -36,7 +36,7 @@ export function FilePreviewInput({ label, onPreview }: FilePreviewInputProps) {
         )}
       </label>
       {fileName ? <p className="mt-2 text-xs font-bold text-emerald-700">{fileName} selected</p> : null}
-      <p className="mt-1 text-xs text-slate-500">TODO: connect Supabase Storage for permanent upload.</p>
+      <p className="mt-1 text-xs text-slate-500">Preview ready. Permanent upload will use Supabase Storage.</p>
     </div>
   );
 }

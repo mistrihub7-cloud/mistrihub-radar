@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMockJobs, getWorkerRegistration, getWorkerSettings, saveWorkerSettings, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
+import { loadJobsFromSupabase, saveWorkerSettingsToSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
 export function WorkerDashboardClient() {
@@ -10,33 +11,41 @@ export function WorkerDashboardClient() {
   const [availability, setAvailability] = useState("Available Today");
   const [serviceRadius, setServiceRadius] = useState("10 km");
   const [question, setQuestion] = useState("");
-  const profile = typeof window !== "undefined" ? getWorkerRegistration() : null;
+  const [profileReady, setProfileReady] = useState(false);
 
   useEffect(() => {
-    const settings = getWorkerSettings();
-    setAvailability(settings.availability);
-    setServiceRadius(settings.serviceRadius);
-    setJobs(getMockJobs());
+    async function loadDashboard() {
+      const settings = getWorkerSettings();
+      setAvailability(settings.availability);
+      setServiceRadius(settings.serviceRadius);
+      setProfileReady(Boolean(getWorkerRegistration()));
+      setJobs(await loadJobsFromSupabase("worker"));
+    }
+
+    loadDashboard();
   }, []);
 
-  function saveAvailability(nextAvailability: string) {
+  async function saveAvailability(nextAvailability: string) {
     setAvailability(nextAvailability);
     saveWorkerSettings({ availability: nextAvailability, serviceRadius });
+    await saveWorkerSettingsToSupabase({ availability: nextAvailability, serviceRadius });
   }
 
-  function saveRadius(nextRadius: string) {
+  async function saveRadius(nextRadius: string) {
     setServiceRadius(nextRadius);
     saveWorkerSettings({ availability, serviceRadius: nextRadius });
+    await saveWorkerSettingsToSupabase({ availability, serviceRadius: nextRadius });
   }
 
-  function updateRequest(jobId: string, status: MockJobRequest["status"], extra?: Partial<MockJobRequest>) {
+  async function updateRequest(jobId: string, status: MockJobRequest["status"], extra?: Partial<MockJobRequest>) {
     updateMockJob(jobId, { status, ...extra });
-    setJobs(getMockJobs());
+    await updateJobInSupabase(jobId, { status, ...extra });
+    setJobs(await loadJobsFromSupabase("worker"));
   }
 
   return (
     <div className="space-y-5">
-      {profile ? (
+      {profileReady ? (
         <div className="rounded-2xl bg-emerald-50 p-4 text-sm font-bold text-emerald-800">Worker profile created successfully.</div>
       ) : null}
 
@@ -53,7 +62,7 @@ export function WorkerDashboardClient() {
 
       <div className="card p-4">
         <h2 className="font-black">Service radius</h2>
-        <p className="mt-1 text-sm text-slate-500">TODO: save this value to workers.service_radius in Supabase.</p>
+        <p className="mt-1 text-sm text-slate-500">Saved to workers.service_radius when logged in.</p>
         <div className="mt-4 grid grid-cols-4 gap-2">
           {["5 km", "10 km", "15 km", "20 km"].map((item) => (
             <button className={`rounded-xl border px-2 py-3 text-sm font-black ${serviceRadius === item ? "border-brand-600 bg-brand-50 text-brand-600" : "border-slate-200 bg-white"}`} key={item} onClick={() => saveRadius(item)} type="button">

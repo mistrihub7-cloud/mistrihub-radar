@@ -3,17 +3,29 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMockJobs, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
+import { loadJobsFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
 export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }) {
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setJobs(getMockJobs());
-    const onChange = () => setJobs(getMockJobs());
+    async function loadJobs() {
+      setLoading(true);
+      setJobs(await loadJobsFromSupabase(owner));
+      setLoading(false);
+    }
+
+    loadJobs();
+    const onChange = () => loadJobs();
     window.addEventListener("mistrihub-mock-change", onChange);
     return () => window.removeEventListener("mistrihub-mock-change", onChange);
-  }, []);
+  }, [owner]);
+
+  if (loading) {
+    return <div className="card p-6 text-center text-sm font-bold text-slate-500">Loading jobs...</div>;
+  }
 
   if (!jobs.length) {
     return (
@@ -52,9 +64,10 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
             {owner === "user" && job.status !== "Cancelled" ? (
               <button
                 className="btn-outline h-10 border-red-500 px-4 text-sm text-red-600"
-                onClick={() => {
+                onClick={async () => {
                   updateMockJob(job.id, { status: "Cancelled" });
-                  setJobs(getMockJobs());
+                  await updateJobInSupabase(job.id, { status: "Cancelled" });
+                  setJobs(await loadJobsFromSupabase(owner));
                 }}
                 type="button"
               >

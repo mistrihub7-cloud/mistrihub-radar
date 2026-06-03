@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase-client";
 import { saveMockAccount, type MockRole } from "@/lib/mock-store";
+import { saveProfileToSupabase } from "@/lib/supabase-flow";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -70,13 +71,15 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     }
 
     const user = result.data.user;
-    saveMockAccount({
+    const account = {
       id: user?.id || `mock-${Date.now()}`,
       role,
       name: (user?.user_metadata?.full_name as string | undefined) || identifier,
       phone: user?.phone || "",
       email: user?.email
-    });
+    };
+    saveMockAccount(account);
+    await saveProfileToSupabase(account);
 
     if (role === "admin") {
       router.push("/admin");

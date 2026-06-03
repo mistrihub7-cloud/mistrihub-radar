@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMockJob, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
+import { loadJobFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { ContactActions } from "./contact-actions";
 import { Icon } from "./simple-icons";
 
@@ -10,16 +11,27 @@ const timeline = ["Requested", "Accepted", "On The Way", "In Progress", "Complet
 
 export function JobTrackingClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<MockJobRequest | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setJob(getMockJob(jobId));
+    async function loadJob() {
+      setLoading(true);
+      setJob(await loadJobFromSupabase(jobId));
+      setLoading(false);
+    }
+
+    loadJob();
   }, [jobId]);
+
+  if (loading) {
+    return <div className="card p-6 text-center text-sm font-bold text-slate-500">Loading job...</div>;
+  }
 
   if (!job) {
     return (
       <div className="card p-6 text-center">
         <h1 className="text-2xl font-black">Job not found</h1>
-        <p className="mt-2 text-sm text-slate-600">This job exists only in local mock storage until Supabase Database is connected.</p>
+        <p className="mt-2 text-sm text-slate-600">This job was not found in the current booking records.</p>
         <Link className="btn-outline mx-auto mt-5 max-w-xs" href="/jobs">Back to Jobs</Link>
       </div>
     );
@@ -27,9 +39,10 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
 
   const contactUnlocked = ["Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
 
-  function setStatus(status: MockJobRequest["status"]) {
+  async function setStatus(status: MockJobRequest["status"]) {
     if (!job) return;
-    const nextJob = updateMockJob(job.id, { status });
+    updateMockJob(job.id, { status });
+    const nextJob = await updateJobInSupabase(job.id, { status });
     if (nextJob) setJob(nextJob);
   }
 
@@ -87,8 +100,8 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
       <aside className="space-y-5">
         <ContactActions unlocked={contactUnlocked} />
         <div className="card p-4">
-          <h2 className="font-black">Mock status controls</h2>
-          <p className="mt-1 text-xs text-slate-500">TODO: these updates should come from worker dashboard/API.</p>
+          <h2 className="font-black">Status controls</h2>
+          <p className="mt-1 text-xs text-slate-500">Status updates are saved to Supabase when available.</p>
           <div className="mt-3 grid gap-2">
             {(["Accepted", "On The Way", "In Progress", "Completed", "Cancelled"] as const).map((item) => (
               <button className="btn-outline h-10 text-sm" key={item} onClick={() => setStatus(item)} type="button">

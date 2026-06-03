@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { categories, workers, type Worker } from "@/lib/data";
 import { createMockJob } from "@/lib/mock-store";
+import { createJobInSupabase } from "@/lib/supabase-flow";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
 import { FilePreviewInput } from "./file-preview-input";
 import { Icon } from "./simple-icons";
@@ -26,7 +27,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  function submitRequest() {
+  async function submitRequest() {
     if (!problem.trim()) {
       setError("Problem description zaroori hai.");
       return;
@@ -42,7 +43,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
 
     setError("");
     setSubmitting(true);
-    const job = createMockJob({
+    const input = {
       workerId: matchedWorker.id,
       service,
       problem,
@@ -51,7 +52,8 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
       preferredTime,
       area,
       photoPreview
-    });
+    };
+    const job = (await createJobInSupabase(input)) || createMockJob(input);
     router.push(`/jobs/${job.id}`);
   }
 
@@ -130,7 +132,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         <Icon name="jobs" />
         {submitting ? "Creating request..." : "Submit Request"}
       </button>
-      <p className="text-xs leading-5 text-slate-500">TODO: save this request to Supabase Database and notify worker by website/WhatsApp.</p>
+      <p className="text-xs leading-5 text-slate-500">Request saves to Supabase when available. Photo storage needs Supabase Storage connection.</p>
     </div>
   );
 }

@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { categories } from "@/lib/data";
-import { saveMockAccount, saveWorkerRegistration, type MockRole } from "@/lib/mock-store";
+import { saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
+import { hasSupabaseConfig, supabase } from "@/lib/supabase-client";
+import { saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
 
 export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole }) {
@@ -23,7 +25,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
   const [idFile, setIdFile] = useState("");
   const [message, setMessage] = useState("");
 
-  function submit() {
+  async function submit() {
     if (!name.trim() || !phone.trim() || !password.trim()) {
       setMessage("Name, phone number aur password zaroori hai.");
       return;
@@ -33,9 +35,23 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       return;
     }
 
-    const id = `mock-${Date.now()}`;
+    setMessage("");
+    let id = `mock-${Date.now()}`;
+    if (hasSupabaseConfig && supabase) {
+      const authPayload = email.trim()
+        ? { email: email.trim(), password, options: { data: { full_name: name, role } } }
+        : { phone: phone.trim().startsWith("+") ? phone.trim() : `+91${phone.replace(/\D/g, "")}`, password, options: { data: { full_name: name, role } } };
+      const { data, error } = await supabase.auth.signUp(authPayload);
+      if (error) {
+        setMessage(`${error.message}. Supabase Auth may need email/phone setup.`);
+      }
+      if (data.user?.id) {
+        id = data.user.id;
+      }
+    }
+
     if (role === "worker") {
-      saveWorkerRegistration({
+      const profile: WorkerRegistration = {
         id,
         role: "worker",
         name,
@@ -49,12 +65,16 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         availability,
         profilePhoto,
         idVerificationFile: idFile
-      });
+      };
+      saveWorkerRegistration(profile);
+      await saveWorkerRegistrationToSupabase(profile);
       router.push("/dashboard/worker?created=1");
       return;
     }
 
-    saveMockAccount({ id, role, name, phone, email });
+    const account: MockAccount = { id, role, name, phone, email };
+    saveMockAccount(account);
+    await saveProfileToSupabase(account);
     router.push(role === "admin" ? "/admin" : "/dashboard/user?created=1");
   }
 
@@ -135,7 +155,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       <button className="btn-primary mt-5 w-full" onClick={submit} type="button">
         {role === "worker" ? "Create Worker Profile" : "Create Account"}
       </button>
-      <p className="mt-3 text-xs leading-5 text-slate-500">TODO: replace mock signup with Supabase Auth and workers table insert.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-500">Signup saves to Supabase Auth/profiles when configured. Worker profile saves to workers table.</p>
     </div>
   );
 }
