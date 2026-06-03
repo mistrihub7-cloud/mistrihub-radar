@@ -30,7 +30,9 @@ export type WorkerRegistration = MockAccount & {
   skill: string;
   experience: string;
   city: string;
-  area: string;
+  location: string;
+  latitude?: number;
+  longitude?: number;
   serviceRadius: string;
   availability: "Available Today" | "Busy" | "Not Available";
   profilePhoto?: string;

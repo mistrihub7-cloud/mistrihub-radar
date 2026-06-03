@@ -15,6 +15,8 @@ export type Worker = {
   status: WorkerStatus;
   serviceRadius: 5 | 10 | 15 | 20;
   distanceKm: number;
+  latitude?: number;
+  longitude?: number;
   phone?: string;
   whatsapp?: string;
 };

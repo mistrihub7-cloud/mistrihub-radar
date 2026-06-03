@@ -35,6 +35,8 @@ type WorkerRow = {
   location?: string;
   city?: string;
   service_area?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   rating?: number | string | null;
   review_count?: number | null;
   reviews?: number | null;
@@ -103,7 +105,7 @@ function mapWorker(row: WorkerRow): Worker {
     id: row.id,
     name: row.name || "Worker",
     skill: row.category || row.skill || "Worker",
-    location: row.location || row.service_area || "Service area",
+    location: row.location || row.service_area || "Saved location",
     city: row.city || "City",
     distance: "Distance after location",
     rating,
@@ -114,6 +116,8 @@ function mapWorker(row: WorkerRow): Worker {
     status,
     serviceRadius: normalizeRadius(row.service_radius),
     distanceKm: 0,
+    latitude: row.latitude ?? undefined,
+    longitude: row.longitude ?? undefined,
     phone: row.phone || undefined,
     whatsapp: row.whatsapp || undefined
   };
@@ -185,19 +189,21 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
     experience_years: Number.parseInt(profile.experience, 10) || 0,
     rating: 0,
     review_count: 0,
-    location: profile.area,
+    location: profile.location,
     city: profile.city,
+    latitude: profile.latitude ?? null,
+    longitude: profile.longitude ?? null,
     phone: profile.phone,
     whatsapp: profile.phone,
     profile_photo: profile.profilePhoto || "",
-    short_description: `${profile.skill} service in ${profile.area}`,
-    bio: `${profile.name} provides ${profile.skill} service in ${profile.area}, ${profile.city}.`,
+    short_description: `${profile.skill} service in ${profile.location}`,
+    bio: `${profile.name} provides ${profile.skill} service from saved location in ${profile.city}.`,
     service_details: [profile.skill],
     available_today: profile.availability === "Available Today",
     starting_price: 0,
     service_radius: radius,
     availability_status: profile.availability,
-    service_area: profile.area,
+    service_area: profile.location,
     verified_status: profile.idVerificationFile ? "Pending" : "Not Submitted"
   });
 
