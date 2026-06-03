@@ -50,7 +50,8 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         }
       });
       if (error) {
-        setMessage(`${error.message}. Supabase Auth may need email/phone setup.`);
+        setMessage(error.message);
+        return;
       }
       if (data.user?.id) {
         id = data.user.id;
