@@ -1,6 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import { AuthForm } from "@/components/auth-form";
-import { Logo } from "@/components/logo";
 
 type LoginPageProps = {
   searchParams?: {
@@ -16,14 +16,15 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
       <section className="container-page flex min-h-screen flex-col justify-center py-10 md:min-h-[calc(100vh-74px)]">
         <div className="mx-auto w-full max-w-md">
           <div className="text-center">
-            <div className="mb-3 flex justify-center">
-              <Logo />
-            </div>
-            <p className="font-semibold text-slate-500">Kaam ke liye trusted worker, nearby.</p>
-            <div className="mx-auto mt-5 flex max-w-xs justify-center gap-3">
-              <div className="worker-avatar !h-20 !w-20" />
-              <div className="worker-avatar busy !h-20 !w-20" />
-              <div className="worker-avatar !h-20 !w-20" />
+            <div className="mx-auto max-h-[330px] w-full max-w-sm overflow-hidden rounded-[2rem] bg-white">
+              <Image
+                alt="Welcome to MistriHub"
+                className="mx-auto h-auto w-full object-contain"
+                height={1481}
+                priority
+                src="/login-workers.png"
+                width={662}
+              />
             </div>
           </div>
 

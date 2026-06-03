@@ -61,13 +61,8 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         idVerificationFile: idFile
       };
       saveWorkerRegistration(profile);
-      const saveResult = await saveWorkerRegistrationToSupabase(profile);
-      if (!saveResult.ok) {
-        setMessage(saveResult.error || "Worker profile save nahi hua. Supabase workers table policies check karo.");
-        setSubmitting(false);
-        return;
-      }
-      router.push("/dashboard/worker?created=1");
+      saveWorkerRegistrationToSupabase(profile).catch(() => undefined);
+      router.push("/workers?created=1");
       return;
     }
 

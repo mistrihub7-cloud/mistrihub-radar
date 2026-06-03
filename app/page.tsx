@@ -1,22 +1,26 @@
 import Link from "next/link";
+import Image from "next/image";
 import { categories } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
 import { LocationLabel } from "@/components/location-label";
 import { Logo } from "@/components/logo";
 import { SectionTitle } from "@/components/section-title";
+import { LocalWorkerList } from "@/components/local-worker-list";
 import { WorkerCard } from "@/components/worker-card";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
+export const dynamic = "force-dynamic";
+
 function HeroWorker() {
   return (
-    <div className="hero-worker">
-      <span className="hero-cap" />
-      <span className="hero-face" />
-      <span className="hero-body" />
-      <span className="hero-arm hero-arm-left" />
-      <span className="hero-arm hero-arm-right" />
-      <span className="tool-wrench" />
-    </div>
+    <Image
+      alt="MistriHub trusted worker"
+      className="h-auto w-full object-contain"
+      height={980}
+      priority
+      src="/hero-worker.png"
+      width={1365}
+    />
   );
 }
 
@@ -173,7 +177,7 @@ export default async function HomePage() {
 
         <div className="hidden md:block md:pt-6">
           <HeroWorker />
-          <div className="-mt-72 ml-auto mr-0 grid w-52 gap-5">
+          <div className="-mt-96 ml-auto mr-0 grid w-64 gap-5">
             {[
               ["Nearby Workers", `${workers.length} Added`, "worker"],
               ["Ratings", "From worker profiles", "star"],
@@ -221,6 +225,9 @@ export default async function HomePage() {
               No workers registered yet. New Supabase workers will appear here.
             </div>
           )}
+          <div className="mt-4">
+            <LocalWorkerList />
+          </div>
         </div>
       </section>
 

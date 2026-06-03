@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LocationLabel } from "@/components/location-label";
+import { LocalWorkerList } from "@/components/local-worker-list";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { Icon } from "@/components/simple-icons";
 import { WorkerCard } from "@/components/worker-card";
@@ -103,6 +104,7 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
             </div>
 
             <div className="space-y-4">
+              <LocalWorkerList />
               {!matchingWorkers.length ? <div className="card p-6 text-center text-sm font-bold text-slate-500">No workers registered yet. New Supabase workers will appear here.</div> : null}
               {matchingWorkers.map((worker) => (
                 <WorkerCard key={worker.id} worker={worker} />
