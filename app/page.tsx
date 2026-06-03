@@ -158,7 +158,7 @@ export default async function HomePage() {
               </p>
             </div>
             <div className="md:hidden">
-              <HeroWorker className="h-[180px] w-full rounded-2xl object-cover object-center" />
+              <HeroWorker className="h-[155px] w-full rounded-2xl object-cover object-center" />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
