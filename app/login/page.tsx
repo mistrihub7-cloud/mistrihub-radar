@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { AuthForm } from "@/components/auth-form";
 
 type LoginPageProps = {
@@ -16,13 +15,12 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
       <section className="container-page flex min-h-screen flex-col justify-center py-10 md:min-h-[calc(100vh-74px)]">
         <div className="mx-auto w-full max-w-md">
           <div className="text-center">
-            <div className="relative mx-auto h-[310px] w-full max-w-sm overflow-hidden rounded-[2rem] bg-white">
-              <Image
+            <div className="mx-auto max-h-[360px] w-full max-w-sm overflow-hidden rounded-[2rem] bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 alt="Welcome to MistriHub"
-                className="object-cover object-[center_18%]"
-                fill
-                priority
-                src="/login-workers.png"
+                className="block h-auto w-full"
+                src="/login-workers.png?v=3"
               />
             </div>
           </div>

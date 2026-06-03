@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { categories } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
 import { LocationLabel } from "@/components/location-label";
@@ -13,13 +12,12 @@ export const dynamic = "force-dynamic";
 
 function HeroWorker() {
   return (
-    <Image
+    // Use a direct public image so the hero appears immediately after deploy/cache refresh.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       alt="MistriHub trusted worker"
-      className="h-auto w-full rounded-[2rem] object-contain"
-      height={980}
-      priority
-      src="/hero-worker.png"
-      width={1365}
+      className="h-auto w-full object-contain"
+      src="/hero-worker.png?v=3"
     />
   );
 }
@@ -175,8 +173,10 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="hidden md:block md:pt-6">
-          <HeroWorker />
+        <div className="hidden min-w-0 md:block md:pt-4">
+          <div className="mx-auto w-full max-w-[640px]">
+            <HeroWorker />
+          </div>
         </div>
 
         <NearbyWorkersPanel workers={workers} />
