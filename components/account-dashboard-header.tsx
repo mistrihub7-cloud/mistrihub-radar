@@ -1,27 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { hasSupabaseConfig, supabase } from "@/lib/supabase-client";
+import { getMockAccount, getWorkerRegistration } from "@/lib/mock-store";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
 import { Icon } from "./simple-icons";
-
-type WorkerProfile = {
-  name: string;
-  category: string;
-  location: string;
-  city: string;
-  profile_photo: string | null;
-};
-
-function getDisplayName(email?: string, phone?: string) {
-  if (email) {
-    return email.split("@")[0].replace(/[._-]+/g, " ");
-  }
-  if (phone) {
-    return phone;
-  }
-  return "User";
-}
 
 export function AccountDashboardHeader({ type }: { type: "user" | "worker" }) {
   const [name, setName] = useState("Loading...");
@@ -31,43 +13,11 @@ export function AccountDashboardHeader({ type }: { type: "user" | "worker" }) {
   useEffect(() => {
     async function loadAccount() {
       const savedLocation = localStorage.getItem(LOCATION_KEY) || DEFAULT_LOCATION;
-
-      if (!hasSupabaseConfig || !supabase) {
-        setName("Login required");
-        setSubtitle(savedLocation);
-        return;
-      }
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
-
-      if (!user) {
-        setName("Login required");
-        setSubtitle(savedLocation);
-        return;
-      }
-
-      const fallbackName =
-        (user.user_metadata?.full_name as string | undefined) ||
-        (user.user_metadata?.name as string | undefined) ||
-        getDisplayName(user.email, user.phone);
-
-      const { data } = await supabase
-        .from("workers")
-        .select("name,category,location,city,profile_photo")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      const profile = data as WorkerProfile | null;
-      setName(profile?.name || fallbackName);
-      setSubtitle(
-        type === "worker"
-          ? profile?.category || "Worker profile"
-          : profile
-            ? [profile.location, profile.city].filter(Boolean).join(", ")
-            : savedLocation
-      );
-      setPhoto(profile?.profile_photo || null);
+      const account = getMockAccount();
+      const workerProfile = getWorkerRegistration();
+      setName(workerProfile?.name || account?.name || "User");
+      setSubtitle(type === "worker" ? workerProfile?.skill || "Worker profile" : savedLocation);
+      setPhoto(workerProfile?.profilePhoto || null);
     }
 
     loadAccount();

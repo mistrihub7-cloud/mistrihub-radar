@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { categories } from "@/lib/data";
 import { saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
-import { hasSupabaseConfig, supabase } from "@/lib/supabase-client";
 import { saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
 
@@ -14,7 +13,6 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [skill, setSkill] = useState(categories[0].name);
   const [experience, setExperience] = useState("");
   const [city, setCity] = useState("");
@@ -29,8 +27,8 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
   const [message, setMessage] = useState("");
 
   async function submit() {
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      setMessage("Name, email aur password zaroori hai.");
+    if (!name.trim() || !phone.trim()) {
+      setMessage("Name aur phone number zaroori hai.");
       return;
     }
     if (role === "worker" && (!experience.trim() || !city.trim() || latitude == null || longitude == null)) {
@@ -39,24 +37,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     }
 
     setMessage("");
-    let id = `mock-${Date.now()}`;
-    if (hasSupabaseConfig && supabase) {
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: { full_name: name, role },
-          emailRedirectTo: `${window.location.origin}/login`
-        }
-      });
-      if (error) {
-        setMessage(error.message);
-        return;
-      }
-      if (data.user?.id) {
-        id = data.user.id;
-      }
-    }
+    const id = `local-${Date.now()}`;
 
     if (role === "worker") {
       const profile: WorkerRegistration = {
@@ -77,7 +58,11 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         idVerificationFile: idFile
       };
       saveWorkerRegistration(profile);
-      await saveWorkerRegistrationToSupabase(profile);
+      const saveResult = await saveWorkerRegistrationToSupabase(profile);
+      if (!saveResult.ok) {
+        setMessage(saveResult.error || "Worker profile save nahi hua. Supabase workers table policies check karo.");
+        return;
+      }
       router.push("/dashboard/worker?created=1");
       return;
     }
@@ -130,16 +115,12 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setName(event.target.value)} value={name} />
         </label>
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">Phone number optional</span>
+          <span className="mb-2 block text-sm font-bold">Phone number</span>
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setPhone(event.target.value)} value={phone} />
         </label>
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">Email</span>
+          <span className="mb-2 block text-sm font-bold">Email optional</span>
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setEmail(event.target.value)} type="email" value={email} />
-        </label>
-        <label className="block">
-          <span className="mb-2 block text-sm font-bold">Password</span>
-          <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setPassword(event.target.value)} type="password" value={password} />
         </label>
       </div>
 
@@ -192,7 +173,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       <button className="btn-primary mt-5 w-full" onClick={submit} type="button">
         {role === "worker" ? "Create Worker Profile" : "Create Account"}
       </button>
-      <p className="mt-3 text-xs leading-5 text-slate-500">Signup uses Supabase email confirmation only. Phone number is only for contact after booking acceptance.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-500">Authentication is temporarily disabled. Worker registration saves directly to the workers table.</p>
     </div>
   );
 }

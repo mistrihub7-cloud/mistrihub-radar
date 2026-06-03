@@ -3,60 +3,35 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { hasSupabaseConfig, supabase } from "@/lib/supabase-client";
 import { saveMockAccount, type MockRole } from "@/lib/mock-store";
-import { saveProfileToSupabase } from "@/lib/supabase-flow";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<MockRole>("user");
   const isRegister = mode === "register";
 
   async function handleSubmit() {
-    if (!supabase || !hasSupabaseConfig) {
-      setMessage("Supabase env missing. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
-      return;
-    }
-
-    if (!identifier || !password) {
-      setMessage("Email aur password bharna zaroori hai.");
+    if (!identifier) {
+      setMessage("Email ya phone bharna zaroori hai.");
       return;
     }
 
     setLoading(true);
     setMessage("");
-    const result = isRegister
-      ? await supabase.auth.signUp({
-          email: identifier.trim(),
-          password,
-          options: {
-            data: { full_name: name },
-            emailRedirectTo: `${window.location.origin}/login`
-          }
-        })
-      : await supabase.auth.signInWithPassword({ email: identifier.trim(), password });
-    setLoading(false);
-
-    if (result.error) {
-      setMessage(result.error.message);
-      return;
-    }
-
-    const user = result.data.user;
+    const cleanIdentifier = identifier.trim();
     const account = {
-      id: user?.id || `mock-${Date.now()}`,
+      id: `local-${Date.now()}`,
       role,
-      name: (user?.user_metadata?.full_name as string | undefined) || identifier,
-      phone: user?.phone || "",
-      email: user?.email
+      name: name.trim() || cleanIdentifier,
+      phone: cleanIdentifier.includes("@") ? "" : cleanIdentifier,
+      email: cleanIdentifier.includes("@") ? cleanIdentifier : undefined
     };
     saveMockAccount(account);
-    await saveProfileToSupabase(account);
+    setLoading(false);
 
     if (role === "admin") {
       router.push("/admin");
@@ -94,32 +69,16 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </label>
       ) : null}
       <label className="block">
-        <span className="mb-2 block text-sm font-bold">Email</span>
+        <span className="mb-2 block text-sm font-bold">Email / phone</span>
         <input
           className="h-13 w-full rounded-xl border border-slate-200 px-4 py-4 outline-none focus:border-brand-500"
           onChange={(event) => setIdentifier(event.target.value)}
-          placeholder="worker@example.com"
-          type="email"
+          placeholder="worker@example.com or 9876543210"
+          type="text"
           value={identifier}
         />
       </label>
-      <label className="block">
-        <span className="mb-2 block text-sm font-bold">Password</span>
-        <input
-          className="h-13 w-full rounded-xl border border-slate-200 px-4 py-4 outline-none focus:border-brand-500"
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="Enter password"
-          type="password"
-          value={password}
-        />
-      </label>
-      {!isRegister ? (
-        <div className="text-right">
-          <Link className="text-sm font-bold text-brand-600" href="/login">
-            Forgot Password?
-          </Link>
-        </div>
-      ) : null}
+      {!isRegister ? <p className="text-xs font-bold text-slate-500">Authentication is temporarily disabled.</p> : null}
       {message ? <p className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-600">{message}</p> : null}
       <button className="btn-primary w-full" disabled={loading} onClick={handleSubmit} type="button">
         {loading ? "Please wait..." : isRegister ? "Create Account" : "Login"}

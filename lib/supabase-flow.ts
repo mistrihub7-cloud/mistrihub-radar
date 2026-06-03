@@ -124,28 +124,11 @@ function mapWorker(row: WorkerRow): Worker {
 }
 
 async function getSessionUserId() {
-  if (!hasSupabaseConfig || !supabase) return null;
-  const { data } = await supabase.auth.getSession();
-  return data.session?.user.id || null;
+  return null;
 }
 
 export async function loadAccountFromSupabase() {
-  if (!hasSupabaseConfig || !supabase) return getMockAccount();
-  const userId = await getSessionUserId();
-  if (!userId) return getMockAccount();
-
-  const { data } = await supabase.from("profiles").select("id,full_name,phone,email,role").eq("id", userId).maybeSingle();
-  if (!data) return getMockAccount();
-
-  const account: MockAccount = {
-    id: data.id,
-    role: data.role || "user",
-    name: data.full_name || "User",
-    phone: data.phone || "",
-    email: data.email || undefined
-  };
-  saveMockAccount(account);
-  return account;
+  return getMockAccount();
 }
 
 export async function saveProfileToSupabase(account: MockAccount) {
@@ -165,24 +148,15 @@ export async function saveProfileToSupabase(account: MockAccount) {
 
 export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistration) {
   saveWorkerRegistration(profile);
-  const account: MockAccount = {
-    id: profile.id,
-    role: "worker",
-    name: profile.name,
-    phone: profile.phone,
-    email: profile.email
-  };
-  await saveProfileToSupabase(account);
-
-  if (!hasSupabaseConfig || !supabase || profile.id.startsWith("mock-")) return { ok: true, fallback: true };
+  if (!hasSupabaseConfig || !supabase) return { ok: true, fallback: true };
 
   const radius = Number.parseInt(profile.serviceRadius, 10) || 10;
   const categorySlug = categorySlugFor(profile.skill);
-  const workerId = `worker-${profile.id}`;
+  const workerId = profile.id.startsWith("worker-") ? profile.id : `worker-${profile.id}`;
 
   const { error } = await supabase.from("workers").upsert({
     id: workerId,
-    user_id: profile.id,
+    user_id: null,
     name: profile.name,
     category: profile.skill,
     category_slug: categorySlug,
