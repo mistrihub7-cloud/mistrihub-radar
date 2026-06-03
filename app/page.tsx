@@ -186,10 +186,16 @@ export default async function HomePage() {
         <div className="card p-4 md:p-5">
           <SectionTitle actionHref="/book" title="What service do you need?" />
           <CategoryGrid />
+          <Link className="btn-outline mt-4 w-full" href="/book">
+            View All
+          </Link>
         </div>
         <div className="card p-4 md:p-5">
           <SectionTitle action="View All" actionHref="/book?urgency=urgent" title="Need Help Now? (Emergency)" />
           <EmergencyBox />
+          <Link className="btn-outline mt-4 w-full" href="/book?urgency=urgent">
+            View All
+          </Link>
         </div>
       </section>
 
@@ -210,6 +216,9 @@ export default async function HomePage() {
           <div className="mt-4">
             <LocalWorkerList />
           </div>
+          <Link className="btn-outline mt-4 w-full" href="/workers">
+            View All
+          </Link>
         </div>
       </section>
 
@@ -226,6 +235,9 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+          <Link className="btn-outline mt-4 w-full" href="/workers">
+            Book Now
+          </Link>
         </div>
         <div className="card p-5">
           <SectionTitle actionHref="/workers" title="Top Rated Workers" />
@@ -249,6 +261,9 @@ export default async function HomePage() {
               Top rated workers will appear after worker registrations and reviews.
             </div>
           )}
+          <Link className="btn-outline mt-4 w-full" href="/workers">
+            View All
+          </Link>
         </div>
       </section>
     </main>
