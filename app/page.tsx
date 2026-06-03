@@ -10,13 +10,13 @@ import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 export const dynamic = "force-dynamic";
 
-function HeroWorker() {
+function HeroWorker({ className = "h-auto w-full object-contain" }: { className?: string }) {
   return (
     // Use a direct public image so the hero appears immediately after deploy/cache refresh.
     // eslint-disable-next-line @next/next/no-img-element
     <img
       alt="MistriHub trusted worker"
-      className="h-auto w-full object-contain"
+      className={className}
       src="/hero-worker.png?v=3"
     />
   );
@@ -158,7 +158,7 @@ export default async function HomePage() {
               </p>
             </div>
             <div className="md:hidden">
-              <HeroWorker />
+              <HeroWorker className="h-[180px] w-full rounded-2xl object-cover object-center" />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
