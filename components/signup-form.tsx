@@ -29,8 +29,8 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
   const [message, setMessage] = useState("");
 
   async function submit() {
-    if (!name.trim() || !phone.trim() || !password.trim()) {
-      setMessage("Name, phone number aur password zaroori hai.");
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setMessage("Name, email aur password zaroori hai.");
       return;
     }
     if (role === "worker" && (!experience.trim() || !city.trim() || latitude == null || longitude == null)) {
@@ -41,10 +41,14 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     setMessage("");
     let id = `mock-${Date.now()}`;
     if (hasSupabaseConfig && supabase) {
-      const authPayload = email.trim()
-        ? { email: email.trim(), password, options: { data: { full_name: name, role } } }
-        : { phone: phone.trim().startsWith("+") ? phone.trim() : `+91${phone.replace(/\D/g, "")}`, password, options: { data: { full_name: name, role } } };
-      const { data, error } = await supabase.auth.signUp(authPayload);
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: { full_name: name, role },
+          emailRedirectTo: `${window.location.origin}/login`
+        }
+      });
       if (error) {
         setMessage(`${error.message}. Supabase Auth may need email/phone setup.`);
       }
@@ -125,11 +129,11 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setName(event.target.value)} value={name} />
         </label>
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">Phone number</span>
+          <span className="mb-2 block text-sm font-bold">Phone number optional</span>
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setPhone(event.target.value)} value={phone} />
         </label>
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">Email optional</span>
+          <span className="mb-2 block text-sm font-bold">Email</span>
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setEmail(event.target.value)} type="email" value={email} />
         </label>
         <label className="block">
@@ -187,7 +191,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       <button className="btn-primary mt-5 w-full" onClick={submit} type="button">
         {role === "worker" ? "Create Worker Profile" : "Create Account"}
       </button>
-      <p className="mt-3 text-xs leading-5 text-slate-500">Signup saves to Supabase Auth/profiles when configured. Worker profile saves to workers table.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-500">Signup uses Supabase email confirmation only. Phone number is only for contact after booking acceptance.</p>
     </div>
   );
 }
