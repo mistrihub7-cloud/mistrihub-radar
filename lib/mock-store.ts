@@ -60,8 +60,13 @@ function readJson<T>(key: string, fallback: T): T {
 
 function writeJson<T>(key: string, value: T) {
   if (!canStore()) return;
-  localStorage.setItem(key, JSON.stringify(value));
-  window.dispatchEvent(new CustomEvent("mistrihub-mock-change"));
+  try {
+    localStorage.removeItem(key);
+    localStorage.setItem(key, JSON.stringify(value));
+    window.dispatchEvent(new CustomEvent("mistrihub-mock-change"));
+  } catch {
+    localStorage.removeItem(key);
+  }
 }
 
 export function getMockAccount() {
@@ -74,7 +79,11 @@ export function saveMockAccount(account: MockAccount) {
 
 export function saveWorkerRegistration(profile: WorkerRegistration) {
   saveMockAccount({ id: profile.id, role: "worker", name: profile.name, phone: profile.phone, email: profile.email });
-  writeJson(WORKER_PROFILE_KEY, profile);
+  writeJson(WORKER_PROFILE_KEY, {
+    ...profile,
+    profilePhoto: "",
+    idVerificationFile: profile.idVerificationFile ? "Selected" : ""
+  });
 }
 
 export function getWorkerRegistration() {

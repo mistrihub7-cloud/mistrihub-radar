@@ -57,20 +57,29 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         longitude,
         serviceRadius,
         availability,
-        profilePhoto,
-        idVerificationFile: idFile
+        profilePhoto: "",
+        idVerificationFile: idFile ? "Selected" : ""
       };
-      saveWorkerRegistration(profile);
-      saveWorkerRegistrationToSupabase(profile).catch(() => undefined);
-      router.push("/workers?created=1");
+      try {
+        saveWorkerRegistration(profile);
+        saveWorkerRegistrationToSupabase(profile).catch(() => undefined);
+        window.location.href = "/workers?created=1";
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Worker profile save nahi hua.");
+        setSubmitting(false);
+      }
       return;
     }
 
     const account: MockAccount = { id, role, name, phone, email };
-    saveMockAccount(account);
-    await saveProfileToSupabase(account);
-    router.push(role === "admin" ? "/admin" : "/dashboard/user?created=1");
-    setSubmitting(false);
+    try {
+      saveMockAccount(account);
+      saveProfileToSupabase(account).catch(() => undefined);
+      window.location.href = role === "admin" ? "/admin" : "/dashboard/user?created=1";
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Account save nahi hua.");
+      setSubmitting(false);
+    }
   }
 
   function saveWorkerLocation() {

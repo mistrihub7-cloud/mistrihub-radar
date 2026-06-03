@@ -23,7 +23,7 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
   return (
     <main className="mobile-shell min-h-screen">
       <MobileTopbar title="Nearby Workers" />
-      <section className="container-page pb-8 pt-2 md:py-10">
+      <section className="container-page pb-28 pt-2 md:py-10">
         <div className="mb-5 rounded-2xl bg-brand-50 p-4 text-sm font-bold text-brand-700 md:hidden">
           Nearby workers serving your area
         </div>
@@ -31,7 +31,7 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
         <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
           <aside className="card p-5">
             <p className="text-sm font-black text-brand-600">Nearby Worker Discovery</p>
-            <h1 className="mt-1 text-3xl font-black text-slate-950">Workers serving your area</h1>
+            <h1 className="mt-1 break-words text-2xl font-black text-slate-950 md:text-3xl">Workers serving your area</h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               Showing added workers by service area, availability, trust score and rating. Exact distance and radius will show only after GPS/service-radius data is saved.
             </p>
@@ -53,11 +53,11 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
               <h2 className="font-black">Search priority</h2>
               <div className="mt-3 space-y-2">
                 {discoveryRules.priority.map((item, index) => (
-                  <div className="flex items-center gap-3 rounded-2xl bg-white p-3 text-sm font-bold shadow-sm" key={item}>
-                    <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-50 text-brand-600">
+                  <div className="flex items-start gap-3 rounded-2xl bg-white p-3 text-sm font-bold leading-5 shadow-sm" key={item}>
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600">
                       {index + 1}
                     </span>
-                    {item}
+                    <span className="min-w-0 break-words">{item}</span>
                   </div>
                 ))}
               </div>
@@ -70,10 +70,10 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
           </aside>
 
           <section>
-            <div className="mb-4 flex gap-3 overflow-x-auto pb-1">
+            <div className="mb-4 flex max-w-full gap-2 overflow-x-auto pb-2">
               {tabs.map((tab, index) => (
                 <Link
-                  className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-black ${
+                  className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-xs font-black sm:text-sm ${
                     selectedStatus === tab
                       ? "border-b-2 border-brand-600 bg-brand-50 text-brand-600"
                       : tab === "Available Today"
@@ -90,15 +90,15 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
               ))}
             </div>
 
-            <div className="mb-4 grid grid-cols-3 gap-3">
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {[
                 ["Workers found", matchingWorkers.length.toString()],
                 ["Available today", availableCount.toString()],
                 ["Top rating", topRating]
               ].map(([label, value]) => (
-                <div className="rounded-2xl border border-slate-200 bg-white p-3 text-center" key={label}>
+                <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 text-center" key={label}>
                   <p className="text-xl font-black text-brand-600">{value}</p>
-                  <p className="text-xs font-bold text-slate-500">{label}</p>
+                  <p className="break-words text-xs font-bold leading-4 text-slate-500">{label}</p>
                 </div>
               ))}
             </div>

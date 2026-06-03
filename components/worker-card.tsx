@@ -22,13 +22,13 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
         <div className={avatarClass} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <h3 className="truncate font-black text-slate-950">{worker.name}</h3>
+            <div className="min-w-0">
+              <h3 className="break-words font-black leading-5 text-slate-950">{worker.name}</h3>
               <p className="text-sm font-semibold text-slate-600">{worker.skill}</p>
-              <p className="text-sm text-slate-600">{worker.location}, {worker.city}</p>
+              <p className="break-words text-sm leading-5 text-slate-600">{worker.location}, {worker.city}</p>
               <p className="text-sm text-slate-500">Serving this area</p>
             </div>
-            <span className={`status-pill ${statusClass}`}>{worker.status}</span>
+            <span className={`status-pill shrink-0 ${statusClass}`}>{worker.status}</span>
           </div>
           <div className="mt-3 flex items-center justify-between gap-2 text-sm">
             <span className="flex items-center gap-1 font-bold">
@@ -42,8 +42,8 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
       {!compact && (
         <>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-slate-600">
-            <span>
-              <b className="block text-slate-950">{worker.location}</b>Area
+            <span className="min-w-0">
+              <b className="block break-words text-slate-950">{worker.location}</b>Area
             </span>
             <span>
               <b className="block text-slate-950">{worker.reviews}</b>Reviews

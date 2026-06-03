@@ -15,7 +15,7 @@ function HeroWorker() {
   return (
     <Image
       alt="MistriHub trusted worker"
-      className="h-auto w-full object-contain"
+      className="h-auto w-full rounded-[2rem] object-contain"
       height={980}
       priority
       src="/hero-worker.png"
@@ -177,24 +177,6 @@ export default async function HomePage() {
 
         <div className="hidden md:block md:pt-6">
           <HeroWorker />
-          <div className="-mt-96 ml-auto mr-0 grid w-64 gap-5">
-            {[
-              ["Nearby Workers", `${workers.length} Added`, "worker"],
-              ["Ratings", "From worker profiles", "star"],
-              ["Trusted", "Verified Workers", "shield"],
-              ["Contact Lock", "Before acceptance", "bell"]
-            ].map(([title, text, icon]) => (
-              <div className="card flex items-center gap-4 p-4" key={title}>
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-600">
-                  <Icon name={icon} />
-                </span>
-                <span>
-                  <b className="block">{title}</b>
-                  <small className="text-slate-500">{text}</small>
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
 
         <NearbyWorkersPanel workers={workers} />
