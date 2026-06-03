@@ -18,7 +18,10 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
   const [skill, setSkill] = useState(categories[0].name);
   const [experience, setExperience] = useState("");
   const [city, setCity] = useState("");
-  const [area, setArea] = useState("");
+  const [location, setLocation] = useState("");
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
+  const [locationStatus, setLocationStatus] = useState("");
   const [serviceRadius, setServiceRadius] = useState("10 km");
   const [availability, setAvailability] = useState<"Available Today" | "Busy" | "Not Available">("Available Today");
   const [profilePhoto, setProfilePhoto] = useState("");
@@ -30,8 +33,8 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       setMessage("Name, phone number aur password zaroori hai.");
       return;
     }
-    if (role === "worker" && (!experience.trim() || !city.trim() || !area.trim())) {
-      setMessage("Worker ke liye experience, city aur area zaroori hai.");
+    if (role === "worker" && (!experience.trim() || !city.trim() || latitude == null || longitude == null)) {
+      setMessage("Worker ke liye experience, city aur location save karna zaroori hai.");
       return;
     }
 
@@ -60,7 +63,9 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         skill,
         experience,
         city,
-        area,
+        location,
+        latitude,
+        longitude,
         serviceRadius,
         availability,
         profilePhoto,
@@ -76,6 +81,27 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     saveMockAccount(account);
     await saveProfileToSupabase(account);
     router.push(role === "admin" ? "/admin" : "/dashboard/user?created=1");
+  }
+
+  function saveWorkerLocation() {
+    if (!("geolocation" in navigator)) {
+      setLocationStatus("Is device/browser me location support nahi hai.");
+      return;
+    }
+
+    setLocationStatus("Location check ho raha hai...");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextLatitude = Number(position.coords.latitude.toFixed(6));
+        const nextLongitude = Number(position.coords.longitude.toFixed(6));
+        setLatitude(nextLatitude);
+        setLongitude(nextLongitude);
+        setLocation(`GPS: ${nextLatitude}, ${nextLongitude}`);
+        setLocationStatus("Location saved.");
+      },
+      () => setLocationStatus("Location permission nahi mila. Browser se allow karke dobara try karo."),
+      { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 }
+    );
   }
 
   return (
@@ -130,10 +156,16 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
             <span className="mb-2 block text-sm font-bold">City</span>
             <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setCity(event.target.value)} value={city} />
           </label>
-          <label className="block">
-            <span className="mb-2 block text-sm font-bold">Area</span>
-            <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setArea(event.target.value)} value={area} />
-          </label>
+          <div className="rounded-xl border border-slate-200 p-4">
+            <span className="mb-2 block text-sm font-bold">Worker location</span>
+            <button className="btn-outline h-11 w-full text-sm" onClick={saveWorkerLocation} type="button">
+              {latitude != null && longitude != null ? "Location Saved" : "Save Location"}
+            </button>
+            <p className="mt-2 text-xs font-bold text-slate-500">
+              {location || "GPS location save karo. Distance km isi se calculate hoga."}
+            </p>
+            {locationStatus ? <p className="mt-1 text-xs font-bold text-brand-600">{locationStatus}</p> : null}
+          </div>
           <label className="block">
             <span className="mb-2 block text-sm font-bold">Service radius</span>
             <select className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setServiceRadius(event.target.value)} value={serviceRadius}>
