@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getMockAccount, getMockJobs, type MockJobRequest } from "@/lib/mock-store";
+import { clearMistriHubSession, getMockAccount, type MockJobRequest } from "@/lib/mock-store";
 import { loadJobsFromSupabase } from "@/lib/supabase-flow";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
 import { Icon } from "./simple-icons";
-
-const localKeys = ["mistrihub.mock.account", "mistrihub.mock.jobs"];
 
 function MenuRow({ href, icon, label, value }: { href: string; icon: string; label: string; value?: string }) {
   return (
@@ -30,6 +28,10 @@ export function UserDashboardClient() {
   useEffect(() => {
     async function loadDashboard() {
       const account = getMockAccount();
+      if (!account) {
+        window.location.replace("/login");
+        return;
+      }
       setAccountName(account?.name || "User");
       setLocation(localStorage.getItem(LOCATION_KEY) || DEFAULT_LOCATION);
       setJobs(await loadJobsFromSupabase("user"));
@@ -43,8 +45,8 @@ export function UserDashboardClient() {
   const cancelledJobs = jobs.filter((job) => job.status === "Cancelled").length;
 
   function logout() {
-    localKeys.forEach((key) => localStorage.removeItem(key));
-    window.location.href = "/";
+    clearMistriHubSession();
+    window.location.replace("/login");
   }
 
   return (

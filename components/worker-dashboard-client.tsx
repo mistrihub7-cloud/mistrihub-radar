@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getMockJobs, getWorkerRegistration, getWorkerSettings, saveWorkerSettings, type MockJobRequest, type WorkerRegistration } from "@/lib/mock-store";
+import { clearMistriHubSession, getMockAccount, getWorkerRegistration, getWorkerSettings, saveWorkerSettings, type MockJobRequest, type WorkerRegistration } from "@/lib/mock-store";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
-
-const localKeys = ["mistrihub.mock.account", "mistrihub.mock.workerProfile", "mistrihub.mock.workerSettings"];
 
 function MenuRow({ href, icon, label, value, badge }: { href: string; icon: string; label: string; value?: string; badge?: string }) {
   return (
@@ -30,6 +28,11 @@ export function WorkerDashboardClient() {
 
   useEffect(() => {
     async function loadDashboard() {
+      const account = getMockAccount();
+      if (!account) {
+        window.location.replace("/login");
+        return;
+      }
       const settings = getWorkerSettings();
       setAvailability(settings.availability);
       setServiceRadius(settings.serviceRadius);
@@ -47,8 +50,8 @@ export function WorkerDashboardClient() {
   }
 
   function logout() {
-    localKeys.forEach((key) => localStorage.removeItem(key));
-    window.location.href = "/";
+    clearMistriHubSession();
+    window.location.replace("/login");
   }
 
   const activeRequests = jobs.filter((job) => job.status === "Requested" || job.status === "Need More Details").length;

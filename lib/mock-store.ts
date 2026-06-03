@@ -43,6 +43,7 @@ const ACCOUNT_KEY = "mistrihub.mock.account";
 const WORKER_PROFILE_KEY = "mistrihub.mock.workerProfile";
 const JOBS_KEY = "mistrihub.mock.jobs";
 const WORKER_SETTINGS_KEY = "mistrihub.mock.workerSettings";
+const SESSION_PREFIXES = ["mistrihub.", "sb-"];
 
 function canStore() {
   return typeof window !== "undefined";
@@ -129,4 +130,16 @@ export function saveWorkerSettings(settings: { availability: string; serviceRadi
   writeJson(WORKER_SETTINGS_KEY, settings);
 }
 
-// TODO: Replace this localStorage mock with Supabase tables for users, worker_profiles, job_requests and notifications.
+export function clearMistriHubSession() {
+  if (!canStore()) return;
+
+  const clearMatchingKeys = (storage: Storage) => {
+    Object.keys(storage)
+      .filter((key) => SESSION_PREFIXES.some((prefix) => key.startsWith(prefix)))
+      .forEach((key) => storage.removeItem(key));
+  };
+
+  clearMatchingKeys(localStorage);
+  clearMatchingKeys(sessionStorage);
+  window.dispatchEvent(new CustomEvent("mistrihub-mock-change"));
+}
