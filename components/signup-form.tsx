@@ -40,7 +40,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
 
     setMessage("");
     setSubmitting(true);
-    const id = `local-${Date.now()}`;
+    const id = globalThis.crypto?.randomUUID?.() || `${Date.now()}`;
 
     if (role === "worker") {
       const profile: WorkerRegistration = {

@@ -123,6 +123,19 @@ function mapWorker(row: WorkerRow): Worker {
   };
 }
 
+async function withTimeout<T>(promise: PromiseLike<T>, ms: number, label: string) {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(label)), ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 async function getSessionUserId() {
   return null;
 }
@@ -152,36 +165,45 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
 
   const radius = Number.parseInt(profile.serviceRadius, 10) || 10;
   const categorySlug = categorySlugFor(profile.skill);
-  const workerId = profile.id.startsWith("worker-") ? profile.id : `worker-${profile.id}`;
+  const workerId = profile.id;
 
-  const { error } = await supabase.from("workers").upsert({
-    id: workerId,
-    user_id: null,
-    name: profile.name,
-    category: profile.skill,
-    category_slug: categorySlug,
-    experience_years: Number.parseInt(profile.experience, 10) || 0,
-    rating: 0,
-    review_count: 0,
-    location: profile.location,
-    city: profile.city,
-    latitude: profile.latitude ?? null,
-    longitude: profile.longitude ?? null,
-    phone: profile.phone,
-    whatsapp: profile.phone,
-    profile_photo: profile.profilePhoto || "",
-    short_description: `${profile.skill} service in ${profile.location}`,
-    bio: `${profile.name} provides ${profile.skill} service from saved location in ${profile.city}.`,
-    service_details: [profile.skill],
-    available_today: profile.availability === "Available Today",
-    starting_price: 0,
-    service_radius: radius,
-    availability_status: profile.availability,
-    service_area: profile.location,
-    verified_status: profile.idVerificationFile ? "Pending" : "Not Submitted"
-  });
+  try {
+    const result = await withTimeout(
+      supabase.from("workers").upsert({
+        id: workerId,
+        user_id: null,
+        name: profile.name,
+        category: profile.skill,
+        category_slug: categorySlug,
+        experience_years: Number.parseInt(profile.experience, 10) || 0,
+        rating: 0,
+        review_count: 0,
+        location: profile.location,
+        city: profile.city,
+        latitude: profile.latitude ?? null,
+        longitude: profile.longitude ?? null,
+        phone: profile.phone,
+        whatsapp: profile.phone,
+        profile_photo: profile.profilePhoto || "",
+        short_description: `${profile.skill} service in ${profile.location}`,
+        bio: `${profile.name} provides ${profile.skill} service from saved location in ${profile.city}.`,
+        service_details: [profile.skill],
+        available_today: profile.availability === "Available Today",
+        starting_price: 0,
+        service_radius: radius,
+        availability_status: profile.availability,
+        service_area: profile.location,
+        verified_status: profile.idVerificationFile ? "Pending" : "Not Submitted"
+      }),
+      8000,
+      "Supabase save timeout. workers table policy/columns/env check karo."
+    );
+    const { error } = result as { error?: { message?: string } | null };
 
-  return { ok: !error, error: error?.message };
+    return { ok: !error, error: error?.message };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Worker save failed." };
+  }
 }
 
 export async function createJobInSupabase(input: Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">) {
