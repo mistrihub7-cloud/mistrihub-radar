@@ -29,6 +29,7 @@ type JobRequestRow = {
 
 type WorkerRow = {
   id: string;
+  created_at?: string | null;
   name: string;
   category?: string;
   skill?: string;
@@ -344,10 +345,21 @@ export async function saveWorkerSettingsToSupabase(settings: { availability: str
 export async function loadWorkersFromSupabase() {
   if (!hasSupabaseConfig || !supabase) return workers;
 
-  const { data, error } = await supabase.from("workers").select("*").order("created_at", { ascending: false });
-  if (error || !data) return workers;
+  try {
+    const result = await withTimeout(supabase.from("workers").select("*"), 8000, "Supabase workers load timeout.");
+    const { data, error } = result as { data?: WorkerRow[] | null; error?: { message?: string } | null };
+    if (error || !data) return workers;
 
-  return (data as WorkerRow[]).map(mapWorker);
+    return [...data]
+      .sort((a, b) => {
+        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bTime - aTime;
+      })
+      .map(mapWorker);
+  } catch {
+    return workers;
+  }
 }
 
 export async function loadWorkerFromSupabase(workerId: string) {

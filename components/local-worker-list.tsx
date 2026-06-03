@@ -52,9 +52,7 @@ export function LocalWorkerList() {
               </div>
               <span className="status-pill status-available">{worker.status}</span>
             </div>
-            <p className="mt-3 text-xs font-bold text-slate-500">
-              Saved locally. Supabase sync will make this visible to everyone after database policy/env is fixed.
-            </p>
+            <p className="mt-3 text-xs font-bold text-slate-500">Newly added worker profile.</p>
           </div>
         </div>
       </div>

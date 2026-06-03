@@ -62,7 +62,12 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       };
       try {
         saveWorkerRegistration(profile);
-        saveWorkerRegistrationToSupabase(profile).catch(() => undefined);
+        const result = await saveWorkerRegistrationToSupabase(profile);
+        if (!result.ok) {
+          setMessage("Profile save nahi hua. Supabase workers table columns, RLS policy, aur Vercel env ek baar check karo.");
+          setSubmitting(false);
+          return;
+        }
         window.location.href = "/workers?created=1";
       } catch (error) {
         setMessage(error instanceof Error ? error.message : "Worker profile save nahi hua.");
@@ -74,7 +79,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     const account: MockAccount = { id, role, name, phone, email };
     try {
       saveMockAccount(account);
-      saveProfileToSupabase(account).catch(() => undefined);
+      await saveProfileToSupabase(account);
       window.location.href = role === "admin" ? "/admin" : "/dashboard/user?created=1";
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Account save nahi hua.");
