@@ -17,7 +17,7 @@ export function MobileTopbar({ title, back = false }: { title?: string; back?: b
         {title ? <h1 className="text-lg font-black">{title}</h1> : null}
       </div>
       <button className="grid h-10 w-10 place-items-center rounded-full text-slate-900">
-        <Icon name={title === "Worker Radar" ? "filter" : "bell"} />
+        <Icon name="bell" />
       </button>
     </div>
   );

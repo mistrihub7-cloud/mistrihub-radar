@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
 import { BookingForm } from "@/components/booking-form";
 import { MobileTopbar } from "@/components/mobile-topbar";
-import { workers } from "@/lib/data";
+import { loadWorkerFromSupabase } from "@/lib/supabase-flow";
 
 export function generateStaticParams() {
-  return workers.map((worker) => ({ workerId: worker.id }));
+  return [];
 }
 
-export default function WorkerBookingPage({ params }: { params: { workerId: string } }) {
-  const worker = workers.find((item) => item.id === params.workerId);
+export default async function WorkerBookingPage({ params }: { params: { workerId: string } }) {
+  const worker = await loadWorkerFromSupabase(params.workerId);
   if (!worker) notFound();
 
   return (

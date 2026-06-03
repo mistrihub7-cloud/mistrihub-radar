@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { categories, topWorkers, workers } from "@/lib/data";
+import { categories } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
 import { LocationLabel } from "@/components/location-label";
 import { Logo } from "@/components/logo";
 import { SectionTitle } from "@/components/section-title";
 import { WorkerCard } from "@/components/worker-card";
+import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 function HeroWorker() {
   return (
@@ -62,7 +63,7 @@ function EmergencyBox() {
   );
 }
 
-function NearbyWorkersPanel() {
+function NearbyWorkersPanel({ workers }: { workers: Awaited<ReturnType<typeof loadWorkersFromSupabase>> }) {
   return (
     <aside className="hidden space-y-4 xl:block">
       <div className="card p-5">
@@ -71,9 +72,13 @@ function NearbyWorkersPanel() {
           Nearby workers serving your area. Exact distance appears only after GPS data is connected.
         </p>
         <div className="space-y-3">
-          {workers.slice(0, 4).map((worker) => (
-            <WorkerCard compact key={worker.name} worker={worker} />
-          ))}
+          {workers.length ? (
+            workers.slice(0, 4).map((worker) => <WorkerCard compact key={worker.id} worker={worker} />)
+          ) : (
+            <div className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-500">
+              No workers registered yet.
+            </div>
+          )}
         </div>
         <Link className="btn-outline mt-4 w-full" href="/workers">
           View Nearby Workers
@@ -114,7 +119,10 @@ function NearbyWorkersPanel() {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const workers = await loadWorkersFromSupabase();
+  const topWorkers = workers.filter((worker) => worker.trust >= 92).slice(0, 4);
+
   return (
     <main className="mobile-shell min-h-screen md:min-h-0 md:bg-transparent">
       <section className="container-page grid gap-7 py-4 md:grid-cols-[1fr_0.9fr] md:py-10 xl:grid-cols-[1.25fr_0.9fr_0.95fr]">
@@ -185,7 +193,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <NearbyWorkersPanel />
+        <NearbyWorkersPanel workers={workers} />
       </section>
 
       <section className="container-page grid gap-5 md:grid-cols-[1.55fr_0.75fr]">
@@ -202,11 +210,17 @@ export default function HomePage() {
       <section className="container-page mt-5">
         <div className="card p-4 md:p-5">
           <SectionTitle actionHref="/workers" title="Nearby Workers" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {workers.slice(0, 4).map((worker) => (
-              <WorkerCard key={worker.name} worker={worker} />
-            ))}
-          </div>
+          {workers.length ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {workers.slice(0, 4).map((worker) => (
+                <WorkerCard key={worker.id} worker={worker} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-slate-50 p-6 text-center text-sm font-bold text-slate-500">
+              No workers registered yet. New Supabase workers will appear here.
+            </div>
+          )}
         </div>
       </section>
 
@@ -226,20 +240,26 @@ export default function HomePage() {
         </div>
         <div className="card p-5">
           <SectionTitle actionHref="/workers" title="Top Rated Workers" />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {topWorkers.map((worker) => (
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3" key={worker.name}>
-                <div className="worker-avatar !h-12 !w-12 !rounded-xl" />
-                <div>
-                  <p className="font-black">{worker.name}</p>
-                  <p className="text-xs text-slate-500">{worker.skill}</p>
-                  <p className="text-xs font-bold text-slate-700">
-                    {worker.rating} ({worker.reviews}) Trust {worker.trust}
-                  </p>
+          {topWorkers.length ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {topWorkers.map((worker) => (
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3" key={worker.id}>
+                  <div className="worker-avatar !h-12 !w-12 !rounded-xl" />
+                  <div>
+                    <p className="font-black">{worker.name}</p>
+                    <p className="text-xs text-slate-500">{worker.skill}</p>
+                    <p className="text-xs font-bold text-slate-700">
+                      {worker.rating} ({worker.reviews}) Trust {worker.trust}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-slate-50 p-6 text-center text-sm font-bold text-slate-500">
+              Top rated workers will appear after worker registrations and reviews.
+            </div>
+          )}
         </div>
       </section>
     </main>

@@ -19,7 +19,6 @@ const paths: Record<string, string> = {
   worker: "M12 3a4 4 0 0 1 4 4H8a4 4 0 0 1 4-4Zm-6 8h12v9H6v-9Z",
   plug: "M8 2v6m8-6v6m-9 0h10v4a5 5 0 0 1-4 4.9V22h-2v-5.1A5 5 0 0 1 7 12V8Z",
   home: "M3 11 12 3l9 8v9h-6v-6H9v6H3v-9Z",
-  radar: "M12 21a9 9 0 1 0-9-9 9 9 0 0 0 9 9Zm0-4a5 5 0 1 0-5-5m5 0 4-4",
   plus: "M12 5v14M5 12h14",
   jobs: "M6 4h12v16H6V4Zm3 4h6M9 12h6M9 16h4",
   user: "M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm-8 9a8 8 0 0 1 16 0",

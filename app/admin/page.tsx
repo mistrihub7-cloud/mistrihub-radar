@@ -1,16 +1,17 @@
 import { Icon } from "@/components/simple-icons";
-import { workers } from "@/lib/data";
-
-const cards = [
-  ["Users", "Auth", "user"],
-  ["Workers", String(workers.length), "worker"],
-  ["Active Jobs", "0", "jobs"],
-  ["Reports", "0", "bell"]
-];
+import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 const sections = ["Workers", "Users", "Job Requests", "Reports", "Reviews", "Verification Status"];
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const workers = await loadWorkersFromSupabase();
+  const cards = [
+    ["Users", "Auth", "user"],
+    ["Workers", String(workers.length), "worker"],
+    ["Active Jobs", "0", "jobs"],
+    ["Reports", "0", "bell"]
+  ];
+
   return (
     <main className="container-page py-8">
       <div className="mb-7">
@@ -39,12 +40,12 @@ export default function AdminPage() {
         <div className="card p-5">
           <h2 className="text-xl font-black">Verification Queue</h2>
           <div className="mt-4 space-y-3">
-            {workers.slice(0, 3).map((worker) => (
+            {workers.length ? workers.slice(0, 3).map((worker) => (
               <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4" key={worker.id}>
                 <span className="font-bold">{worker.name}</span>
                 <span className="status-pill status-available">Review</span>
               </div>
-            ))}
+            )) : <p className="text-sm font-bold text-slate-500">No worker registrations yet.</p>}
           </div>
         </div>
       </div>

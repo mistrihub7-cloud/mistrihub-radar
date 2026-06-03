@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { saveLocationLabel } from "./location-label";
+import { DEFAULT_LOCATION, saveLocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 
 type LocationState = "idle" | "allowed" | "denied" | "unsupported" | "loading";
 
 export function LocationPermission() {
   const [state, setState] = useState<LocationState>("idle");
-  const [area, setArea] = useState("Ranchi, Jharkhand");
+  const [area, setArea] = useState(DEFAULT_LOCATION);
 
   const saveManualArea = (value: string) => {
     setArea(value);

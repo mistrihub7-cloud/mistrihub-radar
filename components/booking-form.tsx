@@ -16,8 +16,8 @@ type BookingFormProps = {
 
 export function BookingForm({ worker, initialService }: BookingFormProps) {
   const router = useRouter();
-  const matchedWorker = worker || workers.find((item) => item.skill === initialService) || workers[0];
-  const [service, setService] = useState(initialService || matchedWorker.skill || categories[0].name);
+  const matchedWorker = worker || workers.find((item) => item.skill === initialService);
+  const [service, setService] = useState(initialService || matchedWorker?.skill || categories[0].name);
   const [problem, setProblem] = useState("");
   const [urgency, setUrgency] = useState<"Normal" | "Urgent" | "Emergency">("Normal");
   const [preferredDate, setPreferredDate] = useState("");
@@ -44,7 +44,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
     setError("");
     setSubmitting(true);
     const input = {
-      workerId: matchedWorker.id,
+      workerId: matchedWorker?.id || "",
       service,
       problem,
       urgency,
@@ -59,16 +59,25 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
 
   return (
     <div className="space-y-5">
-      <div className="card p-4">
-        <p className="text-sm font-black text-brand-600">Selected worker</p>
-        <div className="mt-3 flex items-center gap-3">
-          <div className="worker-avatar" />
-          <div>
-            <h2 className="font-black">{matchedWorker.name}</h2>
-            <p className="text-sm text-slate-500">{matchedWorker.skill} - {matchedWorker.location}, {matchedWorker.city}</p>
+      {matchedWorker ? (
+        <div className="card p-4">
+          <p className="text-sm font-black text-brand-600">Selected worker</p>
+          <div className="mt-3 flex items-center gap-3">
+            <div className="worker-avatar" />
+            <div>
+              <h2 className="font-black">{matchedWorker.name}</h2>
+              <p className="text-sm text-slate-500">{matchedWorker.skill} - {matchedWorker.location}, {matchedWorker.city}</p>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="card p-4">
+          <p className="text-sm font-black text-brand-600">Open job request</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Submit your problem first. Nearby registered workers will review the job before accepting.
+          </p>
+        </div>
+      )}
 
       <label className="block">
         <span className="mb-2 block font-black">Service category</span>

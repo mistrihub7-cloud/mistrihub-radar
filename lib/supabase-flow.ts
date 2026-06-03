@@ -1,4 +1,4 @@
-import { workers } from "./data";
+import { workers, type Worker, type WorkerStatus } from "./data";
 import {
   getMockAccount,
   getMockJob,
@@ -31,12 +31,27 @@ type WorkerRow = {
   id: string;
   name: string;
   category?: string;
+  skill?: string;
   location?: string;
   city?: string;
+  service_area?: string;
+  rating?: number | string | null;
+  review_count?: number | null;
+  reviews?: number | null;
+  trust_score?: number | null;
+  trust?: number | null;
+  jobs_completed?: number | null;
+  jobs?: number | null;
+  availability_status?: string | null;
+  available_today?: boolean | null;
+  service_radius?: number | null;
+  fast_response_time?: number | null;
+  phone?: string | null;
+  whatsapp?: string | null;
 };
 
 function findWorker(workerId?: string | null) {
-  return workers.find((worker) => worker.id === workerId) || workers[0];
+  return workers.find((worker) => worker.id === workerId);
 }
 
 function categorySlugFor(name: string) {
@@ -57,8 +72,8 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
   const worker = findWorker(row.worker_id);
   return {
     id: row.id,
-    workerId: row.worker_id || worker.id,
-    workerName: workerRow?.name || worker.name,
+    workerId: row.worker_id || worker?.id || "",
+    workerName: workerRow?.name || worker?.name || "Nearby workers",
     service: row.service,
     problem: row.problem_description,
     urgency: row.urgency,
@@ -69,6 +84,38 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
     status: row.status,
     createdAt: row.created_at,
     workerQuestion: ""
+  };
+}
+
+function normalizeStatus(value?: string | null, availableToday?: boolean | null): WorkerStatus {
+  if (value === "Available Today" || value === "Busy" || value === "Not Available") return value;
+  return availableToday === false ? "Not Available" : "Available Today";
+}
+
+function normalizeRadius(value?: number | null): 5 | 10 | 15 | 20 {
+  return value === 5 || value === 10 || value === 15 || value === 20 ? value : 10;
+}
+
+function mapWorker(row: WorkerRow): Worker {
+  const status = normalizeStatus(row.availability_status, row.available_today);
+  const rating = row.rating == null ? "0.0" : String(row.rating);
+  return {
+    id: row.id,
+    name: row.name || "Worker",
+    skill: row.category || row.skill || "Worker",
+    location: row.location || row.service_area || "Service area",
+    city: row.city || "City",
+    distance: "Distance after location",
+    rating,
+    reviews: Number(row.review_count ?? row.reviews ?? 0),
+    trust: Number(row.trust_score ?? row.trust ?? 70),
+    jobs: Number(row.jobs_completed ?? row.jobs ?? 0),
+    response: row.fast_response_time ? `${row.fast_response_time} min` : "After request",
+    status,
+    serviceRadius: normalizeRadius(row.service_radius),
+    distanceKm: 0,
+    phone: row.phone || undefined,
+    whatsapp: row.whatsapp || undefined
   };
 }
 
@@ -170,7 +217,7 @@ export async function createJobInSupabase(input: Omit<MockJobRequest, "id" | "cr
     .insert({
       id,
       user_id: userId,
-      worker_id: input.workerId,
+      worker_id: input.workerId || null,
       service: input.service,
       problem_description: input.problem,
       urgency: input.urgency,
@@ -290,4 +337,22 @@ export async function saveWorkerSettingsToSupabase(settings: { availability: str
     .eq("user_id", userId);
 
   return { ok: !error, error: error?.message };
+}
+
+export async function loadWorkersFromSupabase() {
+  if (!hasSupabaseConfig || !supabase) return workers;
+
+  const { data, error } = await supabase.from("workers").select("*").order("created_at", { ascending: false });
+  if (error || !data) return workers;
+
+  return (data as WorkerRow[]).map(mapWorker);
+}
+
+export async function loadWorkerFromSupabase(workerId: string) {
+  if (!hasSupabaseConfig || !supabase) return workers.find((worker) => worker.id === workerId) || null;
+
+  const { data, error } = await supabase.from("workers").select("*").eq("id", workerId).maybeSingle();
+  if (error || !data) return workers.find((worker) => worker.id === workerId) || null;
+
+  return mapWorker(data as WorkerRow);
 }

@@ -88,12 +88,12 @@ export function getMockJob(jobId: string) {
 }
 
 export function createMockJob(input: Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">) {
-  const worker = workers.find((item) => item.id === input.workerId) || workers[0];
+  const worker = workers.find((item) => item.id === input.workerId);
   const job: MockJobRequest = {
     ...input,
     id: `MH${Date.now().toString().slice(-6)}`,
-    workerId: worker.id,
-    workerName: worker.name,
+    workerId: worker?.id || input.workerId || "",
+    workerName: worker?.name || "Nearby workers",
     createdAt: new Date().toISOString(),
     status: "Requested"
   };

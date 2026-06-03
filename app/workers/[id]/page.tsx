@@ -3,14 +3,14 @@ import { notFound } from "next/navigation";
 import { ContactActions } from "@/components/contact-actions";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { Icon } from "@/components/simple-icons";
-import { workers } from "@/lib/data";
+import { loadWorkerFromSupabase } from "@/lib/supabase-flow";
 
 export function generateStaticParams() {
-  return workers.map((worker) => ({ id: worker.id }));
+  return [];
 }
 
-export default function WorkerProfilePage({ params }: { params: { id: string } }) {
-  const worker = workers.find((item) => item.id === params.id);
+export default async function WorkerProfilePage({ params }: { params: { id: string } }) {
+  const worker = await loadWorkerFromSupabase(params.id);
   if (!worker) notFound();
 
   const services = [

@@ -3,11 +3,13 @@ import { LocationLabel } from "@/components/location-label";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { Icon } from "@/components/simple-icons";
 import { WorkerCard } from "@/components/worker-card";
-import { discoveryRules, workers } from "@/lib/data";
+import { discoveryRules } from "@/lib/data";
+import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 const tabs = ["All", "Available Today", "Busy", "Not Available"];
 
-export default function WorkersPage({ searchParams }: { searchParams?: { status?: string; service?: string } }) {
+export default async function WorkersPage({ searchParams }: { searchParams?: { status?: string; service?: string } }) {
+  const workers = await loadWorkersFromSupabase();
   const selectedStatus = searchParams?.status || "All";
   const selectedService = searchParams?.service || "";
   const matchingWorkers = [...workers]
@@ -101,9 +103,9 @@ export default function WorkersPage({ searchParams }: { searchParams?: { status?
             </div>
 
             <div className="space-y-4">
-              {!matchingWorkers.length ? <div className="card p-6 text-center text-sm font-bold text-slate-500">No workers found in your area.</div> : null}
+              {!matchingWorkers.length ? <div className="card p-6 text-center text-sm font-bold text-slate-500">No workers registered yet. New Supabase workers will appear here.</div> : null}
               {matchingWorkers.map((worker) => (
-                <WorkerCard key={worker.name} worker={worker} />
+                <WorkerCard key={worker.id} worker={worker} />
               ))}
             </div>
           </section>
