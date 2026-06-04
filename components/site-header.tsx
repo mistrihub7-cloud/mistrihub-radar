@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { clearMistriHubSession } from "@/lib/mock-store";
 import { LocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 import { Logo } from "./logo";
+import { useAccountState } from "./use-account-state";
 
 const links = [
   ["Home", "/"],
@@ -17,6 +19,8 @@ const links = [
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const { account, ready } = useAccountState();
+  const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : account?.role === "admin" ? "/admin" : "/dashboard/user";
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -46,14 +50,32 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="flex gap-4">
-          <Link className="btn-outline w-24" href="/login">
-            Login
-          </Link>
-          <Link className="btn-primary w-24" href="/signup">
-            Register
-          </Link>
-        </div>
+        {ready && account ? (
+          <div className="flex items-center gap-3">
+            <Link className="rounded-xl bg-brand-50 px-4 py-3 text-sm font-black text-brand-700" href={dashboardHref}>
+              Hi, {account.name || account.role}
+            </Link>
+            <button
+              className="btn-outline w-24"
+              onClick={() => {
+                clearMistriHubSession();
+                window.location.replace("/login");
+              }}
+              type="button"
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-4">
+            <Link className="btn-outline w-24" href="/login">
+              Login
+            </Link>
+            <Link className="btn-primary w-24" href="/signup">
+              Register
+            </Link>
+          </div>
+        )}
       </div>
     </header>
   );

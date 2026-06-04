@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { saveMockAccount, type MockRole } from "@/lib/mock-store";
+import { useAccountState } from "./use-account-state";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -13,6 +14,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<MockRole>("user");
   const isRegister = mode === "register";
+  const { account } = useAccountState();
+  const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : account?.role === "admin" ? "/admin" : "/dashboard/user";
 
   async function handleSubmit() {
     if (!identifier) {
@@ -38,6 +41,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       return;
     }
     router.push(role === "worker" ? "/dashboard/worker" : "/dashboard/user");
+  }
+
+  if (account) {
+    return (
+      <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-50 p-4 text-center">
+        <p className="font-black text-brand-700">Aap already login hain.</p>
+        <p className="mt-1 text-sm font-bold text-slate-600">{account.name || account.role}</p>
+        <Link className="btn-primary mt-4 w-full" href={dashboardHref}>
+          Go to Dashboard
+        </Link>
+      </div>
+    );
   }
 
   return (
