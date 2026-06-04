@@ -34,7 +34,8 @@ const paths: Record<string, string> = {
   water: "M12 2s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Zm-3 12a3 3 0 0 0 5 2",
   camera: "M4 7h4l2-3h4l2 3h4v12H4V7Zm8 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
   tiles: "M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z",
-  leaf: "M20 4C10 4 5 9 5 16a4 4 0 0 0 4 4c7 0 11-6 11-16ZM5 20c3-6 8-9 15-16"
+  leaf: "M20 4C10 4 5 9 5 16a4 4 0 0 0 4 4c7 0 11-6 11-16ZM5 20c3-6 8-9 15-16",
+  car: "M5 12 7 7h10l2 5M4 12h16v6H4v-6Zm3 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm10 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
 };
 
 export function Icon({ name, className = "h-5 w-5" }: IconProps) {
