@@ -20,6 +20,10 @@ export type MockJobRequest = {
   preferredDate: string;
   preferredTime: string;
   area: string;
+  customerName?: string;
+  customerPhone?: string;
+  userLatitude?: number;
+  userLongitude?: number;
   photoPreview?: string;
   photoPreview2?: string;
   status:

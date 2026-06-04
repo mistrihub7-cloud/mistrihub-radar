@@ -13,7 +13,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [identifier, setIdentifier] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<MockRole>("user");
+  const [role, setRole] = useState<Extract<MockRole, "user" | "worker">>("user");
   const isRegister = mode === "register";
   const { account } = useAccountState();
   const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : account?.role === "admin" ? "/admin" : "/dashboard/user";
@@ -38,10 +38,6 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     saveMockAccount(account);
     setLoading(false);
 
-    if (role === "admin") {
-      router.push("/admin");
-      return;
-    }
     router.push(role === "worker" ? "/dashboard/worker" : "/dashboard/user");
   }
 
@@ -61,8 +57,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     <form className="mt-5 space-y-4" onSubmit={(event) => event.preventDefault()}>
       <div>
         <span className="mb-2 block text-sm font-bold">Login role</span>
-        <div className="grid grid-cols-3 gap-2">
-          {(["user", "worker", "admin"] as const).map((item) => (
+        <div className="grid grid-cols-2 gap-2">
+          {(["user", "worker"] as const).map((item) => (
             <button
               className={`h-11 rounded-xl border text-sm font-black ${role === item ? "border-brand-600 bg-brand-50 text-brand-600" : "border-slate-200 bg-white"}`}
               key={item}

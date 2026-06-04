@@ -10,7 +10,7 @@ import { SuccessPopup } from "./success-popup";
 
 export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole }) {
   const router = useRouter();
-  const [role, setRole] = useState<MockRole>(defaultRole);
+  const [role, setRole] = useState<Extract<MockRole, "user" | "worker">>(defaultRole === "worker" ? "worker" : "user");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -44,49 +44,51 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     setSubmitting(true);
     const id = globalThis.crypto?.randomUUID?.() || `${Date.now()}`;
 
-    if (role === "worker") {
-      const profile: WorkerRegistration = {
-        id,
-        role: "worker",
-        name,
-        phone,
-        email,
-        skill,
-        experience,
-        city,
-        location: location || `Location pending, ${city}`,
-        latitude,
-        longitude,
-        serviceRadius,
-        availability,
-        profilePhoto,
-        idVerificationFile: idFile ? "Selected" : ""
-      };
+    if (role === "user") {
+      const account: MockAccount = { id, role: "user", name, phone, email };
       try {
-        saveWorkerRegistration(profile);
-        const result = await saveWorkerRegistrationToSupabase(profile);
-        if (!result.ok) {
-          setMessage("Profile save nahi hua. Supabase workers table columns, RLS policy, aur Vercel env ek baar check karo.");
-          setSubmitting(false);
-          return;
-        }
+        saveMockAccount(account);
+        await saveProfileToSupabase(account);
         setShowSuccess(true);
         setSubmitting(false);
-        window.setTimeout(() => router.replace(`/workers/${id}`), 1200);
+        window.setTimeout(() => router.replace("/dashboard/user?created=1"), 1000);
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Worker profile save nahi hua.");
+        setMessage(error instanceof Error ? error.message : "User account save nahi hua.");
         setSubmitting(false);
       }
       return;
     }
 
-    const account: MockAccount = { id, role, name, phone, email };
+    const profile: WorkerRegistration = {
+      id,
+      role: "worker",
+      name,
+      phone,
+      email,
+      skill,
+      experience,
+      city,
+      location: location || `Location pending, ${city}`,
+      latitude,
+      longitude,
+      serviceRadius,
+      availability,
+      profilePhoto,
+      idVerificationFile: idFile ? "Selected" : ""
+    };
     try {
-      saveMockAccount(account);
-      await saveProfileToSupabase(account);
-      window.location.href = role === "admin" ? "/admin" : "/dashboard/user?created=1";
+      saveWorkerRegistration(profile);
+      const result = await saveWorkerRegistrationToSupabase(profile);
+      if (!result.ok) {
+        setMessage("Profile save nahi hua. Supabase workers table columns, RLS policy, aur Vercel env ek baar check karo.");
+        setSubmitting(false);
+        return;
+      }
+      setShowSuccess(true);
+      setSubmitting(false);
+      window.setTimeout(() => router.replace(`/workers/${id}`), 1200);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Account save nahi hua.");
+      setMessage(error instanceof Error ? error.message : "Worker profile save nahi hua.");
       setSubmitting(false);
     }
   }
@@ -114,7 +116,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
 
   return (
     <div className="card p-5">
-      {showSuccess ? <SuccessPopup /> : null}
+      {showSuccess ? <SuccessPopup message={role === "worker" ? "Registration completed" : "Account created successfully"} /> : null}
       <div className="grid grid-cols-2 gap-3">
         {(["user", "worker"] as const).map((item) => (
           <button
@@ -192,7 +194,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       <button className="btn-primary relative z-10 mt-5 w-full" disabled={submitting} onClick={submit} type="button">
         {submitting ? "Saving..." : role === "worker" ? "Create Worker Profile" : "Create Account"}
       </button>
-      <p className="mt-3 text-xs leading-5 text-slate-500">Authentication is temporarily disabled. Worker registration saves directly to the workers table.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-500">Authentication is temporarily disabled. User profile saves locally; worker registration saves to workers table.</p>
     </div>
   );
 }

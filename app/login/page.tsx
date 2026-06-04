@@ -1,14 +1,8 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
 
-type LoginPageProps = {
-  searchParams?: {
-    mode?: string;
-  };
-};
-
-export default function LoginPage({ searchParams }: LoginPageProps) {
-  const isRegister = searchParams?.mode === "register";
+export default function LoginPage() {
+  const isRegister = false;
 
   return (
     <main className="mobile-shell min-h-screen">

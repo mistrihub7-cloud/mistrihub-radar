@@ -33,9 +33,11 @@ type JobRequestRow = {
 
 type WorkerRow = {
   id: string;
+  user_id?: string | null;
   created_at?: string | null;
   name: string;
   category?: string;
+  category_slug?: string | null;
   skill?: string;
   location?: string;
   city?: string;
@@ -57,6 +59,8 @@ type WorkerRow = {
   whatsapp?: string | null;
   profile_photo?: string | null;
 };
+
+type CreateJobInput = Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">;
 
 const JOB_SELECT =
   "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at,quote_amount,quote_note,quote_eta";
@@ -113,6 +117,37 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
 function normalizeStatus(value?: string | null, availableToday?: boolean | null): WorkerStatus {
   if (value === "Available Today" || value === "Busy" || value === "Not Available") return value;
   return availableToday === false ? "Not Available" : "Available Today";
+}
+
+function toRadians(value: number) {
+  return (value * Math.PI) / 180;
+}
+
+function distanceKm(from: { latitude: number; longitude: number }, to: { latitude: number; longitude: number }) {
+  const earthRadiusKm = 6371;
+  const latitudeDelta = toRadians(to.latitude - from.latitude);
+  const longitudeDelta = toRadians(to.longitude - from.longitude);
+  const a =
+    Math.sin(latitudeDelta / 2) * Math.sin(latitudeDelta / 2) +
+    Math.cos(toRadians(from.latitude)) *
+      Math.cos(toRadians(to.latitude)) *
+      Math.sin(longitudeDelta / 2) *
+      Math.sin(longitudeDelta / 2);
+
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function isValidCoordinate(latitude?: number, longitude?: number) {
+  return (
+    typeof latitude === "number" &&
+    typeof longitude === "number" &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180
+  );
 }
 
 function normalizeRadius(value?: number | null): 5 | 10 | 15 | 20 {
@@ -227,7 +262,71 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
   }
 }
 
-export async function createJobInSupabase(input: Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">) {
+async function loadMatchingWorkersForJob(input: CreateJobInput) {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase.from("workers").select("*").range(0, 999);
+  if (error || !data) return [];
+
+  const selectedCategorySlug = categorySlugFor(input.service);
+  const hasUserCoordinates = isValidCoordinate(input.userLatitude, input.userLongitude);
+
+  return (data as WorkerRow[])
+    .filter((worker) => {
+      if (input.workerId) return worker.id === input.workerId;
+
+      const workerCategorySlug = worker.category_slug || categorySlugFor(worker.category || worker.skill || "");
+      if (workerCategorySlug !== selectedCategorySlug) return false;
+
+      const status = normalizeStatus(worker.availability_status, worker.available_today);
+      if (status === "Not Available") return false;
+
+      if (!hasUserCoordinates || !isValidCoordinate(worker.latitude ?? undefined, worker.longitude ?? undefined)) return true;
+
+      const distance = distanceKm(
+        { latitude: input.userLatitude as number, longitude: input.userLongitude as number },
+        { latitude: worker.latitude as number, longitude: worker.longitude as number }
+      );
+      const radius = Number(worker.service_radius || 10);
+      return distance <= radius;
+    })
+    .sort((a, b) => {
+      const aStatus = normalizeStatus(a.availability_status, a.available_today);
+      const bStatus = normalizeStatus(b.availability_status, b.available_today);
+      if (aStatus !== bStatus) return aStatus === "Available Today" ? -1 : 1;
+      return Number(b.trust_score ?? b.trust ?? 70) - Number(a.trust_score ?? a.trust ?? 70);
+    })
+    .slice(0, 25);
+}
+
+async function notifyMatchingWorkers(jobId: string, input: CreateJobInput) {
+  if (!supabase) return;
+
+  const matchingWorkers = await loadMatchingWorkersForJob(input);
+  if (!matchingWorkers.length) return;
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mistrihub-radar.vercel.app";
+  const requestUrl = `${siteUrl}/jobs/${jobId}`;
+  const summary = input.problem.trim().slice(0, 120);
+
+  const websiteNotifications = matchingWorkers.map((worker) => ({
+    user_id: worker.user_id || null,
+    title: "New job request",
+    message: `${input.service} request in ${input.area}. ${input.urgency}. ${summary}`,
+    type: "new_job_request"
+  }));
+
+  const whatsappNotifications = matchingWorkers.map((worker) => ({
+    user_id: worker.user_id || null,
+    title: "WhatsApp: new job request",
+    message: `New job request\nService: ${input.service}\nArea: ${input.area}\nProblem: ${summary}\nOpen: ${requestUrl}`,
+    type: "whatsapp_notification"
+  }));
+
+  await supabase.from("notifications").insert([...websiteNotifications, ...whatsappNotifications]);
+}
+
+export async function createJobInSupabase(input: CreateJobInput) {
   if (!hasSupabaseConfig || !supabase) {
     return null;
   }
@@ -255,15 +354,18 @@ export async function createJobInSupabase(input: Omit<MockJobRequest, "id" | "cr
 
   if (error || !data) return null;
 
+  await supabase
+    .from("job_requests")
+    .update({
+      customer_name: input.customerName || null,
+      customer_phone: input.customerPhone || null,
+      user_latitude: input.userLatitude ?? null,
+      user_longitude: input.userLongitude ?? null
+    })
+    .eq("id", id);
+
   await supabase.from("job_status_history").insert({ job_id: id, status: "Requested", note: "Job request created" });
-  if (userId) {
-    await supabase.from("notifications").insert({
-      user_id: userId,
-      title: "Job request created",
-      message: `${input.service} request sent to worker.`,
-      type: "new_job_request"
-    });
-  }
+  await notifyMatchingWorkers(id, input);
 
   return mapJob(data as JobRequestRow);
 }

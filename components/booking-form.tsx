@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { categories, workers, type Worker } from "@/lib/data";
-import { createMockJob } from "@/lib/mock-store";
-import { createJobInSupabase } from "@/lib/supabase-flow";
-import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
+import { createMockJob, getMockAccount, saveMockAccount } from "@/lib/mock-store";
+import { createJobInSupabase, saveProfileToSupabase } from "@/lib/supabase-flow";
+import { DEFAULT_LOCATION, LOCATION_KEY, LOCATION_LAT_KEY, LOCATION_LNG_KEY } from "./location-label";
 import { FilePreviewInput } from "./file-preview-input";
 import { Icon } from "./simple-icons";
 
@@ -17,6 +17,12 @@ type BookingFormProps = {
 export function BookingForm({ worker, initialService }: BookingFormProps) {
   const router = useRouter();
   const matchedWorker = worker || workers.find((item) => item.skill === initialService);
+  const savedContact =
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("mistrihub.bookingContact") || "{}") as { name?: string; phone?: string }
+      : {};
+  const [customerName, setCustomerName] = useState(savedContact.name || "");
+  const [customerPhone, setCustomerPhone] = useState(savedContact.phone || "");
   const [service, setService] = useState(initialService || matchedWorker?.skill || categories[0].name);
   const [problem, setProblem] = useState("");
   const [urgency, setUrgency] = useState<"Normal" | "Urgent" | "Emergency">("Normal");
@@ -29,6 +35,10 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
   const [submitting, setSubmitting] = useState(false);
 
   async function submitRequest() {
+    if (!customerName.trim() || !customerPhone.trim()) {
+      setError("Booking ke liye naam aur phone/WhatsApp number zaroori hai.");
+      return;
+    }
     if (!problem.trim()) {
       setError("Problem description zaroori hai.");
       return;
@@ -40,6 +50,23 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
 
     setError("");
     setSubmitting(true);
+    const rawLatitude = localStorage.getItem(LOCATION_LAT_KEY);
+    const rawLongitude = localStorage.getItem(LOCATION_LNG_KEY);
+    const userLatitude = rawLatitude ? Number(rawLatitude) : undefined;
+    const userLongitude = rawLongitude ? Number(rawLongitude) : undefined;
+    localStorage.setItem("mistrihub.bookingContact", JSON.stringify({ name: customerName.trim(), phone: customerPhone.trim() }));
+    const currentAccount = getMockAccount();
+    if (!currentAccount || currentAccount.role === "user") {
+      const account = {
+        id: currentAccount?.id || globalThis.crypto?.randomUUID?.() || `local-${Date.now()}`,
+        role: "user" as const,
+        name: customerName.trim(),
+        phone: customerPhone.trim(),
+        email: currentAccount?.email
+      };
+      saveMockAccount(account);
+      await saveProfileToSupabase(account);
+    }
     const input = {
       workerId: matchedWorker?.id || "",
       service,
@@ -48,6 +75,10 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
       preferredDate,
       preferredTime,
       area,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      userLatitude: Number.isFinite(userLatitude) ? userLatitude : undefined,
+      userLongitude: Number.isFinite(userLongitude) ? userLongitude : undefined,
       photoPreview,
       photoPreview2
     };
@@ -81,6 +112,20 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
           </p>
         </div>
       )}
+
+      <div className="card p-4">
+        <p className="text-sm font-black text-brand-600">Your booking details</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-2 block font-black">Your name</span>
+            <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" onChange={(event) => setCustomerName(event.target.value)} placeholder="Full name" value={customerName} />
+          </label>
+          <label className="block">
+            <span className="mb-2 block font-black">Phone / WhatsApp</span>
+            <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" inputMode="tel" onChange={(event) => setCustomerPhone(event.target.value)} placeholder="+91 mobile number" value={customerPhone} />
+          </label>
+        </div>
+      </div>
 
       <label className="block">
         <span className="mb-2 block font-black">Service category</span>
