@@ -12,9 +12,9 @@ function MenuRow({ href, icon, label, value }: { href: string; icon: string; lab
   return (
     <Link className="flex items-center gap-4 border-b border-slate-100 py-4" href={href}>
       <span className="grid h-10 w-10 place-items-center rounded-xl text-brand-600">
-        <Icon className="h-7 w-7" name={icon} />
+        <Icon className="h-6 w-6" name={icon} />
       </span>
-      <span className="flex-1 text-lg font-black text-slate-950">{label}</span>
+      <span className="flex-1 text-base font-black text-slate-950">{label}</span>
       {value ? <span className="text-sm font-black text-slate-700">{value}</span> : null}
       <span className="text-2xl font-bold text-slate-400">&gt;</span>
     </Link>
@@ -56,8 +56,8 @@ export function UserDashboardClient() {
         <div className="flex items-center gap-4">
           <div className="worker-avatar !h-20 !w-20" />
           <div>
-            <h1 className="text-3xl font-black leading-tight text-slate-950">Hello, {accountName}</h1>
-            <p className="text-lg font-bold text-slate-500">{location}</p>
+            <h1 className="text-2xl font-black leading-tight text-slate-950 md:text-3xl">Hello, {accountName}</h1>
+            <p className="text-base font-bold text-slate-500">{location}</p>
           </div>
         </div>
         <button className="grid h-12 w-12 place-items-center rounded-full text-slate-900" type="button">
@@ -78,7 +78,7 @@ export function UserDashboardClient() {
           ].map(([label, value, tone]) => (
             <div className={`rounded-2xl p-4 ${tone}`} key={label}>
               <p className="text-sm font-black">{label}</p>
-              <p className="mt-3 text-4xl font-black text-slate-950">{value}</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
             </div>
           ))}
         </div>

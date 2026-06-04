@@ -11,9 +11,9 @@ function MenuRow({ href, icon, label, value, badge }: { href: string; icon: stri
   return (
     <Link className="flex items-center gap-4 border-b border-slate-100 py-4" href={href}>
       <span className="grid h-10 w-10 place-items-center rounded-xl text-brand-600">
-        <Icon className="h-7 w-7" name={icon} />
+        <Icon className="h-6 w-6" name={icon} />
       </span>
-      <span className="flex-1 text-lg font-black text-slate-950">{label}</span>
+      <span className="flex-1 text-base font-black text-slate-950">{label}</span>
       {badge ? <span className="grid h-8 w-8 place-items-center rounded-full bg-red-500 text-sm font-black text-white">{badge}</span> : null}
       {value ? <span className="text-sm font-black text-slate-700">{value}</span> : null}
       <span className="text-2xl font-bold text-slate-400">&gt;</span>
@@ -27,6 +27,7 @@ export function WorkerDashboardClient() {
   const [serviceRadius, setServiceRadius] = useState("10 km");
   const [profile, setProfile] = useState<WorkerRegistration | null>(null);
   const [accountName, setAccountName] = useState("Worker");
+  const availabilityOptions = ["Available Today", "Busy", "Not Available"];
 
   useEffect(() => {
     async function loadDashboard() {
@@ -72,8 +73,8 @@ export function WorkerDashboardClient() {
             <div className="worker-avatar !h-20 !w-20" />
           )}
           <div>
-            <h1 className="text-3xl font-black leading-tight text-slate-950">Hello, {accountName}</h1>
-            <p className="text-lg font-bold text-slate-500">{profile?.skill || "Worker profile"}</p>
+            <h1 className="text-2xl font-black leading-tight text-slate-950 md:text-3xl">Hello, {accountName}</h1>
+            <p className="text-base font-bold text-slate-500">{profile?.skill || "Worker profile"}</p>
           </div>
         </div>
         <button className="relative grid h-12 w-12 place-items-center rounded-full text-slate-900" type="button">
@@ -82,21 +83,37 @@ export function WorkerDashboardClient() {
         </button>
       </div>
 
-      <button
-        className={`flex w-full items-center justify-between rounded-2xl p-5 text-left ${
-          availability === "Available Today" ? "bg-emerald-50 text-emerald-900" : "bg-slate-100 text-slate-700"
-        }`}
-        onClick={() => saveAvailability(availability === "Available Today" ? "Not Available" : "Available Today")}
-        type="button"
-      >
-        <span className="flex items-center gap-3 text-2xl font-black">
-          <Icon className="h-7 w-7 text-emerald-600" name="shield" />
-          {availability === "Available Today" ? "Available Now" : "Not Available"}
-        </span>
-        <span className={`h-12 w-20 rounded-full p-1 ${availability === "Available Today" ? "bg-emerald-500" : "bg-slate-400"}`}>
-          <span className={`block h-10 w-10 rounded-full bg-white transition ${availability === "Available Today" ? "translate-x-8" : ""}`} />
-        </span>
-      </button>
+      <section className="card p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <Icon className="h-5 w-5 text-brand-600" name="shield" />
+          <h2 className="font-black text-slate-950">Worker status</h2>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {availabilityOptions.map((item) => {
+            const active = availability === item;
+            const label = item === "Available Today" ? "Available" : item;
+            const activeClass =
+              item === "Available Today"
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : item === "Busy"
+                  ? "bg-orange-500 text-white border-orange-500"
+                  : "bg-slate-800 text-white border-slate-800";
+            return (
+              <button
+                className={`min-h-11 rounded-xl border px-2 text-xs font-black transition ${
+                  active ? activeClass : "border-slate-200 bg-white text-slate-700"
+                }`}
+                key={item}
+                onClick={() => saveAvailability(item)}
+                type="button"
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-3 text-xs font-bold text-slate-500">Current: {availability === "Available Today" ? "Available" : availability}</p>
+      </section>
 
       <div className="grid grid-cols-3 gap-4">
         {[
@@ -106,7 +123,7 @@ export function WorkerDashboardClient() {
         ].map(([label, value]) => (
           <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm" key={label}>
             <p className="text-sm font-black text-slate-600">{label}</p>
-            <p className="mt-3 text-4xl font-black text-slate-950">{value}</p>
+            <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
           </div>
         ))}
       </div>
@@ -115,8 +132,7 @@ export function WorkerDashboardClient() {
         <MenuRow badge={activeRequests ? activeRequests.toString() : undefined} href="/worker-request" icon="jobs" label="New Job Requests" />
         <MenuRow href="/jobs" icon="calendar" label="My Jobs" />
         <MenuRow href="/jobs" icon="star" label="Reviews" value="New" />
-        <MenuRow href="/worker/profile" icon="user" label="My Profile" />
-        <MenuRow href="/worker/register" icon="jobs" label="Documents Verification" />
+        <MenuRow href="/worker/profile" icon="user" label="Edit Profile" />
         <button className="flex w-full items-center gap-4 py-4 text-left" onClick={logout} type="button">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-red-600">
             <Icon className="h-7 w-7" name="user" />
