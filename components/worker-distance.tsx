@@ -28,10 +28,17 @@ function distanceKm(from: { latitude: number; longitude: number }, to: { latitud
   return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function isValidCoordinate(latitude: number, longitude: number) {
+  return Number.isFinite(latitude) && Number.isFinite(longitude) && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+}
+
 function parseSavedCoordinates() {
-  const savedLatitude = Number(localStorage.getItem(LOCATION_LAT_KEY));
-  const savedLongitude = Number(localStorage.getItem(LOCATION_LNG_KEY));
-  if (Number.isFinite(savedLatitude) && Number.isFinite(savedLongitude)) {
+  const rawLatitude = localStorage.getItem(LOCATION_LAT_KEY);
+  const rawLongitude = localStorage.getItem(LOCATION_LNG_KEY);
+  if (rawLatitude && rawLongitude) {
+    const savedLatitude = Number(rawLatitude);
+    const savedLongitude = Number(rawLongitude);
+    if (!isValidCoordinate(savedLatitude, savedLongitude)) return null;
     return { latitude: savedLatitude, longitude: savedLongitude };
   }
 
@@ -41,7 +48,7 @@ function parseSavedCoordinates() {
 
   const latitude = Number(match[1]);
   const longitude = Number(match[2]);
-  return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+  return isValidCoordinate(latitude, longitude) ? { latitude, longitude } : null;
 }
 
 export function WorkerDistance({ workerLatitude, workerLongitude, missingWorkerText = "Unavailable", missingUserText = "Set location" }: WorkerDistanceProps) {
