@@ -9,6 +9,9 @@ import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 const tabs = ["All", "Available Today", "Busy", "Not Available"];
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function WorkersPage({ searchParams }: { searchParams?: { status?: string; service?: string } }) {
   const workers = await loadWorkersFromSupabase();
   const selectedStatus = searchParams?.status || "All";

@@ -415,7 +415,11 @@ export async function loadWorkersFromSupabase() {
   if (!hasSupabaseConfig || !supabase) return workers;
 
   try {
-    const result = await withTimeout(supabase.from("workers").select("*"), 8000, "Supabase workers load timeout.");
+    const result = await withTimeout(
+      supabase.from("workers").select("*").order("created_at", { ascending: false }).range(0, 999),
+      8000,
+      "Supabase workers load timeout."
+    );
     const { data, error } = result as { data?: WorkerRow[] | null; error?: { message?: string } | null };
     if (error || !data) return workers;
 

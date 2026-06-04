@@ -9,6 +9,7 @@ import { LocalWorkerList } from "@/components/local-worker-list";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function HeroWorker({ className = "h-auto w-full object-contain" }: { className?: string }) {
   return (

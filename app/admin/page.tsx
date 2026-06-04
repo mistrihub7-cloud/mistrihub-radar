@@ -3,6 +3,9 @@ import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 const sections = ["Workers", "Users", "Job Requests", "Reports", "Reviews", "Verification Status"];
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminPage() {
   const workers = await loadWorkersFromSupabase();
   const cards = [
