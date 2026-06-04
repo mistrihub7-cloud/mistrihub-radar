@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ContactActions } from "@/components/contact-actions";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { Icon } from "@/components/simple-icons";
+import { WorkerDistance } from "@/components/worker-distance";
 import { loadWorkerFromSupabase } from "@/lib/supabase-flow";
 
 export function generateStaticParams() {
@@ -27,24 +28,29 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
         <div className="space-y-5">
           <div className="card p-5">
             <div className="flex items-start gap-4">
-              <div className="worker-avatar !h-20 !w-20" />
+              {worker.profilePhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img alt={worker.name} className="h-20 w-20 rounded-full object-cover shadow-sm" src={worker.profilePhoto} />
+              ) : (
+                <div className="worker-avatar !h-20 !w-20" />
+              )}
               <div className="min-w-0 flex-1">
                 <span className="status-pill status-available">{worker.status}</span>
                 <h1 className="mt-3 text-3xl font-black">{worker.name}</h1>
                 <p className="text-sm font-bold text-slate-600">{worker.skill}</p>
-                <p className="mt-1 text-sm text-slate-500">{worker.location}, {worker.city}</p>
+                <p className="mt-1 text-sm text-slate-500">{worker.city || "City not saved"}</p>
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
-                ["Rating", `${worker.rating} (${worker.reviews})`],
-                ["Trust Score", worker.trust.toString()],
-                ["Distance", "GPS pending"],
-                ["Service Radius", "Set by worker"]
-              ].map(([label, value]) => (
-                <div className="rounded-2xl bg-slate-50 p-3 text-center" key={label}>
-                  <p className="text-xs font-bold text-slate-500">{label}</p>
-                  <p className="mt-1 font-black">{value}</p>
+                { label: "Rating", value: `${worker.rating} (${worker.reviews})` },
+                { label: "Trust Score", value: worker.trust.toString() },
+                { label: "Distance", value: <WorkerDistance workerLatitude={worker.latitude} workerLongitude={worker.longitude} /> },
+                { label: "Service Radius", value: `${worker.serviceRadius} km` }
+              ].map((item) => (
+                <div className="rounded-2xl bg-slate-50 p-3 text-center" key={item.label}>
+                  <p className="text-xs font-bold text-slate-500">{item.label}</p>
+                  <p className="mt-1 font-black">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -53,7 +59,7 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
           <div className="card p-5">
             <h2 className="text-xl font-black">About worker</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              {worker.name} provides {worker.skill.toLowerCase()} services in {worker.location}, {worker.city}. Contact details stay locked until a job is accepted.
+              {worker.name} provides {worker.skill.toLowerCase()} services in {worker.city || "saved service city"}. Contact details stay locked until a job is accepted.
             </p>
           </div>
 

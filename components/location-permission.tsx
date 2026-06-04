@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DEFAULT_LOCATION, saveLocationLabel } from "./location-label";
+import { resolveAreaName } from "./location-geocode";
 import { Icon } from "./simple-icons";
 
 type LocationState = "idle" | "allowed" | "denied" | "unsupported" | "loading";
@@ -23,12 +24,12 @@ export function LocationPermission() {
 
     setState("loading");
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
-        const detectedArea = `Detected: ${latitude.toFixed(3)}, ${longitude.toFixed(3)}`;
+        const detectedArea = await resolveAreaName(latitude, longitude);
         setState("allowed");
         setArea(detectedArea);
-        saveLocationLabel(detectedArea);
+        saveLocationLabel(detectedArea, true, { latitude, longitude });
       },
       () => setState("denied"),
       { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 }

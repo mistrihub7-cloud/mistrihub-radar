@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Worker } from "@/lib/data";
 import { Icon } from "./simple-icons";
+import { WorkerDistance } from "./worker-distance";
 
 export function WorkerCard({ worker, compact = false }: { worker: Worker; compact?: boolean }) {
   const statusClass =
@@ -30,7 +31,7 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
             <div className="min-w-0">
               <h3 className="break-words font-black leading-5 text-slate-950">{worker.name}</h3>
               <p className="text-sm font-semibold text-slate-600">{worker.skill}</p>
-              <p className="break-words text-sm leading-5 text-slate-600">{worker.location}, {worker.city}</p>
+              <p className="break-words text-sm leading-5 text-slate-600">{worker.city || "City not saved"}</p>
               <p className="text-sm text-slate-500">Serving this area</p>
             </div>
             <span className={`status-pill shrink-0 ${statusClass}`}>{worker.status}</span>
@@ -48,7 +49,10 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
         <>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-slate-600">
             <span className="min-w-0">
-              <b className="block break-words text-slate-950">{worker.location}</b>Area
+              <b className="block break-words text-slate-950">
+                <WorkerDistance workerLatitude={worker.latitude} workerLongitude={worker.longitude} />
+              </b>
+              Distance
             </span>
             <span>
               <b className="block text-slate-950">{worker.reviews}</b>Reviews

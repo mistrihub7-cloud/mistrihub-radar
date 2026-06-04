@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { resolveAreaName } from "./location-geocode";
 import { LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, saveLocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 
@@ -44,9 +45,10 @@ export function LocationPopup() {
 
     setState("loading");
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
-        saveLocationLabel(`Current location saved (${latitude.toFixed(3)}, ${longitude.toFixed(3)})`);
+        const areaName = await resolveAreaName(latitude, longitude);
+        saveLocationLabel(areaName, true, { latitude, longitude });
         setState("saved");
         setVisible(false);
       },
