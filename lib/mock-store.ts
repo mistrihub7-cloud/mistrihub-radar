@@ -82,7 +82,7 @@ export function saveWorkerRegistration(profile: WorkerRegistration) {
   saveMockAccount({ id: profile.id, role: "worker", name: profile.name, phone: profile.phone, email: profile.email });
   writeJson(WORKER_PROFILE_KEY, {
     ...profile,
-    profilePhoto: "",
+    profilePhoto: profile.profilePhoto || "",
     idVerificationFile: profile.idVerificationFile ? "Selected" : ""
   });
 }

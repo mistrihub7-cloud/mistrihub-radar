@@ -23,7 +23,8 @@ function mapLocalWorker(profile: WorkerRegistration): Worker {
     latitude: profile.latitude,
     longitude: profile.longitude,
     phone: profile.phone,
-    whatsapp: profile.phone
+    whatsapp: profile.phone,
+    profilePhoto: profile.profilePhoto
   };
 }
 
@@ -42,7 +43,12 @@ export function LocalWorkerList() {
       <p className="mb-2 text-sm font-black text-brand-600">Recently added on this device</p>
       <div className="card p-4">
         <div className="flex items-start gap-3">
-          <div className="worker-avatar" />
+          {worker.profilePhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img alt={worker.name} className="h-16 w-16 shrink-0 rounded-2xl object-cover" src={worker.profilePhoto} />
+          ) : (
+            <div className="worker-avatar" />
+          )}
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div>

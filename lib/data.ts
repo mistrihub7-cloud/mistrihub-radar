@@ -19,6 +19,7 @@ export type Worker = {
   longitude?: number;
   phone?: string;
   whatsapp?: string;
+  profilePhoto?: string;
 };
 
 export type JobRequest = {

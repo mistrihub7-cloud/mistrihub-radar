@@ -61,7 +61,12 @@ export function WorkerDashboardClient() {
     <div className="space-y-7 pb-24">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="worker-avatar !h-20 !w-20" />
+          {profile?.profilePhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img alt={profile.name} className="h-20 w-20 rounded-full object-cover shadow-sm" src={profile.profilePhoto} />
+          ) : (
+            <div className="worker-avatar !h-20 !w-20" />
+          )}
           <div>
             <h1 className="text-3xl font-black leading-tight text-slate-950">Hello, {profile?.name || "Worker"}</h1>
             <p className="text-lg font-bold text-slate-500">{profile?.skill || "Worker profile"}</p>

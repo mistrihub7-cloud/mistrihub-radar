@@ -51,6 +51,7 @@ type WorkerRow = {
   fast_response_time?: number | null;
   phone?: string | null;
   whatsapp?: string | null;
+  profile_photo?: string | null;
 };
 
 function findWorker(workerId?: string | null) {
@@ -120,7 +121,8 @@ function mapWorker(row: WorkerRow): Worker {
     latitude: row.latitude ?? undefined,
     longitude: row.longitude ?? undefined,
     phone: row.phone || undefined,
-    whatsapp: row.whatsapp || undefined
+    whatsapp: row.whatsapp || undefined,
+    profilePhoto: row.profile_photo || undefined
   };
 }
 

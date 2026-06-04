@@ -57,7 +57,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         longitude,
         serviceRadius,
         availability,
-        profilePhoto: "",
+        profilePhoto,
         idVerificationFile: idFile ? "Selected" : ""
       };
       try {
