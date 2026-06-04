@@ -203,7 +203,6 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
         bio: `${profile.name} provides ${profile.skill} service from saved location in ${profile.city}.`,
         service_details: [profile.skill],
         available_today: profile.availability === "Available Today",
-        starting_price: 0,
         service_radius: radius,
         availability_status: profile.availability,
         service_area: profile.location,
@@ -344,7 +343,7 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
       .update(dbUpdate)
       .eq("id", jobId);
 
-    if (update.status === "Quote Sent" && update.workerId) {
+    if ((update.status === "Accepted" || update.status === "Quote Sent") && update.workerId) {
       query = query.in("status", ["Requested", "Need More Details"]);
     }
 
@@ -362,7 +361,7 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
       if (update.status) fallbackUpdate.status = update.status;
       if (update.workerId !== undefined) fallbackUpdate.worker_id = update.workerId || null;
       let fallbackQuery = supabase.from("job_requests").update(fallbackUpdate).eq("id", jobId);
-      if (update.status === "Quote Sent" && update.workerId) {
+      if ((update.status === "Accepted" || update.status === "Quote Sent") && update.workerId) {
         fallbackQuery = fallbackQuery.in("status", ["Requested", "Need More Details"]);
       }
       const fallback = await fallbackQuery.select(JOB_SELECT_BASE).maybeSingle();
@@ -372,7 +371,7 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
       }
     }
 
-    if (update.status === "Quote Sent" && update.workerId && !data) {
+    if ((update.status === "Accepted" || update.status === "Quote Sent") && update.workerId && !data) {
       return loadJobFromSupabase(jobId);
     }
   }

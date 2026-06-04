@@ -31,7 +31,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
             if (declinedJobs.includes(job.id)) return false;
             if (profile && job.service !== profile.skill) return false;
             if (job.workerId && profile && job.workerId !== profile.id) return false;
-            return ["Requested", "Need More Details", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+            return ["Requested", "Need More Details", "Accepted", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
           })
         );
       } else {
@@ -82,28 +82,21 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
         if (declinedJobs.includes(job.id)) return false;
         if (profile && job.service !== profile.skill) return false;
         if (job.workerId && profile && job.workerId !== profile.id) return false;
-        return ["Requested", "Need More Details", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+        return ["Requested", "Need More Details", "Accepted", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
       })
     );
   }
 
-  async function sendQuote(job: MockJobRequest) {
+  async function acceptJob(job: MockJobRequest) {
     if (!workerProfile) return;
-    const quoteAmount = window.prompt("Price quote amount likho (Rs):");
-    if (!quoteAmount?.trim()) return;
-    const quoteEta = window.prompt("ETA / kab aa sakte ho? (optional)") || "";
-    const quoteNote = window.prompt("Short note / price detail (optional)") || "";
     const update = {
-      status: "Quote Sent" as const,
+      status: "Accepted" as const,
       workerId: workerProfile.id,
-      workerName: workerProfile.name,
-      quoteAmount: quoteAmount.trim(),
-      quoteEta: quoteEta.trim(),
-      quoteNote: quoteNote.trim()
+      workerName: workerProfile.name
     };
     updateMockJob(job.id, update);
     const nextJob = await updateJobInSupabase(job.id, update);
-    if (nextJob?.status === "Quote Sent" && nextJob.workerId && nextJob.workerId !== workerProfile.id) {
+    if (nextJob?.status === "Accepted" && nextJob.workerId && nextJob.workerId !== workerProfile.id) {
       markWorkerDeclinedJob(job.id);
     }
     await refreshJobs();
@@ -141,12 +134,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
           </div>
           {owner === "worker" && !job.workerId ? (
             <p className="mt-3 rounded-2xl bg-brand-50 p-3 text-xs font-black text-brand-700">
-              Fast Nearby Dispatch: send your price quote first. Contact unlocks only after user accepts the quote.
-            </p>
-          ) : null}
-          {job.quoteAmount ? (
-            <p className="mt-3 rounded-2xl bg-emerald-50 p-3 text-sm font-black text-emerald-800">
-              Quote sent: Rs {job.quoteAmount}{job.quoteEta ? ` - ETA ${job.quoteEta}` : ""}
+              Fast Nearby Dispatch: nearest matching workers can review this request. First worker who accepts gets the booking.
             </p>
           ) : null}
           <p className="mt-3 text-sm leading-6 text-slate-600">{job.problem}</p>
@@ -156,8 +144,8 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
             </Link>
             {owner === "worker" && ["Requested", "Need More Details"].includes(job.status) ? (
               <>
-                <button className="btn-primary h-10 px-4 text-sm" disabled={!workerProfile} onClick={() => sendQuote(job)} type="button">
-                  Send Quote
+                <button className="btn-primary h-10 px-4 text-sm" disabled={!workerProfile} onClick={() => acceptJob(job)} type="button">
+                  Accept Job
                 </button>
                 <button className="btn-outline h-10 px-4 text-sm" onClick={() => askDetails(job)} type="button">
                   Need More Details

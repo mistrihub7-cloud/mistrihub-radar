@@ -114,11 +114,9 @@ export function WorkerDashboardClient() {
       <section className="card px-5 py-2">
         <MenuRow badge={activeRequests ? activeRequests.toString() : undefined} href="/worker-request" icon="jobs" label="New Job Requests" />
         <MenuRow href="/jobs" icon="calendar" label="My Jobs" />
-        <MenuRow href="/dashboard/worker" icon="calendar" label="Earnings" value="Rs 0" />
         <MenuRow href="/jobs" icon="star" label="Reviews" value="0.0 (0)" />
-        <MenuRow href="/worker/register" icon="user" label="My Profile" />
+        <MenuRow href="/worker/profile" icon="user" label="My Profile" />
         <MenuRow href="/worker/register" icon="jobs" label="Documents Verification" />
-        <MenuRow href="/dashboard/worker" icon="settings" label="Settings" />
         <button className="flex w-full items-center gap-4 py-4 text-left" onClick={logout} type="button">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-red-600">
             <Icon className="h-7 w-7" name="user" />

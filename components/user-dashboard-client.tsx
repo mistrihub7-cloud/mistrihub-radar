@@ -85,12 +85,12 @@ export function UserDashboardClient() {
       </section>
 
       <section className="card px-5 py-2">
+        <MenuRow href="/user/profile" icon="user" label="My Profile" />
         <MenuRow href="/jobs" icon="calendar" label="My Bookings" />
         <MenuRow href="/jobs" icon="jobs" label="Job History" />
         <MenuRow href="/jobs" icon="star" label="My Reviews" />
         <MenuRow href="/workers" icon="bell" label="Saved Workers" />
         <MenuRow href="/login" icon="phone" label="Help & Support" />
-        <MenuRow href="/dashboard/user" icon="settings" label="Settings" />
         <button className="flex w-full items-center gap-4 py-4 text-left" onClick={logout} type="button">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-red-600">
             <Icon className="h-7 w-7" name="user" />

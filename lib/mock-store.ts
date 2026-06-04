@@ -24,6 +24,7 @@ export type MockJobRequest = {
   photoPreview2?: string;
   status:
     | "Requested"
+    | "Accepted"
     | "Quote Sent"
     | "Quote Accepted"
     | "Quote Rejected"
