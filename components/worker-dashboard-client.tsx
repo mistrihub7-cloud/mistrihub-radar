@@ -8,6 +8,7 @@ import {
   getMockAccount,
   getWorkerRegistration,
   getWorkerSettings,
+  saveMockAccount,
   saveWorkerRegistration,
   saveWorkerSettings,
   type MockJobRequest,
@@ -75,6 +76,20 @@ export function WorkerDashboardClient() {
     window.location.replace("/login");
   }
 
+  function switchToUser() {
+    const account = getMockAccount();
+    const worker = getWorkerRegistration();
+    if (!account) return;
+    saveMockAccount({
+      ...account,
+      role: "user",
+      name: worker?.name || account.name,
+      phone: worker?.phone || account.phone,
+      email: worker?.email || account.email
+    });
+    window.location.href = "/dashboard/user";
+  }
+
   const activeRequests = jobs.filter((job) => job.status === "Requested" || job.status === "Need More Details").length;
   const completedJobs = jobs.filter((job) => job.status === "Completed").length;
 
@@ -98,6 +113,14 @@ export function WorkerDashboardClient() {
           {activeRequests ? <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-red-500" /> : null}
         </button>
       </div>
+
+      <section className="card p-4">
+        <h2 className="font-black text-slate-950">Account mode</h2>
+        <p className="mt-1 text-sm font-bold text-slate-500">Worker mode active hai. Service book karne ke liye user mode par switch karo.</p>
+        <button className="btn-outline mt-4 w-full" onClick={switchToUser} type="button">
+          Switch to User Mode
+        </button>
+      </section>
 
       <section className="card p-4">
         <div className="mb-3 flex items-center gap-2">

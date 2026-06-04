@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { accountDisplayName } from "@/lib/display-name";
-import { clearMistriHubSession, getMockAccount, type MockJobRequest } from "@/lib/mock-store";
+import { clearMistriHubSession, getMockAccount, getWorkerRegistration, saveMockAccount, type MockAccount, type MockJobRequest, type WorkerRegistration } from "@/lib/mock-store";
 import { loadJobsFromSupabase } from "@/lib/supabase-flow";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
 import { Icon } from "./simple-icons";
@@ -23,6 +23,8 @@ function MenuRow({ href, icon, label, value }: { href: string; icon: string; lab
 
 export function UserDashboardClient() {
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
+  const [account, setAccount] = useState<MockAccount | null>(null);
+  const [workerProfile, setWorkerProfile] = useState<WorkerRegistration | null>(null);
   const [accountName, setAccountName] = useState("User");
   const [location, setLocation] = useState(DEFAULT_LOCATION);
 
@@ -33,6 +35,8 @@ export function UserDashboardClient() {
         window.location.replace("/login");
         return;
       }
+      setAccount(account);
+      setWorkerProfile(getWorkerRegistration());
       setAccountName(accountDisplayName(account));
       setLocation(localStorage.getItem(LOCATION_KEY) || DEFAULT_LOCATION);
       setJobs(await loadJobsFromSupabase("user"));
@@ -48,6 +52,17 @@ export function UserDashboardClient() {
   function logout() {
     clearMistriHubSession();
     window.location.replace("/login");
+  }
+
+  function switchToWorker() {
+    if (!account) return;
+    const worker = getWorkerRegistration();
+    if (!worker) {
+      window.location.href = "/worker/register";
+      return;
+    }
+    saveMockAccount({ ...account, role: "worker", name: worker.name || account.name, phone: worker.phone || account.phone, email: worker.email || account.email });
+    window.location.href = "/dashboard/worker";
   }
 
   return (
@@ -82,6 +97,16 @@ export function UserDashboardClient() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="card p-4">
+        <h2 className="font-black text-slate-950">Account mode</h2>
+        <p className="mt-1 text-sm font-bold text-slate-500">
+          {workerProfile ? "Worker profile found. Aap user aur worker dono mode use kar sakte ho." : "Worker banne ke liye worker profile complete karo."}
+        </p>
+        <button className="btn-outline mt-4 w-full" onClick={switchToWorker} type="button">
+          {workerProfile ? "Switch to Worker Mode" : "Join as Worker"}
+        </button>
       </section>
 
       <section className="card px-5 py-2">

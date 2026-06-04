@@ -69,7 +69,9 @@ const PRESERVED_SESSION_KEYS = new Set([
   "mistrihub.locationLatitude",
   "mistrihub.locationLongitude",
   "mistrihub.locationLocked",
-  "mistrihub.locationSkipped"
+  "mistrihub.locationSkipped",
+  WORKER_PROFILE_KEY,
+  WORKER_SETTINGS_KEY
 ]);
 
 function canStore() {

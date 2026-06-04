@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { displayNameFromValue } from "@/lib/display-name";
-import { saveMockAccount, type MockRole } from "@/lib/mock-store";
+import { saveMockAccount } from "@/lib/mock-store";
 import { useAccountState } from "./use-account-state";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -13,7 +13,6 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [identifier, setIdentifier] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<Extract<MockRole, "user" | "worker">>("user");
   const isRegister = mode === "register";
   const { account } = useAccountState();
   const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : account?.role === "admin" ? "/admin" : "/dashboard/user";
@@ -30,7 +29,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     const cleanIdentifier = identifier.trim();
     const account = {
       id: `local-${Date.now()}`,
-      role,
+      role: "user" as const,
       name: name.trim() || displayNameFromValue(cleanIdentifier),
       phone: cleanIdentifier.includes("@") ? "" : cleanIdentifier,
       email: cleanIdentifier.includes("@") ? cleanIdentifier : undefined
@@ -38,7 +37,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     saveMockAccount(account);
     setLoading(false);
 
-    router.push(role === "worker" ? "/dashboard/worker" : "/dashboard/user");
+    router.push("/dashboard/user");
   }
 
   if (account) {
@@ -55,21 +54,6 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   return (
     <form className="mt-5 space-y-4" onSubmit={(event) => event.preventDefault()}>
-      <div>
-        <span className="mb-2 block text-sm font-bold">Login role</span>
-        <div className="grid grid-cols-2 gap-2">
-          {(["user", "worker"] as const).map((item) => (
-            <button
-              className={`h-11 rounded-xl border text-sm font-black ${role === item ? "border-brand-600 bg-brand-50 text-brand-600" : "border-slate-200 bg-white"}`}
-              key={item}
-              onClick={() => setRole(item)}
-              type="button"
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </div>
       {isRegister ? (
         <label className="block">
           <span className="mb-2 block text-sm font-bold">Full Name</span>

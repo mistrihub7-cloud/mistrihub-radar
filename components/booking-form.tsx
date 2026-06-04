@@ -17,12 +17,13 @@ type BookingFormProps = {
 export function BookingForm({ worker, initialService }: BookingFormProps) {
   const router = useRouter();
   const matchedWorker = worker || workers.find((item) => item.skill === initialService);
+  const loggedInAccount = typeof window !== "undefined" ? getMockAccount() : null;
   const savedContact =
     typeof window !== "undefined"
       ? JSON.parse(localStorage.getItem("mistrihub.bookingContact") || "{}") as { name?: string; phone?: string }
       : {};
-  const [customerName, setCustomerName] = useState(savedContact.name || "");
-  const [customerPhone, setCustomerPhone] = useState(savedContact.phone || "");
+  const [customerName, setCustomerName] = useState(loggedInAccount?.name || savedContact.name || "");
+  const [customerPhone, setCustomerPhone] = useState(loggedInAccount?.phone || savedContact.phone || "");
   const [service, setService] = useState(initialService || matchedWorker?.skill || categories[0].name);
   const [problem, setProblem] = useState("");
   const [urgency, setUrgency] = useState<"Normal" | "Urgent" | "Emergency">("Normal");
@@ -35,7 +36,11 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
   const [submitting, setSubmitting] = useState(false);
 
   async function submitRequest() {
-    if (!customerName.trim() || !customerPhone.trim()) {
+    const currentAccount = getMockAccount();
+    const bookingName = currentAccount?.name || customerName.trim();
+    const bookingPhone = currentAccount?.phone || customerPhone.trim();
+
+    if (!bookingName || !bookingPhone) {
       setError("Booking ke liye naam aur phone/WhatsApp number zaroori hai.");
       return;
     }
@@ -54,14 +59,13 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
     const rawLongitude = localStorage.getItem(LOCATION_LNG_KEY);
     const userLatitude = rawLatitude ? Number(rawLatitude) : undefined;
     const userLongitude = rawLongitude ? Number(rawLongitude) : undefined;
-    localStorage.setItem("mistrihub.bookingContact", JSON.stringify({ name: customerName.trim(), phone: customerPhone.trim() }));
-    const currentAccount = getMockAccount();
+    localStorage.setItem("mistrihub.bookingContact", JSON.stringify({ name: bookingName, phone: bookingPhone }));
     if (!currentAccount || currentAccount.role === "user") {
       const account = {
         id: currentAccount?.id || globalThis.crypto?.randomUUID?.() || `local-${Date.now()}`,
         role: "user" as const,
-        name: customerName.trim(),
-        phone: customerPhone.trim(),
+        name: bookingName,
+        phone: bookingPhone,
         email: currentAccount?.email
       };
       saveMockAccount(account);
@@ -75,8 +79,8 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
       preferredDate,
       preferredTime,
       area,
-      customerName: customerName.trim(),
-      customerPhone: customerPhone.trim(),
+      customerName: bookingName,
+      customerPhone: bookingPhone,
       userLatitude: Number.isFinite(userLatitude) ? userLatitude : undefined,
       userLongitude: Number.isFinite(userLongitude) ? userLongitude : undefined,
       photoPreview,
@@ -113,19 +117,27 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         </div>
       )}
 
-      <div className="card p-4">
-        <p className="text-sm font-black text-brand-600">Your booking details</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-2 block font-black">Your name</span>
-            <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" onChange={(event) => setCustomerName(event.target.value)} placeholder="Full name" value={customerName} />
-          </label>
-          <label className="block">
-            <span className="mb-2 block font-black">Phone / WhatsApp</span>
-            <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" inputMode="tel" onChange={(event) => setCustomerPhone(event.target.value)} placeholder="+91 mobile number" value={customerPhone} />
-          </label>
+      {loggedInAccount ? (
+        <div className="card p-4">
+          <p className="text-sm font-black text-brand-600">Booking as</p>
+          <p className="mt-1 font-black text-slate-950">{loggedInAccount.name || "Logged in user"}</p>
+          <p className="text-sm font-bold text-slate-500">{loggedInAccount.phone || loggedInAccount.email}</p>
         </div>
-      </div>
+      ) : (
+        <div className="card p-4">
+          <p className="text-sm font-black text-brand-600">Your booking details</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block font-black">Your name</span>
+              <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" onChange={(event) => setCustomerName(event.target.value)} placeholder="Full name" value={customerName} />
+            </label>
+            <label className="block">
+              <span className="mb-2 block font-black">Phone / WhatsApp</span>
+              <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" inputMode="tel" onChange={(event) => setCustomerPhone(event.target.value)} placeholder="+91 mobile number" value={customerPhone} />
+            </label>
+          </div>
+        </div>
+      )}
 
       <label className="block">
         <span className="mb-2 block font-black">Service category</span>
