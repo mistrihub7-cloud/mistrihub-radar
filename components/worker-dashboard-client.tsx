@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { accountDisplayName } from "@/lib/display-name";
 import { clearMistriHubSession, getMockAccount, getWorkerRegistration, getWorkerSettings, saveWorkerSettings, type MockJobRequest, type WorkerRegistration } from "@/lib/mock-store";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
@@ -25,6 +26,7 @@ export function WorkerDashboardClient() {
   const [availability, setAvailability] = useState("Available Today");
   const [serviceRadius, setServiceRadius] = useState("10 km");
   const [profile, setProfile] = useState<WorkerRegistration | null>(null);
+  const [accountName, setAccountName] = useState("Worker");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -33,10 +35,12 @@ export function WorkerDashboardClient() {
         window.location.replace("/login");
         return;
       }
+      const workerProfile = getWorkerRegistration();
       const settings = getWorkerSettings();
       setAvailability(settings.availability);
       setServiceRadius(settings.serviceRadius);
-      setProfile(getWorkerRegistration());
+      setProfile(workerProfile);
+      setAccountName(accountDisplayName(account, workerProfile));
       setJobs(await loadJobsFromSupabase("worker"));
     }
 
@@ -68,7 +72,7 @@ export function WorkerDashboardClient() {
             <div className="worker-avatar !h-20 !w-20" />
           )}
           <div>
-            <h1 className="text-3xl font-black leading-tight text-slate-950">Hello, {profile?.name || "Worker"}</h1>
+            <h1 className="text-3xl font-black leading-tight text-slate-950">Hello, {accountName}</h1>
             <p className="text-lg font-bold text-slate-500">{profile?.skill || "Worker profile"}</p>
           </div>
         </div>

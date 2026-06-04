@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { accountDisplayName } from "@/lib/display-name";
 import { clearMistriHubSession } from "@/lib/mock-store";
 import { LocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
@@ -21,6 +22,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const { account, ready } = useAccountState();
   const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : account?.role === "admin" ? "/admin" : "/dashboard/user";
+  const displayName = accountDisplayName(account);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -53,7 +55,7 @@ export function SiteHeader() {
         {ready && account ? (
           <div className="flex items-center gap-3">
             <Link className="rounded-xl bg-brand-50 px-4 py-3 text-sm font-black text-brand-700" href={dashboardHref}>
-              Hi, {account.name || account.role}
+              Hi, {displayName}
             </Link>
             <button
               className="btn-outline w-24"

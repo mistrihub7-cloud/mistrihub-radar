@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { accountDisplayName } from "@/lib/display-name";
 import { clearMistriHubSession, getMockAccount, type MockJobRequest } from "@/lib/mock-store";
 import { loadJobsFromSupabase } from "@/lib/supabase-flow";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
@@ -32,7 +33,7 @@ export function UserDashboardClient() {
         window.location.replace("/login");
         return;
       }
-      setAccountName(account?.name || "User");
+      setAccountName(accountDisplayName(account));
       setLocation(localStorage.getItem(LOCATION_KEY) || DEFAULT_LOCATION);
       setJobs(await loadJobsFromSupabase("user"));
     }
