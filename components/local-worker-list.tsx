@@ -42,12 +42,16 @@ export function LocalWorkerList() {
     <div className="mb-4">
       <p className="mb-2 text-sm font-black text-brand-600">Recently added on this device</p>
       <div className="card p-4">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           {worker.profilePhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img alt={worker.name} className="h-16 w-16 shrink-0 rounded-2xl object-cover" src={worker.profilePhoto} />
+            <img
+              alt={worker.name}
+              className="h-24 w-20 shrink-0 rounded-2xl border border-slate-200 object-cover object-top shadow-sm ring-4 ring-blue-50"
+              src={worker.profilePhoto}
+            />
           ) : (
-            <div className="worker-avatar" />
+            <div className="worker-avatar !h-24 !w-20 !rounded-2xl shadow-sm ring-4 ring-blue-50" />
           )}
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">

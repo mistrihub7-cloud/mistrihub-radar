@@ -31,9 +31,9 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
             <div className="flex items-start gap-4">
               {worker.profilePhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img alt={worker.name} className="h-20 w-20 rounded-full object-cover shadow-sm" src={worker.profilePhoto} />
+                <img alt={worker.name} className="h-32 w-24 rounded-2xl border border-slate-200 object-cover object-top shadow-sm ring-4 ring-blue-50" src={worker.profilePhoto} />
               ) : (
-                <div className="worker-avatar !h-20 !w-20" />
+                <div className="worker-avatar !h-32 !w-24 !rounded-2xl shadow-sm ring-4 ring-blue-50" />
               )}
               <div className="min-w-0 flex-1">
                 <span className="status-pill status-available">{worker.status}</span>
