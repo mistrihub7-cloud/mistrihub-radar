@@ -3,9 +3,9 @@ import { categories } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
 import { LocationLabel } from "@/components/location-label";
 import { Logo } from "@/components/logo";
+import { NearbyWorkerList } from "@/components/nearby-worker-list";
 import { SectionTitle } from "@/components/section-title";
 import { LocalWorkerList } from "@/components/local-worker-list";
-import { WorkerCard } from "@/components/worker-card";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 export const dynamic = "force-dynamic";
@@ -71,17 +71,9 @@ function NearbyWorkersPanel({ workers }: { workers: Awaited<ReturnType<typeof lo
       <div className="card p-5">
         <SectionTitle actionHref="/workers" title="Nearby Workers" />
         <p className="mb-4 rounded-2xl bg-brand-50 p-3 text-sm font-bold text-brand-700">
-          Nearby workers serving your area. Exact distance appears only after GPS data is connected.
+          Nearby workers serving your area. Km updates after user location is allowed.
         </p>
-        <div className="space-y-3">
-          {workers.length ? (
-            workers.slice(0, 4).map((worker) => <WorkerCard compact key={worker.id} worker={worker} />)
-          ) : (
-            <div className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-500">
-              No workers registered yet.
-            </div>
-          )}
-        </div>
+        <NearbyWorkerList compact emptyMessage="No workers registered yet." limit={4} workers={workers} />
         <Link className="btn-outline mt-4 w-full" href="/workers">
           View Nearby Workers
         </Link>
@@ -202,17 +194,7 @@ export default async function HomePage() {
       <section className="container-page mt-5">
         <div className="card p-4 md:p-5">
           <SectionTitle actionHref="/workers" title="Nearby Workers" />
-          {workers.length ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {workers.slice(0, 4).map((worker) => (
-                <WorkerCard key={worker.id} worker={worker} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl bg-slate-50 p-6 text-center text-sm font-bold text-slate-500">
-              No workers registered yet. New Supabase workers will appear here.
-            </div>
-          )}
+          <NearbyWorkerList layout="grid" limit={4} workers={workers} />
           <div className="mt-4">
             <LocalWorkerList />
           </div>

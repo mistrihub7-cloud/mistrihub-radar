@@ -2,8 +2,8 @@ import Link from "next/link";
 import { LocationLabel } from "@/components/location-label";
 import { LocalWorkerList } from "@/components/local-worker-list";
 import { MobileTopbar } from "@/components/mobile-topbar";
+import { NearbyWorkerList } from "@/components/nearby-worker-list";
 import { Icon } from "@/components/simple-icons";
-import { WorkerCard } from "@/components/worker-card";
 import { discoveryRules } from "@/lib/data";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
@@ -13,10 +13,9 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
   const workers = await loadWorkersFromSupabase();
   const selectedStatus = searchParams?.status || "All";
   const selectedService = searchParams?.service || "";
-  const matchingWorkers = [...workers]
+  const matchingWorkers = workers
     .filter((worker) => selectedStatus === "All" || worker.status === selectedStatus)
-    .filter((worker) => !selectedService || worker.skill === selectedService)
-    .sort((a, b) => b.trust - a.trust || Number(b.rating) - Number(a.rating));
+    .filter((worker) => !selectedService || worker.skill === selectedService);
   const availableCount = matchingWorkers.filter((worker) => worker.status === "Available Today").length;
   const topRating = matchingWorkers.reduce((max, worker) => Math.max(max, Number(worker.rating) || 0), 0).toFixed(1);
 
@@ -33,7 +32,7 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
             <p className="text-sm font-black text-brand-600">Nearby Worker Discovery</p>
             <h1 className="mt-1 break-words text-2xl font-black text-slate-950 md:text-3xl">Workers serving your area</h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Showing added workers by service area, availability, trust score and rating. Exact distance and radius will show only after GPS/service-radius data is saved.
+              Showing workers by saved service area, availability, nearby km, trust score and rating. Distance updates after user location is allowed.
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -44,8 +43,8 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
                 </p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs font-bold text-slate-500">Distance accuracy</p>
-                <p className="mt-1 font-black">Hidden until GPS is saved</p>
+                <p className="text-xs font-bold text-slate-500">Nearby km</p>
+                <p className="mt-1 font-black">Calculated from saved GPS</p>
               </div>
             </div>
 
@@ -105,10 +104,7 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
 
             <div className="space-y-4">
               <LocalWorkerList />
-              {!matchingWorkers.length ? <div className="card p-6 text-center text-sm font-bold text-slate-500">No workers registered yet. New Supabase workers will appear here.</div> : null}
-              {matchingWorkers.map((worker) => (
-                <WorkerCard key={worker.id} worker={worker} />
-              ))}
+              <NearbyWorkerList workers={matchingWorkers} />
             </div>
           </section>
         </div>
