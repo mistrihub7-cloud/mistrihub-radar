@@ -17,7 +17,8 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
     .filter((worker) => selectedStatus === "All" || worker.status === selectedStatus)
     .filter((worker) => !selectedService || worker.skill === selectedService);
   const availableCount = matchingWorkers.filter((worker) => worker.status === "Available Today").length;
-  const topRating = matchingWorkers.reduce((max, worker) => Math.max(max, Number(worker.rating) || 0), 0).toFixed(1);
+  const reviewedWorkers = matchingWorkers.filter((worker) => worker.reviews > 0 && Number(worker.rating) > 0);
+  const topRating = reviewedWorkers.length ? reviewedWorkers.reduce((max, worker) => Math.max(max, Number(worker.rating) || 0), 0).toFixed(1) : "New";
 
   return (
     <main className="mobile-shell min-h-screen">
@@ -93,7 +94,7 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
               {[
                 ["Workers found", matchingWorkers.length.toString()],
                 ["Available today", availableCount.toString()],
-                ["Top rating", topRating]
+                ["Reviews", topRating]
               ].map(([label, value]) => (
                 <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 text-center" key={label}>
                   <p className="text-xl font-black text-brand-600">{value}</p>

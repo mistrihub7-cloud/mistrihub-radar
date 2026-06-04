@@ -13,6 +13,7 @@ export function generateStaticParams() {
 export default async function WorkerProfilePage({ params }: { params: { id: string } }) {
   const worker = await loadWorkerFromSupabase(params.id);
   if (!worker) notFound();
+  const hasReviews = worker.reviews > 0 && Number(worker.rating) > 0;
 
   const services = [
     `${worker.skill} inspection`,
@@ -43,7 +44,7 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
-                { label: "Rating", value: `${worker.rating} (${worker.reviews})` },
+                { label: "Reviews", value: hasReviews ? `${worker.rating} (${worker.reviews})` : "New worker" },
                 { label: "Trust Score", value: worker.trust.toString() },
                 { label: "Distance", value: <WorkerDistance workerLatitude={worker.latitude} workerLongitude={worker.longitude} /> },
                 { label: "Service Radius", value: `${worker.serviceRadius} km` }

@@ -4,6 +4,7 @@ import { Icon } from "./simple-icons";
 import { WorkerDistance } from "./worker-distance";
 
 export function WorkerCard({ worker, compact = false }: { worker: Worker; compact?: boolean }) {
+  const hasReviews = worker.reviews > 0 && Number(worker.rating) > 0;
   const statusClass =
     worker.status === "Available Today"
       ? "status-available"
@@ -18,30 +19,35 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
         : "worker-avatar offline";
 
   return (
-    <article className={`card p-4 ${compact ? "" : "h-full"}`}>
+    <article className={`card p-4 transition hover:-translate-y-0.5 hover:shadow-card ${compact ? "" : "h-full"}`}>
       <div className="flex items-start gap-3">
         {worker.profilePhoto ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img alt={worker.name} className="h-16 w-16 shrink-0 rounded-2xl object-cover" src={worker.profilePhoto} />
+          <img alt={worker.name} className="h-16 w-16 shrink-0 rounded-full border border-slate-200 object-cover shadow-sm" src={worker.profilePhoto} />
         ) : (
-          <div className={avatarClass} />
+          <div className={`${avatarClass} !rounded-full border border-slate-200 shadow-sm`} />
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <h3 className="break-words font-black leading-5 text-slate-950">{worker.name}</h3>
-              <p className="text-sm font-semibold text-slate-600">{worker.skill}</p>
-              <p className="break-words text-sm leading-5 text-slate-600">{worker.city || "City not saved"}</p>
-              <p className="text-sm text-slate-500">Serving this area</p>
+              <p className="text-sm font-semibold text-slate-700">
+                {worker.skill}{worker.city ? ` - ${worker.city}` : ""}
+              </p>
+              <p className="break-words text-sm leading-5 text-slate-500">Serving your area</p>
             </div>
             <span className={`status-pill shrink-0 ${statusClass}`}>{worker.status}</span>
           </div>
           <div className="mt-3 flex items-center justify-between gap-2 text-sm">
-            <span className="flex items-center gap-1 font-bold">
-              <Icon className="h-4 w-4 fill-amber-400 text-amber-400" name="star" />
-              {worker.rating} ({worker.reviews})
-            </span>
-            <span className="font-bold text-slate-700">Trust {worker.trust}</span>
+            {hasReviews ? (
+              <span className="flex items-center gap-1 font-bold">
+                <Icon className="h-4 w-4 fill-amber-400 text-amber-400" name="star" />
+                {worker.rating} ({worker.reviews})
+              </span>
+            ) : (
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">New worker</span>
+            )}
+            <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-black text-brand-700">Trust Score {worker.trust}</span>
           </div>
         </div>
       </div>
@@ -50,15 +56,15 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-slate-600">
             <span className="min-w-0">
               <b className="block break-words text-slate-950">
-                <WorkerDistance workerLatitude={worker.latitude} workerLongitude={worker.longitude} />
+                <WorkerDistance missingWorkerText="Unavailable" workerLatitude={worker.latitude} workerLongitude={worker.longitude} />
               </b>
               Distance
             </span>
             <span>
-              <b className="block text-slate-950">{worker.reviews}</b>Reviews
+              <b className="block text-slate-950">{worker.jobs || "New"}</b>Jobs
             </span>
             <span>
-              <b className="block text-slate-950">{worker.rating}</b>Rating
+              <b className="block text-slate-950">{hasReviews ? worker.reviews : "No"}</b>Reviews
             </span>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">

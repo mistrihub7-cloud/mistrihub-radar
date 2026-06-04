@@ -6,6 +6,8 @@ import { LOCATION_KEY, LOCATION_LAT_KEY, LOCATION_LNG_KEY } from "./location-lab
 type WorkerDistanceProps = {
   workerLatitude?: number;
   workerLongitude?: number;
+  missingWorkerText?: string;
+  missingUserText?: string;
 };
 
 function toRadians(value: number) {
@@ -42,24 +44,24 @@ function parseSavedCoordinates() {
   return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
 }
 
-export function WorkerDistance({ workerLatitude, workerLongitude }: WorkerDistanceProps) {
-  const [label, setLabel] = useState("Set location");
+export function WorkerDistance({ workerLatitude, workerLongitude, missingWorkerText = "Unavailable", missingUserText = "Set location" }: WorkerDistanceProps) {
+  const [label, setLabel] = useState(missingUserText);
 
   useEffect(() => {
     if (workerLatitude == null || workerLongitude == null) {
-      setLabel("Not saved");
+      setLabel(missingWorkerText);
       return;
     }
 
     const userCoordinates = parseSavedCoordinates();
     if (!userCoordinates) {
-      setLabel("Set location");
+      setLabel(missingUserText);
       return;
     }
 
     const kilometers = distanceKm(userCoordinates, { latitude: workerLatitude, longitude: workerLongitude });
     setLabel(kilometers < 1 ? `${Math.max(0.1, kilometers).toFixed(1)} km` : `${kilometers.toFixed(1)} km`);
-  }, [workerLatitude, workerLongitude]);
+  }, [missingUserText, missingWorkerText, workerLatitude, workerLongitude]);
 
   return <>{label}</>;
 }
