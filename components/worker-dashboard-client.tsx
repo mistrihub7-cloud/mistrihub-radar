@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { accountDisplayName } from "@/lib/display-name";
-import { clearMistriHubSession, getMockAccount, getWorkerRegistration, getWorkerSettings, saveWorkerSettings, type MockJobRequest, type WorkerRegistration } from "@/lib/mock-store";
+import {
+  clearMistriHubSession,
+  getMockAccount,
+  getWorkerRegistration,
+  getWorkerSettings,
+  saveWorkerRegistration,
+  saveWorkerSettings,
+  type MockJobRequest,
+  type WorkerRegistration
+} from "@/lib/mock-store";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
@@ -27,6 +36,7 @@ export function WorkerDashboardClient() {
   const [serviceRadius, setServiceRadius] = useState("10 km");
   const [profile, setProfile] = useState<WorkerRegistration | null>(null);
   const [accountName, setAccountName] = useState("Worker");
+  const [statusMessage, setStatusMessage] = useState("");
   const availabilityOptions = ["Available Today", "Busy", "Not Available"];
 
   useEffect(() => {
@@ -51,7 +61,13 @@ export function WorkerDashboardClient() {
   async function saveAvailability(nextAvailability: string) {
     setAvailability(nextAvailability);
     saveWorkerSettings({ availability: nextAvailability, serviceRadius });
-    await saveWorkerSettingsToSupabase({ availability: nextAvailability, serviceRadius });
+    if (profile) {
+      const nextProfile = { ...profile, availability: nextAvailability as WorkerRegistration["availability"], serviceRadius };
+      saveWorkerRegistration(nextProfile);
+      setProfile(nextProfile);
+    }
+    const result = await saveWorkerSettingsToSupabase({ availability: nextAvailability, serviceRadius });
+    setStatusMessage(result.ok ? "Status saved. Site par update ho gaya." : "Status local save hua. Supabase row/policy check karo.");
   }
 
   function logout() {
@@ -113,6 +129,7 @@ export function WorkerDashboardClient() {
           })}
         </div>
         <p className="mt-3 text-xs font-bold text-slate-500">Current: {availability === "Available Today" ? "Available" : availability}</p>
+        {statusMessage ? <p className="mt-2 text-xs font-black text-brand-600">{statusMessage}</p> : null}
       </section>
 
       <div className="grid grid-cols-3 gap-4">

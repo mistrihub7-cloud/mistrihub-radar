@@ -6,6 +6,7 @@ import { categories } from "@/lib/data";
 import { saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
 import { saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
+import { SuccessPopup } from "./success-popup";
 
 export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole }) {
   const router = useRouter();
@@ -26,6 +27,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
   const [idFile, setIdFile] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   async function submit() {
     if (submitting) return;
@@ -68,7 +70,9 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
           setSubmitting(false);
           return;
         }
-        window.location.href = "/workers?created=1";
+        setShowSuccess(true);
+        setSubmitting(false);
+        window.setTimeout(() => router.replace(`/workers/${id}`), 1200);
       } catch (error) {
         setMessage(error instanceof Error ? error.message : "Worker profile save nahi hua.");
         setSubmitting(false);
@@ -110,6 +114,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
 
   return (
     <div className="card p-5">
+      {showSuccess ? <SuccessPopup /> : null}
       <div className="grid grid-cols-2 gap-3">
         {(["user", "worker"] as const).map((item) => (
           <button

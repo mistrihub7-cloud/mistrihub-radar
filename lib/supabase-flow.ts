@@ -3,6 +3,7 @@ import {
   getMockAccount,
   getMockJob,
   getMockJobs,
+  getWorkerRegistration,
   saveMockAccount,
   saveWorkerRegistration,
   updateMockJob,
@@ -397,18 +398,22 @@ export async function saveWorkerSettingsToSupabase(settings: { availability: str
   if (!hasSupabaseConfig || !supabase) return { ok: true, fallback: true };
 
   const userId = await getSessionUserId();
-  if (!userId) return { ok: true, fallback: true };
+  const workerProfile = getWorkerRegistration();
+  const update = {
+    availability_status: settings.availability,
+    available_today: settings.availability === "Available Today",
+    service_radius: Number.parseInt(settings.serviceRadius, 10) || 10
+  };
 
-  const { error } = await supabase
-    .from("workers")
-    .update({
-      availability_status: settings.availability,
-      available_today: settings.availability === "Available Today",
-      service_radius: Number.parseInt(settings.serviceRadius, 10) || 10
-    })
-    .eq("user_id", userId);
+  if (userId) {
+    const { data, error } = await supabase.from("workers").update(update).eq("user_id", userId).select("id").maybeSingle();
+    return { ok: !error && Boolean(data), error: error?.message || (!data ? "Worker row not found." : undefined) };
+  }
 
-  return { ok: !error, error: error?.message };
+  if (!workerProfile?.id) return { ok: true, fallback: true };
+
+  const { data, error } = await supabase.from("workers").update(update).eq("id", workerProfile.id).select("id").maybeSingle();
+  return { ok: !error && Boolean(data), error: error?.message || (!data ? "Worker row not found." : undefined) };
 }
 
 export async function loadWorkersFromSupabase() {

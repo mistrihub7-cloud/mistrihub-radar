@@ -1,12 +1,15 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { categories } from "@/lib/data";
 import { getMockAccount, getWorkerRegistration, saveWorkerRegistration, type WorkerRegistration } from "@/lib/mock-store";
 import { saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
+import { SuccessPopup } from "./success-popup";
 
 export function WorkerProfileForm() {
+  const router = useRouter();
   const [profile, setProfile] = useState<WorkerRegistration | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -22,6 +25,7 @@ export function WorkerProfileForm() {
   const [profilePhoto, setProfilePhoto] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const account = getMockAccount();
@@ -104,11 +108,19 @@ export function WorkerProfileForm() {
     saveWorkerRegistration(nextProfile);
     const result = await saveWorkerRegistrationToSupabase(nextProfile);
     setSaving(false);
-    setMessage(result.ok ? "Profile updated." : "Profile local update hua. Supabase columns/policy check karo.");
+    if (!result.ok) {
+      setMessage("Profile local update hua. Supabase columns/policy check karo.");
+      return;
+    }
+
+    setProfile(nextProfile);
+    setShowSuccess(true);
+    window.setTimeout(() => router.replace(`/workers/${nextProfile.id}`), 1200);
   }
 
   return (
     <div className="card p-5">
+      {showSuccess ? <SuccessPopup message="Profile saved successfully" /> : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="mb-2 block text-sm font-bold">Full name</span>

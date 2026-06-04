@@ -6,14 +6,19 @@ import { Icon } from "@/components/simple-icons";
 import { WorkerDistance } from "@/components/worker-distance";
 import { loadWorkerFromSupabase } from "@/lib/supabase-flow";
 
-export function generateStaticParams() {
-  return [];
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function WorkerProfilePage({ params }: { params: { id: string } }) {
   const worker = await loadWorkerFromSupabase(params.id);
   if (!worker) notFound();
   const hasReviews = worker.reviews > 0 && Number(worker.rating) > 0;
+  const statusClass =
+    worker.status === "Available Today"
+      ? "status-available"
+      : worker.status === "Busy"
+        ? "status-busy"
+        : "status-offline";
 
   const services = [
     `${worker.skill} inspection`,
@@ -36,7 +41,7 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
                 <div className="worker-avatar !h-32 !w-24 !rounded-2xl shadow-sm ring-4 ring-blue-50" />
               )}
               <div className="min-w-0 flex-1">
-                <span className="status-pill status-available">{worker.status}</span>
+                <span className={`status-pill ${statusClass}`}>{worker.status}</span>
                 <h1 className="mt-3 text-3xl font-black">{worker.name}</h1>
                 <p className="text-sm font-bold text-slate-600">{worker.skill}</p>
                 <p className="mt-1 text-sm text-slate-500">{worker.city || "City not saved"}</p>
