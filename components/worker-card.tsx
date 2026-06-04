@@ -32,42 +32,39 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
           <div className={`${avatarClass} !h-24 !w-20 !rounded-2xl border border-slate-200 shadow-sm ring-4 ring-blue-50`} />
         )}
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="break-words font-black leading-5 text-slate-950">{worker.name}</h3>
-              <p className="text-sm font-semibold text-slate-700">
-                {worker.skill}{worker.city ? ` - ${worker.city}` : ""}
-              </p>
-              <p className="break-words text-sm leading-5 text-slate-500">Serving your area</p>
-            </div>
-            <span className={`status-pill shrink-0 ${statusClass}`}>{worker.status}</span>
+          <div className="min-w-0">
+            <h3 className="break-words text-lg font-black leading-5 text-slate-950">{worker.name}</h3>
+            <p className="mt-1 text-sm font-black text-slate-700">{worker.skill}</p>
+            {worker.city ? <p className="text-sm font-semibold text-slate-600">{worker.city}</p> : null}
+            <p className="text-sm leading-5 text-slate-500">Serving your area</p>
           </div>
-          <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <span className={`status-pill flex items-center justify-center text-center ${statusClass}`}>{worker.status}</span>
             {hasReviews ? (
-              <span className="flex items-center gap-1 font-bold">
+              <span className="flex items-center justify-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">
                 <Icon className="h-4 w-4 fill-amber-400 text-amber-400" name="star" />
                 {worker.rating} ({worker.reviews})
               </span>
             ) : (
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">New worker</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-center text-xs font-black text-slate-600">Newly Joined</span>
             )}
-            <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-black text-brand-700">Trust Score {worker.trust}</span>
+            <span className="col-span-2 rounded-full bg-brand-50 px-3 py-1.5 text-center text-xs font-black text-brand-700">Trust Score {worker.trust}</span>
           </div>
         </div>
       </div>
       {!compact && (
         <>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-slate-600">
-            <span className="min-w-0">
+            <span className="min-w-0 rounded-xl bg-slate-50 px-2 py-2">
               <b className="block break-words text-slate-950">
                 <WorkerDistance missingWorkerText="Unavailable" workerLatitude={worker.latitude} workerLongitude={worker.longitude} />
               </b>
               Distance
             </span>
-            <span>
+            <span className="rounded-xl bg-slate-50 px-2 py-2">
               <b className="block text-slate-950">{worker.jobs || "New"}</b>Jobs
             </span>
-            <span>
+            <span className="rounded-xl bg-slate-50 px-2 py-2">
               <b className="block text-slate-950">{hasReviews ? worker.reviews : "No"}</b>Reviews
             </span>
           </div>
