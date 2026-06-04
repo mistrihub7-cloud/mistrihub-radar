@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { LocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 import { Logo } from "./logo";
@@ -13,6 +16,14 @@ const links = [
 ];
 
 export function SiteHeader() {
+  const pathname = usePathname();
+
+  function isActive(href: string) {
+    if (href === "/") return pathname === "/";
+    if (href.startsWith("/#")) return false;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   return (
     <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-white/90 backdrop-blur md:block">
       <div className="container-page flex h-[74px] items-center justify-between gap-7">
@@ -25,9 +36,9 @@ export function SiteHeader() {
           </Link>
         </div>
         <nav className="flex items-center gap-8 text-sm font-extrabold text-slate-900">
-          {links.map(([label, href], index) => (
+          {links.map(([label, href]) => (
             <Link
-              className={index === 0 ? "border-b-4 border-brand-600 py-7 text-brand-600" : "py-7"}
+              className={isActive(href) ? "border-b-4 border-brand-600 py-7 text-brand-600" : "py-7"}
               href={href}
               key={href}
             >
