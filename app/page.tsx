@@ -180,7 +180,7 @@ export default async function HomePage() {
 
       <section className="container-page grid gap-5 md:grid-cols-[1.55fr_0.75fr]">
         <div className="card p-4 md:p-5">
-          <SectionTitle action="View all" actionHref="/book" title="What service do you need?" />
+          <SectionTitle action="View all" actionHref="/categories" title="What service do you need?" />
           <CategoryGrid />
         </div>
         <div className="card p-4 md:p-5">
