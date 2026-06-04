@@ -123,7 +123,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-2 block font-black">Preferred date (optional)</span>
+          <span className="mb-2 block font-black">Preferred date</span>
           <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" onChange={(event) => setPreferredDate(event.target.value)} type="date" value={preferredDate} />
         </label>
         <label className="block">

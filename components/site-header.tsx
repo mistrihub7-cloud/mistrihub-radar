@@ -14,8 +14,7 @@ const links = [
   ["Workers", "/workers"],
   ["Book Worker", "/book"],
   ["Jobs", "/jobs"],
-  ["How It Works", "/#how-it-works"],
-  ["Become a Worker", "/worker/register"]
+  ["How It Works", "/#how-it-works"]
 ];
 
 export function SiteHeader() {

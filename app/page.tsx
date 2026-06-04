@@ -69,14 +69,11 @@ function NearbyWorkersPanel({ workers }: { workers: Awaited<ReturnType<typeof lo
   return (
     <aside className="hidden space-y-4 xl:block">
       <div className="card p-5">
-        <SectionTitle actionHref="/workers" title="Nearby Workers" />
+        <SectionTitle action="View all" actionHref="/workers" title="Nearby Workers" />
         <p className="mb-4 rounded-2xl bg-brand-50 p-3 text-sm font-bold text-brand-700">
           Nearby workers serving your area. Km updates after user location is allowed.
         </p>
         <NearbyWorkerList compact emptyMessage="No workers registered yet." limit={3} workers={workers} />
-        <Link className="btn-outline mt-4 w-full" href="/workers">
-          View Nearby Workers
-        </Link>
       </div>
     </aside>
   );
@@ -183,31 +180,22 @@ export default async function HomePage() {
 
       <section className="container-page grid gap-5 md:grid-cols-[1.55fr_0.75fr]">
         <div className="card p-4 md:p-5">
-          <SectionTitle actionHref="/book" title="What service do you need?" />
+          <SectionTitle action="View all" actionHref="/book" title="What service do you need?" />
           <CategoryGrid />
-          <Link className="btn-outline mt-4 w-full" href="/book">
-            View All
-          </Link>
         </div>
         <div className="card p-4 md:p-5">
-          <SectionTitle action="View All" actionHref="/book?urgency=urgent" title="Need Help Now? (Emergency)" />
+          <SectionTitle action="View all" actionHref="/book?urgency=urgent" title="Need Help Now? (Emergency)" />
           <EmergencyBox />
-          <Link className="btn-outline mt-4 w-full" href="/book?urgency=urgent">
-            View All
-          </Link>
         </div>
       </section>
 
       <section className="container-page mt-5">
         <div className="card p-4 md:p-5">
-          <SectionTitle actionHref="/workers" title="Nearby Workers" />
+          <SectionTitle action="View all" actionHref="/workers" title="Nearby Workers" />
           <NearbyWorkerList layout="grid" limit={4} workers={workers} />
           <div className="mt-4">
             <LocalWorkerList />
           </div>
-          <Link className="btn-outline mt-4 w-full" href="/workers">
-            View All
-          </Link>
         </div>
       </section>
 
@@ -215,7 +203,7 @@ export default async function HomePage() {
 
       <section className="container-page mt-5 grid gap-5 pb-8 md:grid-cols-[0.85fr_1.15fr]" id="how-it-works">
         <div className="card p-5">
-          <SectionTitle action="Book Now" actionHref="/workers" title="How It Works" />
+          <SectionTitle action="Book now" actionHref="/workers" title="How It Works" />
           <div className="grid grid-cols-4 gap-2 text-center">
             {["Choose Service", "Send Request", "Worker Accepts", "Track & Review"].map((step, index) => (
               <div key={step}>
@@ -226,12 +214,9 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
-          <Link className="btn-outline mt-4 w-full" href="/workers">
-            Book Now
-          </Link>
         </div>
         <div className="card p-5">
-          <SectionTitle actionHref="/workers" title="Top Rated Workers" />
+          <SectionTitle action="View all" actionHref="/workers" title="Top Rated Workers" />
           {topWorkers.length ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {topWorkers.map((worker) => (
@@ -252,9 +237,6 @@ export default async function HomePage() {
               Top rated workers will appear after worker registrations and reviews.
             </div>
           )}
-          <Link className="btn-outline mt-4 w-full" href="/workers">
-            View All
-          </Link>
         </div>
       </section>
     </main>
