@@ -22,9 +22,22 @@ export type MockJobRequest = {
   area: string;
   photoPreview?: string;
   photoPreview2?: string;
-  status: "Requested" | "Accepted" | "On The Way" | "In Progress" | "Completed" | "Cancelled" | "Declined" | "Need More Details";
+  status:
+    | "Requested"
+    | "Quote Sent"
+    | "Quote Accepted"
+    | "Quote Rejected"
+    | "On The Way"
+    | "In Progress"
+    | "Completed"
+    | "Cancelled"
+    | "Declined"
+    | "Need More Details";
   createdAt: string;
   workerQuestion?: string;
+  quoteAmount?: string;
+  quoteNote?: string;
+  quoteEta?: string;
 };
 
 export type WorkerRegistration = MockAccount & {

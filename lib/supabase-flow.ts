@@ -25,6 +25,9 @@ type JobRequestRow = {
   photo_url: string | null;
   status: MockJobRequest["status"];
   created_at: string;
+  quote_amount?: string | null;
+  quote_note?: string | null;
+  quote_eta?: string | null;
 };
 
 type WorkerRow = {
@@ -53,6 +56,11 @@ type WorkerRow = {
   whatsapp?: string | null;
   profile_photo?: string | null;
 };
+
+const JOB_SELECT =
+  "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at,quote_amount,quote_note,quote_eta";
+const JOB_SELECT_BASE =
+  "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at";
 
 function findWorker(workerId?: string | null) {
   return workers.find((worker) => worker.id === workerId);
@@ -87,7 +95,10 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
     photoPreview: row.photo_url || "",
     status: row.status,
     createdAt: row.created_at,
-    workerQuestion: ""
+    workerQuestion: "",
+    quoteAmount: row.quote_amount || "",
+    quoteNote: row.quote_note || "",
+    quoteEta: row.quote_eta || ""
   };
 }
 
@@ -232,12 +243,10 @@ export async function createJobInSupabase(input: Omit<MockJobRequest, "id" | "cr
       photo_url: input.photoPreview && !input.photoPreview.startsWith("data:") ? input.photoPreview : null,
       status: "Requested"
     })
-    .select("id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at")
+    .select(JOB_SELECT_BASE)
     .single();
 
-  if (error || !data) {
-    return null;
-  }
+  if (error || !data) return null;
 
   await supabase.from("job_status_history").insert({ job_id: id, status: "Requested", note: "Job request created" });
   if (userId) {
@@ -258,7 +267,7 @@ export async function loadJobsFromSupabase(owner: "user" | "worker" = "user") {
   const userId = await getSessionUserId();
   let query = supabase
     .from("job_requests")
-    .select("id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at,workers(id,name,category,location,city)")
+    .select(`${JOB_SELECT},workers(id,name,category,location,city)`)
     .order("created_at", { ascending: false });
 
   if (userId && owner === "user") {
@@ -272,7 +281,21 @@ export async function loadJobsFromSupabase(owner: "user" | "worker" = "user") {
     }
   }
 
-  const { data, error } = await query;
+  let { data, error } = (await query) as { data: any[] | null; error: { message?: string } | null };
+  if (error) {
+    let fallbackQuery = supabase
+      .from("job_requests")
+      .select(`${JOB_SELECT_BASE},workers(id,name,category,location,city)`)
+      .order("created_at", { ascending: false });
+    if (userId && owner === "user") fallbackQuery = fallbackQuery.eq("user_id", userId);
+    if (userId && owner === "worker") {
+      const { data: workerProfile } = await supabase.from("workers").select("id").eq("user_id", userId).maybeSingle();
+      if (workerProfile?.id) fallbackQuery = fallbackQuery.eq("worker_id", workerProfile.id);
+    }
+    const fallback = await fallbackQuery;
+    data = fallback.data;
+    error = fallback.error;
+  }
   if (error || !data) return getMockJobs();
 
   return data.map((row) => {
@@ -286,11 +309,20 @@ export async function loadJobFromSupabase(jobId: string) {
 
   const { data, error } = await supabase
     .from("job_requests")
-    .select("id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at,workers(id,name,category,location,city)")
+    .select(`${JOB_SELECT},workers(id,name,category,location,city)`)
     .eq("id", jobId)
     .maybeSingle();
 
-  if (error || !data) return getMockJob(jobId);
+  if (error || !data) {
+    const fallback = await supabase
+      .from("job_requests")
+      .select(`${JOB_SELECT_BASE},workers(id,name,category,location,city)`)
+      .eq("id", jobId)
+      .maybeSingle();
+    if (fallback.error || !fallback.data) return getMockJob(jobId);
+    const workerRow = Array.isArray(fallback.data.workers) ? fallback.data.workers[0] : fallback.data.workers;
+    return mapJob(fallback.data as JobRequestRow, workerRow as WorkerRow | null);
+  }
   const workerRow = Array.isArray(data.workers) ? data.workers[0] : data.workers;
   return mapJob(data as JobRequestRow, workerRow as WorkerRow | null);
 }
@@ -302,6 +334,9 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
   const dbUpdate: Record<string, string | null> = {};
   if (update.status) dbUpdate.status = update.status;
   if (update.workerId !== undefined) dbUpdate.worker_id = update.workerId || null;
+  if (update.quoteAmount !== undefined) dbUpdate.quote_amount = update.quoteAmount || null;
+  if (update.quoteNote !== undefined) dbUpdate.quote_note = update.quoteNote || null;
+  if (update.quoteEta !== undefined) dbUpdate.quote_eta = update.quoteEta || null;
 
   if (Object.keys(dbUpdate).length) {
     let query = supabase
@@ -309,12 +344,12 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
       .update(dbUpdate)
       .eq("id", jobId);
 
-    if (update.status === "Accepted" && update.workerId) {
+    if (update.status === "Quote Sent" && update.workerId) {
       query = query.in("status", ["Requested", "Need More Details"]);
     }
 
     const { data, error } = await query
-      .select("id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at")
+      .select(JOB_SELECT)
       .maybeSingle();
 
     if (!error && data && update.status) {
@@ -322,7 +357,22 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
       return mapJob(data as JobRequestRow);
     }
 
-    if (update.status === "Accepted" && update.workerId && !data) {
+    if (error && (update.quoteAmount !== undefined || update.quoteNote !== undefined || update.quoteEta !== undefined)) {
+      const fallbackUpdate: Record<string, string | null> = {};
+      if (update.status) fallbackUpdate.status = update.status;
+      if (update.workerId !== undefined) fallbackUpdate.worker_id = update.workerId || null;
+      let fallbackQuery = supabase.from("job_requests").update(fallbackUpdate).eq("id", jobId);
+      if (update.status === "Quote Sent" && update.workerId) {
+        fallbackQuery = fallbackQuery.in("status", ["Requested", "Need More Details"]);
+      }
+      const fallback = await fallbackQuery.select(JOB_SELECT_BASE).maybeSingle();
+      if (!fallback.error && fallback.data && update.status) {
+        await supabase.from("job_status_history").insert({ job_id: jobId, status: update.status, note: "Status updated" });
+        return { ...mapJob(fallback.data as JobRequestRow), ...update };
+      }
+    }
+
+    if (update.status === "Quote Sent" && update.workerId && !data) {
       return loadJobFromSupabase(jobId);
     }
   }

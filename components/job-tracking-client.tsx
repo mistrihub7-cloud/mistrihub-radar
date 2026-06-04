@@ -7,7 +7,7 @@ import { loadJobFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { ContactActions } from "./contact-actions";
 import { Icon } from "./simple-icons";
 
-const timeline = ["Requested", "Accepted", "On The Way", "In Progress", "Completed", "Cancelled"];
+const timeline = ["Requested", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed", "Quote Rejected", "Cancelled"];
 
 export function JobTrackingClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<MockJobRequest | null>(null);
@@ -37,7 +37,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
     );
   }
 
-  const contactUnlocked = ["Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+  const contactUnlocked = ["Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
 
   async function setStatus(status: MockJobRequest["status"]) {
     if (!job) return;
@@ -80,6 +80,15 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
             </div>
           ) : null}
           {job.workerQuestion ? <p className="mt-4 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-amber-800">Worker asked: {job.workerQuestion}</p> : null}
+          {job.status === "Quote Sent" || job.status === "Quote Accepted" || job.status === "Quote Rejected" ? (
+            <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-50 p-4">
+              <p className="text-sm font-black text-brand-700">Worker Price Quote</p>
+              <p className="mt-2 text-3xl font-black text-slate-950">Rs {job.quoteAmount || "Not set"}</p>
+              {job.quoteEta ? <p className="mt-1 text-sm font-bold text-slate-700">ETA: {job.quoteEta}</p> : null}
+              {job.quoteNote ? <p className="mt-2 text-sm leading-6 text-slate-700">{job.quoteNote}</p> : null}
+              <p className="mt-2 text-xs font-bold text-slate-500">Final price site visit ke baad problem ke hisab se change ho sakta hai.</p>
+            </div>
+          ) : null}
         </div>
 
         <div className="card p-5">
@@ -103,11 +112,25 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
 
       <aside className="space-y-5">
         <ContactActions unlocked={contactUnlocked} />
+        {job.status === "Quote Sent" ? (
+          <div className="card p-4">
+            <h2 className="font-black">Quote decision</h2>
+            <p className="mt-1 text-xs text-slate-500">Quote accept karne ke baad Call aur WhatsApp unlock hoga.</p>
+            <div className="mt-3 grid gap-2">
+              <button className="btn-primary h-11 text-sm" onClick={() => setStatus("Quote Accepted")} type="button">
+                Accept Quote
+              </button>
+              <button className="btn-outline h-11 border-red-500 text-sm text-red-600" onClick={() => setStatus("Quote Rejected")} type="button">
+                Reject Quote
+              </button>
+            </div>
+          </div>
+        ) : null}
         <div className="card p-4">
           <h2 className="font-black">Status controls</h2>
           <p className="mt-1 text-xs text-slate-500">Status updates are saved to Supabase when available.</p>
           <div className="mt-3 grid gap-2">
-            {(["Accepted", "On The Way", "In Progress", "Completed", "Cancelled"] as const).map((item) => (
+            {(["Quote Accepted", "On The Way", "In Progress", "Completed", "Cancelled"] as const).map((item) => (
               <button className="btn-outline h-10 text-sm" key={item} onClick={() => setStatus(item)} type="button">
                 Mark {item}
               </button>

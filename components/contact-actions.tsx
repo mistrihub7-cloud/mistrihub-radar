@@ -11,7 +11,7 @@ export function ContactActions({ unlocked }: { unlocked: boolean }) {
           <div>
             <h3 className="font-black text-slate-950">Contact locked</h3>
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              Phone and WhatsApp unlock only after the worker accepts this job inside MistriHub.
+              Phone and WhatsApp unlock only after the user accepts the worker price quote inside MistriHub.
             </p>
           </div>
         </div>
