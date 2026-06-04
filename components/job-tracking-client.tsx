@@ -71,9 +71,13 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
               </div>
             ))}
           </div>
-          {job.photoPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img alt="Problem upload" className="mt-4 h-44 w-full rounded-2xl object-cover" src={job.photoPreview} />
+          {job.photoPreview || job.photoPreview2 ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[job.photoPreview, job.photoPreview2].filter(Boolean).map((photo, index) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img alt={`Problem upload ${index + 1}`} className="h-44 w-full rounded-2xl object-cover" key={photo} src={photo} />
+              ))}
+            </div>
           ) : null}
           {job.workerQuestion ? <p className="mt-4 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-amber-800">Worker asked: {job.workerQuestion}</p> : null}
         </div>

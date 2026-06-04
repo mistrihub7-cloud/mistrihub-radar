@@ -21,6 +21,7 @@ export type MockJobRequest = {
   preferredTime: string;
   area: string;
   photoPreview?: string;
+  photoPreview2?: string;
   status: "Requested" | "Accepted" | "On The Way" | "In Progress" | "Completed" | "Cancelled" | "Declined" | "Need More Details";
   createdAt: string;
   workerQuestion?: string;

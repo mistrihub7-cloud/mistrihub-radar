@@ -24,16 +24,13 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
   const [preferredTime, setPreferredTime] = useState("");
   const [area, setArea] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(LOCATION_KEY) || "" : ""));
   const [photoPreview, setPhotoPreview] = useState("");
+  const [photoPreview2, setPhotoPreview2] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function submitRequest() {
     if (!problem.trim()) {
       setError("Problem description zaroori hai.");
-      return;
-    }
-    if (!preferredDate || !preferredTime) {
-      setError("Preferred date aur time select karo.");
       return;
     }
     if (!area.trim() || area === DEFAULT_LOCATION) {
@@ -51,7 +48,8 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
       preferredDate,
       preferredTime,
       area,
-      photoPreview
+      photoPreview,
+      photoPreview2
     };
     const job = (await createJobInSupabase(input)) || createMockJob(input);
     router.push(`/jobs/${job.id}`);
@@ -125,11 +123,11 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-2 block font-black">Preferred date</span>
+          <span className="mb-2 block font-black">Preferred date (optional)</span>
           <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" onChange={(event) => setPreferredDate(event.target.value)} type="date" value={preferredDate} />
         </label>
         <label className="block">
-          <span className="mb-2 block font-black">Preferred time</span>
+          <span className="mb-2 block font-black">Preferred time (optional)</span>
           <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" onChange={(event) => setPreferredTime(event.target.value)} type="time" value={preferredTime} />
         </label>
       </div>
@@ -139,7 +137,10 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" onChange={(event) => setArea(event.target.value)} placeholder="Area, city" value={area} />
       </label>
 
-      <FilePreviewInput label="Problem photo (optional)" onPreview={(preview) => setPhotoPreview(preview)} />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FilePreviewInput label="Problem photo 1 (optional)" onPreview={(preview) => setPhotoPreview(preview)} />
+        <FilePreviewInput label="Problem photo 2 (optional)" onPreview={(preview) => setPhotoPreview2(preview)} />
+      </div>
 
       {error ? <p className="rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600">{error}</p> : null}
       <button className="btn-primary w-full" disabled={submitting} onClick={submitRequest} type="button">
