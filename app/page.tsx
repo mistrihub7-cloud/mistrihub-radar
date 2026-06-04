@@ -73,15 +73,22 @@ function NearbyWorkersPanel({ workers }: { workers: Awaited<ReturnType<typeof lo
         <p className="mb-4 rounded-2xl bg-brand-50 p-3 text-sm font-bold text-brand-700">
           Nearby workers serving your area. Km updates after user location is allowed.
         </p>
-        <NearbyWorkerList compact emptyMessage="No workers registered yet." limit={4} workers={workers} />
+        <NearbyWorkerList compact emptyMessage="No workers registered yet." limit={3} workers={workers} />
         <Link className="btn-outline mt-4 w-full" href="/workers">
           View Nearby Workers
         </Link>
       </div>
-      <div className="card grid grid-cols-[1fr_120px] items-center gap-4 p-6">
+    </aside>
+  );
+}
+
+function TrustStatsSection({ workers }: { workers: Awaited<ReturnType<typeof loadWorkersFromSupabase>> }) {
+  return (
+    <section className="container-page mt-5 grid gap-5 md:grid-cols-[1fr_0.85fr]">
+      <div className="card grid gap-5 p-5 md:grid-cols-[1fr_150px] md:items-center">
         <div>
           <h3 className="text-xl font-black">Trust & Safety</h3>
-          <ul className="mt-5 space-y-4 text-sm font-semibold text-slate-700">
+          <ul className="mt-4 grid gap-3 text-sm font-semibold text-slate-700 sm:grid-cols-2">
             {["Verified Workers", "No Direct Contact Before Booking", "Secure Job Tracking", "Customer Support 24/7"].map((item) => (
               <li className="flex items-center gap-3" key={item}>
                 <span className="grid h-5 w-5 place-items-center rounded-full bg-brand-50 text-brand-600">
@@ -92,11 +99,11 @@ function NearbyWorkersPanel({ workers }: { workers: Awaited<ReturnType<typeof lo
             ))}
           </ul>
         </div>
-        <span className="grid h-28 w-28 place-items-center rounded-[2rem] bg-gradient-to-b from-brand-500 to-brand-700 text-white shadow-card">
+        <span className="hidden h-28 w-28 place-items-center rounded-[2rem] bg-gradient-to-b from-brand-500 to-brand-700 text-white shadow-card md:grid">
           <Icon className="h-16 w-16" name="shield" />
         </span>
       </div>
-      <div className="card grid grid-cols-2 gap-6 bg-gradient-to-br from-white to-blue-50 p-6">
+      <div className="card grid grid-cols-2 gap-5 bg-gradient-to-br from-white to-blue-50 p-5">
         {[
           [workers.length.toString(), "Workers Added"],
           [categories.length.toString(), "Service Categories"],
@@ -109,7 +116,7 @@ function NearbyWorkersPanel({ workers }: { workers: Awaited<ReturnType<typeof lo
           </div>
         ))}
       </div>
-    </aside>
+    </section>
   );
 }
 
@@ -203,6 +210,8 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+      <TrustStatsSection workers={workers} />
 
       <section className="container-page mt-5 grid gap-5 pb-8 md:grid-cols-[0.85fr_1.15fr]" id="how-it-works">
         <div className="card p-5">
