@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { resolveAreaName } from "./location-geocode";
-import { LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, saveLocationLabel } from "./location-label";
+import { DEFAULT_LOCATION, LOCATION_KEY, LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, saveLocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 
 type LocationState = "idle" | "loading" | "saved" | "denied" | "unsupported";
@@ -15,6 +15,14 @@ export function LocationPopup() {
   useEffect(() => {
     const alreadyLocked = localStorage.getItem(LOCATION_LOCK_KEY) === "true";
     const alreadySkipped = localStorage.getItem(LOCATION_SKIP_KEY) === "true";
+    const savedLocation = localStorage.getItem(LOCATION_KEY);
+    const hasSavedLocation = Boolean(savedLocation && savedLocation !== DEFAULT_LOCATION);
+
+    if (hasSavedLocation) {
+      localStorage.setItem(LOCATION_LOCK_KEY, "true");
+      localStorage.removeItem(LOCATION_SKIP_KEY);
+      return;
+    }
 
     if (!alreadyLocked && !alreadySkipped) {
       const timer = window.setTimeout(() => setVisible(true), 700);

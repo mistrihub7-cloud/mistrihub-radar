@@ -60,6 +60,13 @@ const JOBS_KEY = "mistrihub.mock.jobs";
 const WORKER_SETTINGS_KEY = "mistrihub.mock.workerSettings";
 const WORKER_DECLINED_JOBS_KEY = "mistrihub.mock.workerDeclinedJobs";
 const SESSION_PREFIXES = ["mistrihub.", "sb-"];
+const PRESERVED_SESSION_KEYS = new Set([
+  "mistrihub.locationLabel",
+  "mistrihub.locationLatitude",
+  "mistrihub.locationLongitude",
+  "mistrihub.locationLocked",
+  "mistrihub.locationSkipped"
+]);
 
 function canStore() {
   return typeof window !== "undefined";
@@ -160,6 +167,7 @@ export function clearMistriHubSession() {
   const clearMatchingKeys = (storage: Storage) => {
     Object.keys(storage)
       .filter((key) => SESSION_PREFIXES.some((prefix) => key.startsWith(prefix)))
+      .filter((key) => !PRESERVED_SESSION_KEYS.has(key))
       .forEach((key) => storage.removeItem(key));
   };
 
