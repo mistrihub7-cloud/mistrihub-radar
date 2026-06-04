@@ -2,18 +2,41 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getMockJobs, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
+import {
+  getWorkerDeclinedJobs,
+  getWorkerRegistration,
+  markWorkerDeclinedJob,
+  updateMockJob,
+  type MockJobRequest,
+  type WorkerRegistration
+} from "@/lib/mock-store";
 import { loadJobsFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
 export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }) {
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [workerProfile, setWorkerProfile] = useState<WorkerRegistration | null>(null);
 
   useEffect(() => {
     async function loadJobs() {
       setLoading(true);
-      setJobs(await loadJobsFromSupabase(owner));
+      const nextJobs = await loadJobsFromSupabase(owner);
+      if (owner === "worker") {
+        const profile = getWorkerRegistration();
+        const declinedJobs = getWorkerDeclinedJobs();
+        setWorkerProfile(profile);
+        setJobs(
+          nextJobs.filter((job) => {
+            if (declinedJobs.includes(job.id)) return false;
+            if (profile && job.service !== profile.skill) return false;
+            if (job.workerId && profile && job.workerId !== profile.id) return false;
+            return ["Requested", "Need More Details", "Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+          })
+        );
+      } else {
+        setJobs(nextJobs);
+      }
       setLoading(false);
     }
 
@@ -44,6 +67,55 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     );
   }
 
+  async function refreshJobs() {
+    const nextJobs = await loadJobsFromSupabase(owner);
+    if (owner !== "worker") {
+      setJobs(nextJobs);
+      return;
+    }
+
+    const profile = getWorkerRegistration();
+    const declinedJobs = getWorkerDeclinedJobs();
+    setWorkerProfile(profile);
+    setJobs(
+      nextJobs.filter((job) => {
+        if (declinedJobs.includes(job.id)) return false;
+        if (profile && job.service !== profile.skill) return false;
+        if (job.workerId && profile && job.workerId !== profile.id) return false;
+        return ["Requested", "Need More Details", "Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+      })
+    );
+  }
+
+  async function acceptJob(job: MockJobRequest) {
+    if (!workerProfile) return;
+    const update = { status: "Accepted" as const, workerId: workerProfile.id, workerName: workerProfile.name };
+    updateMockJob(job.id, update);
+    const nextJob = await updateJobInSupabase(job.id, update);
+    if (nextJob?.status === "Accepted" && nextJob.workerId && nextJob.workerId !== workerProfile.id) {
+      markWorkerDeclinedJob(job.id);
+    }
+    await refreshJobs();
+  }
+
+  async function declineJob(job: MockJobRequest) {
+    if (job.workerId && workerProfile?.id === job.workerId) {
+      updateMockJob(job.id, { status: "Declined" });
+      await updateJobInSupabase(job.id, { status: "Declined" });
+    } else {
+      markWorkerDeclinedJob(job.id);
+    }
+    await refreshJobs();
+  }
+
+  async function askDetails(job: MockJobRequest) {
+    const question = window.prompt("User se ek short question poochho:");
+    if (!question?.trim()) return;
+    updateMockJob(job.id, { status: "Need More Details", workerQuestion: question.trim() });
+    await updateJobInSupabase(job.id, { status: "Need More Details", workerQuestion: question.trim() });
+    await refreshJobs();
+  }
+
   return (
     <div className="space-y-4">
       {jobs.map((job) => (
@@ -56,11 +128,29 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
             </div>
             <span className="status-pill bg-blue-50 text-brand-600">{job.status}</span>
           </div>
+          {owner === "worker" && !job.workerId ? (
+            <p className="mt-3 rounded-2xl bg-brand-50 p-3 text-xs font-black text-brand-700">
+              Fast Nearby Dispatch: first matching worker who accepts gets this job. Contact unlocks after acceptance.
+            </p>
+          ) : null}
           <p className="mt-3 text-sm leading-6 text-slate-600">{job.problem}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link className="btn-primary h-10 px-4 text-sm" href={`/jobs/${job.id}`}>
               Track
             </Link>
+            {owner === "worker" && ["Requested", "Need More Details"].includes(job.status) ? (
+              <>
+                <button className="btn-primary h-10 px-4 text-sm" disabled={!workerProfile} onClick={() => acceptJob(job)} type="button">
+                  Accept Job
+                </button>
+                <button className="btn-outline h-10 px-4 text-sm" onClick={() => askDetails(job)} type="button">
+                  Need More Details
+                </button>
+                <button className="btn-outline h-10 border-red-500 px-4 text-sm text-red-600" onClick={() => declineJob(job)} type="button">
+                  Decline
+                </button>
+              </>
+            ) : null}
             {owner === "user" && job.status !== "Cancelled" ? (
               <button
                 className="btn-outline h-10 border-red-500 px-4 text-sm text-red-600"

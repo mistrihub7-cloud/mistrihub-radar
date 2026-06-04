@@ -43,6 +43,7 @@ const ACCOUNT_KEY = "mistrihub.mock.account";
 const WORKER_PROFILE_KEY = "mistrihub.mock.workerProfile";
 const JOBS_KEY = "mistrihub.mock.jobs";
 const WORKER_SETTINGS_KEY = "mistrihub.mock.workerSettings";
+const WORKER_DECLINED_JOBS_KEY = "mistrihub.mock.workerDeclinedJobs";
 const SESSION_PREFIXES = ["mistrihub.", "sb-"];
 
 function canStore() {
@@ -105,7 +106,7 @@ export function createMockJob(input: Omit<MockJobRequest, "id" | "createdAt" | "
     ...input,
     id: `MH${Date.now().toString().slice(-6)}`,
     workerId: worker?.id || input.workerId || "",
-    workerName: worker?.name || "Nearby workers",
+    workerName: worker?.name || "Nearby matching workers",
     createdAt: new Date().toISOString(),
     status: "Requested"
   };
@@ -117,6 +118,14 @@ export function updateMockJob(jobId: string, update: Partial<MockJobRequest>) {
   const nextJobs = getMockJobs().map((job) => (job.id === jobId ? { ...job, ...update } : job));
   writeJson(JOBS_KEY, nextJobs);
   return nextJobs.find((job) => job.id === jobId) || null;
+}
+
+export function getWorkerDeclinedJobs() {
+  return readJson<string[]>(WORKER_DECLINED_JOBS_KEY, []);
+}
+
+export function markWorkerDeclinedJob(jobId: string) {
+  writeJson(WORKER_DECLINED_JOBS_KEY, Array.from(new Set([jobId, ...getWorkerDeclinedJobs()])));
 }
 
 export function getWorkerSettings() {

@@ -77,7 +77,7 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
   return {
     id: row.id,
     workerId: row.worker_id || worker?.id || "",
-    workerName: workerRow?.name || worker?.name || "Nearby workers",
+    workerName: workerRow?.name || worker?.name || "Nearby matching workers",
     service: row.service,
     problem: row.problem_description,
     urgency: row.urgency,
@@ -301,18 +301,29 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
 
   const dbUpdate: Record<string, string | null> = {};
   if (update.status) dbUpdate.status = update.status;
+  if (update.workerId !== undefined) dbUpdate.worker_id = update.workerId || null;
 
   if (Object.keys(dbUpdate).length) {
-    const { data, error } = await supabase
+    let query = supabase
       .from("job_requests")
       .update(dbUpdate)
-      .eq("id", jobId)
+      .eq("id", jobId);
+
+    if (update.status === "Accepted" && update.workerId) {
+      query = query.in("status", ["Requested", "Need More Details"]);
+    }
+
+    const { data, error } = await query
       .select("id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at")
       .maybeSingle();
 
     if (!error && data && update.status) {
       await supabase.from("job_status_history").insert({ job_id: jobId, status: update.status, note: "Status updated" });
       return mapJob(data as JobRequestRow);
+    }
+
+    if (update.status === "Accepted" && update.workerId && !data) {
+      return loadJobFromSupabase(jobId);
     }
   }
 

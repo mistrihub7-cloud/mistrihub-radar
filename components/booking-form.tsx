@@ -63,10 +63,15 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         <div className="card p-4">
           <p className="text-sm font-black text-brand-600">Selected worker</p>
           <div className="mt-3 flex items-center gap-3">
-            <div className="worker-avatar" />
+            {matchedWorker.profilePhoto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img alt={matchedWorker.name} className="h-14 w-14 rounded-2xl object-cover" src={matchedWorker.profilePhoto} />
+            ) : (
+              <div className="worker-avatar" />
+            )}
             <div>
               <h2 className="font-black">{matchedWorker.name}</h2>
-              <p className="text-sm text-slate-500">{matchedWorker.skill} - {matchedWorker.location}, {matchedWorker.city}</p>
+              <p className="text-sm text-slate-500">{matchedWorker.skill} - {matchedWorker.city || "City not saved"}</p>
             </div>
           </div>
         </div>
@@ -74,7 +79,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         <div className="card p-4">
           <p className="text-sm font-black text-brand-600">Open job request</p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Submit your problem first. Nearby registered workers will review the job before accepting.
+            Fast Nearby Dispatch: matching nearby workers will review the job. First worker who accepts gets the booking.
           </p>
         </div>
       )}
@@ -141,7 +146,9 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         <Icon name="jobs" />
         {submitting ? "Creating request..." : "Submit Request"}
       </button>
-      <p className="text-xs leading-5 text-slate-500">Request saves to Supabase when available. Photo storage needs Supabase Storage connection.</p>
+      <p className="text-xs leading-5 text-slate-500">
+        Contact stays locked until a worker accepts. Alerts use website and WhatsApp notification flow.
+      </p>
     </div>
   );
 }
