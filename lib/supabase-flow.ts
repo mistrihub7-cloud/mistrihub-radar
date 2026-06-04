@@ -75,7 +75,15 @@ function categorySlugFor(name: string) {
     "AC Repair": "ac-repair",
     Carpenter: "carpenter",
     Labour: "helper-labour",
-    "Appliance Repair": "ac-repair"
+    "Appliance Repair": "appliance-repair",
+    "Home Cleaning": "home-cleaning",
+    "Pest Control": "pest-control",
+    Mason: "mason",
+    Welder: "welder",
+    "RO Service": "ro-service",
+    CCTV: "cctv",
+    "Tile / Marble": "tile-marble",
+    Gardener: "gardener"
   };
   return map[name] || name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }

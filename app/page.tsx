@@ -24,17 +24,17 @@ function HeroWorker({ className = "h-auto w-full object-contain" }: { className?
 
 function CategoryGrid() {
   return (
-    <div className="grid grid-cols-4 gap-3 md:grid-cols-8">
+    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-8">
       {categories.map((category) => (
         <Link
-          className="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-card"
+          className="group min-h-[112px] rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-3 text-center shadow-sm transition hover:-translate-y-1 hover:border-brand-200 hover:shadow-card"
           href={`/workers?service=${encodeURIComponent(category.name)}`}
           key={category.name}
         >
-          <span className={`mx-auto grid h-12 w-12 place-items-center rounded-xl bg-slate-50 ${category.tone}`}>
-            <Icon name={category.icon} />
+          <span className={`mx-auto grid h-12 w-12 place-items-center rounded-2xl ${category.bg} ${category.tone} transition group-hover:scale-105`}>
+            <Icon className="h-6 w-6" name={category.icon} />
           </span>
-          <span className="mt-2 block text-xs font-black text-slate-950">{category.name}</span>
+          <span className="mt-2 block text-[11px] font-black leading-4 text-slate-950 sm:text-xs">{category.name}</span>
         </Link>
       ))}
     </div>

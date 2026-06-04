@@ -26,7 +26,15 @@ const paths: Record<string, string> = {
   shield: "M12 2 5 5v6c0 5 3.3 8.8 7 10 3.7-1.2 7-5 7-10V5l-7-3Z",
   check: "m5 12 4 4L19 6",
   calendar: "M7 3v4m10-4v4M4 8h16v12H4V8Z",
-  settings: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm8 4 2 1-2 4-2-.5a8 8 0 0 1-2 1.2L15.5 20h-7L8 17.7a8 8 0 0 1-2-1.2L4 17l-2-4 2-1a8 8 0 0 1 0-2L2 9l2-4 2 .5A8 8 0 0 1 8 4.3L8.5 2h7l.5 2.3a8 8 0 0 1 2 1.2l2-.5 2 4-2 1a8 8 0 0 1 0 2Z"
+  settings: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm8 4 2 1-2 4-2-.5a8 8 0 0 1-2 1.2L15.5 20h-7L8 17.7a8 8 0 0 1-2-1.2L4 17l-2-4 2-1a8 8 0 0 1 0-2L2 9l2-4 2 .5A8 8 0 0 1 8 4.3L8.5 2h7l.5 2.3a8 8 0 0 1 2 1.2l2-.5 2 4-2 1a8 8 0 0 1 0 2Z",
+  broom: "M15 3 21 9M14 4l6 6-8 8-6-6 8-8ZM4 14l6 6M3 21h8",
+  bug: "M8 7a4 4 0 0 1 8 0v1H8V7Zm-1 5h10v5a5 5 0 0 1-10 0v-5Zm-4 1h4m10 0h4M4 18h3m10 0h3M9 4 7 2m8 2 2-2",
+  mason: "M4 16h16v4H4v-4Zm2-6h16v4H6v-4ZM2 4h16v4H2V4Z",
+  weld: "M4 20l7-7m2-2 7-7M14 4l6 6M7 17l-3 3m10-10 3 3m-6-1 2 2",
+  water: "M12 2s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Zm-3 12a3 3 0 0 0 5 2",
+  camera: "M4 7h4l2-3h4l2 3h4v12H4V7Zm8 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
+  tiles: "M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z",
+  leaf: "M20 4C10 4 5 9 5 16a4 4 0 0 0 4 4c7 0 11-6 11-16ZM5 20c3-6 8-9 15-16"
 };
 
 export function Icon({ name, className = "h-5 w-5" }: IconProps) {
