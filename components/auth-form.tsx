@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { displayNameFromValue } from "@/lib/display-name";
-import { saveMockAccount } from "@/lib/mock-store";
+import { clearMistriHubSession, saveMockAccount } from "@/lib/mock-store";
 import { useAccountState } from "./use-account-state";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -15,7 +15,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [loading, setLoading] = useState(false);
   const isRegister = mode === "register";
   const { account } = useAccountState();
-  const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : account?.role === "admin" ? "/admin" : "/dashboard/user";
+  const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : "/dashboard/user";
   const loggedInName = displayNameFromValue(account?.name) || displayNameFromValue(account?.email) || account?.role;
 
   async function handleSubmit() {
@@ -34,6 +34,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       phone: cleanIdentifier.includes("@") ? "" : cleanIdentifier,
       email: cleanIdentifier.includes("@") ? cleanIdentifier : undefined
     };
+    clearMistriHubSession();
     saveMockAccount(account);
     setLoading(false);
 
@@ -48,6 +49,16 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <Link className="btn-primary mt-4 w-full" href={dashboardHref}>
           Go to Dashboard
         </Link>
+        <button
+          className="btn-outline mt-3 w-full border-red-500 text-red-600"
+          onClick={() => {
+            clearMistriHubSession();
+            window.location.reload();
+          }}
+          type="button"
+        >
+          Logout and use another account
+        </button>
       </div>
     );
   }

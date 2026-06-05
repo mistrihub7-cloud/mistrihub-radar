@@ -29,7 +29,6 @@ npm run start
 - `/worker` Worker Dashboard
 - `/worker-request` Worker Review Before Accept page
 - `/login` Login/Register
-- `/admin` Admin Panel
 
 ## Booking flow
 

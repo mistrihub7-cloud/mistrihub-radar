@@ -20,7 +20,7 @@ const links = [
 export function SiteHeader() {
   const pathname = usePathname();
   const { account, ready } = useAccountState();
-  const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : account?.role === "admin" ? "/admin" : "/dashboard/user";
+  const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : "/dashboard/user";
   const displayName = accountDisplayName(account);
 
   function isActive(href: string) {

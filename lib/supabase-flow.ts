@@ -26,6 +26,10 @@ type JobRequestRow = {
   photo_url: string | null;
   status: MockJobRequest["status"];
   created_at: string;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  user_latitude?: number | null;
+  user_longitude?: number | null;
   quote_amount?: string | null;
   quote_note?: string | null;
   quote_eta?: string | null;
@@ -63,7 +67,7 @@ type WorkerRow = {
 type CreateJobInput = Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">;
 
 const JOB_SELECT =
-  "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at,quote_amount,quote_note,quote_eta";
+  "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at,customer_name,customer_phone,user_latitude,user_longitude,quote_amount,quote_note,quote_eta";
 const JOB_SELECT_BASE =
   "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at";
 
@@ -104,6 +108,10 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
     preferredDate: row.preferred_date || "",
     preferredTime: row.preferred_time || "",
     area: row.area,
+    customerName: row.customer_name || undefined,
+    customerPhone: row.customer_phone || undefined,
+    userLatitude: row.user_latitude ?? undefined,
+    userLongitude: row.user_longitude ?? undefined,
     photoPreview: row.photo_url || "",
     status: row.status,
     createdAt: row.created_at,
@@ -112,6 +120,32 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
     quoteNote: row.quote_note || "",
     quoteEta: row.quote_eta || ""
   };
+}
+
+function normalizeContact(value?: string | null) {
+  return (value || "").replace(/\D/g, "");
+}
+
+function jobBelongsToAccount(row: JobRequestRow, account: MockAccount | null) {
+  if (!account) return false;
+  const accountPhone = normalizeContact(account.phone);
+  const jobPhone = normalizeContact(row.customer_phone);
+  if (accountPhone && jobPhone) return accountPhone.slice(-10) === jobPhone.slice(-10);
+
+  const accountName = account.name.trim().toLowerCase();
+  const customerName = (row.customer_name || "").trim().toLowerCase();
+  return Boolean(accountName && customerName && accountName === customerName);
+}
+
+function mockJobBelongsToAccount(job: MockJobRequest, account: MockAccount | null) {
+  if (!account) return false;
+  const accountPhone = normalizeContact(account.phone);
+  const jobPhone = normalizeContact(job.customerPhone);
+  if (accountPhone && jobPhone) return accountPhone.slice(-10) === jobPhone.slice(-10);
+
+  const accountName = account.name.trim().toLowerCase();
+  const customerName = (job.customerName || "").trim().toLowerCase();
+  return Boolean(accountName && customerName && accountName === customerName);
 }
 
 function normalizeStatus(value?: string | null, availableToday?: boolean | null): WorkerStatus {
@@ -404,7 +438,10 @@ export async function createJobInSupabase(input: CreateJobInput) {
 }
 
 export async function loadJobsFromSupabase(owner: "user" | "worker" = "user") {
-  if (!hasSupabaseConfig || !supabase) return getMockJobs();
+  if (!hasSupabaseConfig || !supabase) {
+    const localJobs = getMockJobs();
+    return owner === "user" ? localJobs.filter((job) => mockJobBelongsToAccount(job, getMockAccount())) : localJobs;
+  }
 
   const userId = await getSessionUserId();
   let query = supabase
@@ -440,7 +477,10 @@ export async function loadJobsFromSupabase(owner: "user" | "worker" = "user") {
   }
   if (error || !data) return getMockJobs();
 
-  return data.map((row) => {
+  const account = owner === "user" ? getMockAccount() : null;
+  const visibleRows = owner === "user" && !userId ? data.filter((row) => jobBelongsToAccount(row as JobRequestRow, account)) : data;
+
+  return visibleRows.map((row) => {
     const workerRow = Array.isArray(row.workers) ? row.workers[0] : row.workers;
     return mapJob(row as JobRequestRow, workerRow as WorkerRow | null);
   });

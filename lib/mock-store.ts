@@ -1,6 +1,6 @@
 import { workers } from "./data";
 
-export type MockRole = "user" | "worker" | "admin";
+export type MockRole = "user" | "worker";
 
 export type MockAccount = {
   id: string;
@@ -69,9 +69,7 @@ const PRESERVED_SESSION_KEYS = new Set([
   "mistrihub.locationLatitude",
   "mistrihub.locationLongitude",
   "mistrihub.locationLocked",
-  "mistrihub.locationSkipped",
-  WORKER_PROFILE_KEY,
-  WORKER_SETTINGS_KEY
+  "mistrihub.locationSkipped"
 ]);
 
 function canStore() {
@@ -100,7 +98,13 @@ function writeJson<T>(key: string, value: T) {
 }
 
 export function getMockAccount() {
-  return readJson<MockAccount | null>(ACCOUNT_KEY, null);
+  const account = readJson<(MockAccount & { role?: string }) | null>(ACCOUNT_KEY, null);
+  if (account && account.role !== "user" && account.role !== "worker") {
+    clearMistriHubSession();
+    return null;
+  }
+
+  return account as MockAccount | null;
 }
 
 export function saveMockAccount(account: MockAccount) {

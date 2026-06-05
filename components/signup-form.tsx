@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { categories } from "@/lib/data";
-import { saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
+import { clearMistriHubSession, saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
 import { saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
 import { SuccessPopup } from "./success-popup";
@@ -47,6 +47,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     if (role === "user") {
       const account: MockAccount = { id, role: "user", name, phone, email };
       try {
+        clearMistriHubSession();
         saveMockAccount(account);
         await saveProfileToSupabase(account);
         setShowSuccess(true);
@@ -77,6 +78,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       idVerificationFile: idFile ? "Selected" : ""
     };
     try {
+      clearMistriHubSession();
       saveWorkerRegistration(profile);
       const result = await saveWorkerRegistrationToSupabase(profile);
       if (!result.ok) {

@@ -16,7 +16,7 @@ const items = [
 export function BottomNav() {
   const pathname = usePathname();
   const { account } = useAccountState();
-  const profileHref = account?.role === "worker" ? "/dashboard/worker" : account?.role === "admin" ? "/admin" : account ? "/dashboard/user" : "/login";
+  const profileHref = account?.role === "worker" ? "/dashboard/worker" : account ? "/dashboard/user" : "/login";
   const profileLabel = account ? "Profile" : "Login";
   const navItems = items.map((item) => (item.label === "Profile" ? { ...item, href: profileHref, label: profileLabel } : item));
 
