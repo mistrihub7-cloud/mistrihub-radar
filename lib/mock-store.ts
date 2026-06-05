@@ -59,7 +59,9 @@ export type WorkerRegistration = MockAccount & {
 };
 
 const ACCOUNT_KEY = "mistrihub.mock.account";
+const SAVED_ACCOUNTS_KEY = "mistrihub.saved.accounts";
 const WORKER_PROFILE_KEY = "mistrihub.mock.workerProfile";
+const SAVED_WORKER_PROFILES_KEY = "mistrihub.saved.workerProfiles";
 const JOBS_KEY = "mistrihub.mock.jobs";
 const WORKER_SETTINGS_KEY = "mistrihub.mock.workerSettings";
 const WORKER_DECLINED_JOBS_KEY = "mistrihub.mock.workerDeclinedJobs";
@@ -69,7 +71,9 @@ const PRESERVED_SESSION_KEYS = new Set([
   "mistrihub.locationLatitude",
   "mistrihub.locationLongitude",
   "mistrihub.locationLocked",
-  "mistrihub.locationSkipped"
+  "mistrihub.locationSkipped",
+  SAVED_ACCOUNTS_KEY,
+  SAVED_WORKER_PROFILES_KEY
 ]);
 
 function canStore() {
@@ -97,6 +101,64 @@ function writeJson<T>(key: string, value: T) {
   }
 }
 
+function accountKeyFor(value: { phone?: string; email?: string }) {
+  const email = value.email?.trim().toLowerCase();
+  if (email) return `email:${email}`;
+  const phone = (value.phone || "").replace(/\D/g, "").slice(-10);
+  return phone ? `phone:${phone}` : "";
+}
+
+function getSavedWorkerProfiles() {
+  return readJson<Record<string, WorkerRegistration>>(SAVED_WORKER_PROFILES_KEY, {});
+}
+
+function getSavedAccounts() {
+  return readJson<Record<string, MockAccount>>(SAVED_ACCOUNTS_KEY, {});
+}
+
+function saveAccountByLogin(account: MockAccount) {
+  const key = accountKeyFor(account);
+  if (!key) return;
+  writeJson(SAVED_ACCOUNTS_KEY, {
+    ...getSavedAccounts(),
+    [key]: account
+  });
+}
+
+export function findSavedAccount(account: Pick<MockAccount, "phone" | "email">) {
+  const key = accountKeyFor(account);
+  const savedAccount = key ? getSavedAccounts()[key] || null : null;
+  return savedAccount && (savedAccount.role === "user" || savedAccount.role === "worker") ? savedAccount : null;
+}
+
+function saveWorkerProfileByAccount(profile: WorkerRegistration) {
+  const key = accountKeyFor(profile);
+  if (!key) return;
+  writeJson(SAVED_WORKER_PROFILES_KEY, {
+    ...getSavedWorkerProfiles(),
+    [key]: {
+      ...profile,
+      profilePhoto: profile.profilePhoto || "",
+      idVerificationFile: profile.idVerificationFile ? "Selected" : ""
+    }
+  });
+}
+
+export function findSavedWorkerRegistration(account: Pick<MockAccount, "phone" | "email">) {
+  const key = accountKeyFor(account);
+  return key ? getSavedWorkerProfiles()[key] || null : null;
+}
+
+export function restoreWorkerRegistrationForAccount(account: Pick<MockAccount, "phone" | "email">) {
+  const profile = findSavedWorkerRegistration(account);
+  if (profile) {
+    writeJson(WORKER_PROFILE_KEY, profile);
+    writeJson(WORKER_SETTINGS_KEY, { availability: profile.availability, serviceRadius: profile.serviceRadius });
+  }
+
+  return profile;
+}
+
 export function getMockAccount() {
   const account = readJson<(MockAccount & { role?: string }) | null>(ACCOUNT_KEY, null);
   if (account && account.role !== "user" && account.role !== "worker") {
@@ -109,15 +171,18 @@ export function getMockAccount() {
 
 export function saveMockAccount(account: MockAccount) {
   writeJson(ACCOUNT_KEY, account);
+  saveAccountByLogin(account);
 }
 
 export function saveWorkerRegistration(profile: WorkerRegistration) {
   saveMockAccount({ id: profile.id, role: "worker", name: profile.name, phone: profile.phone, email: profile.email });
-  writeJson(WORKER_PROFILE_KEY, {
+  const savedProfile = {
     ...profile,
     profilePhoto: profile.profilePhoto || "",
     idVerificationFile: profile.idVerificationFile ? "Selected" : ""
-  });
+  };
+  writeJson(WORKER_PROFILE_KEY, savedProfile);
+  saveWorkerProfileByAccount(savedProfile);
 }
 
 export function getWorkerRegistration() {

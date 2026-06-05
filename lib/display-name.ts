@@ -12,6 +12,7 @@ export function displayNameFromValue(value?: string) {
   if (!value) return "";
   const cleanValue = value.trim();
   if (!cleanValue) return "";
+  if (/^\+?\d[\d\s-]{5,}$/.test(cleanValue)) return "";
   if (cleanValue.includes("@")) return titleCase(cleanValue.split("@")[0]);
   return titleCase(cleanValue);
 }
@@ -20,8 +21,6 @@ export function accountDisplayName(account?: MockAccount | null, profile?: Worke
   return (
     displayNameFromValue(profile?.name) ||
     displayNameFromValue(account?.name) ||
-    displayNameFromValue(account?.email) ||
-    displayNameFromValue(account?.phone) ||
     (account?.role === "worker" ? "Worker" : "User")
   );
 }

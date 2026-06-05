@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { displayNameFromValue } from "@/lib/display-name";
-import { clearMistriHubSession, saveMockAccount } from "@/lib/mock-store";
+import { accountDisplayName } from "@/lib/display-name";
+import { clearMistriHubSession, findSavedAccount, restoreWorkerRegistrationForAccount, saveMockAccount } from "@/lib/mock-store";
 import { useAccountState } from "./use-account-state";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -16,7 +16,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const isRegister = mode === "register";
   const { account } = useAccountState();
   const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : "/dashboard/user";
-  const loggedInName = displayNameFromValue(account?.name) || displayNameFromValue(account?.email) || account?.role;
+  const loggedInName = accountDisplayName(account);
 
   async function handleSubmit() {
     if (!identifier) {
@@ -27,18 +27,24 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     setLoading(true);
     setMessage("");
     const cleanIdentifier = identifier.trim();
-    const account = {
+    const loginAccount = {
       id: `local-${Date.now()}`,
       role: "user" as const,
-      name: name.trim() || displayNameFromValue(cleanIdentifier),
+      name: name.trim() || "User",
       phone: cleanIdentifier.includes("@") ? "" : cleanIdentifier,
       email: cleanIdentifier.includes("@") ? cleanIdentifier : undefined
     };
+    const savedAccount = findSavedAccount(loginAccount);
+    const account = savedAccount || loginAccount;
+    const workerProfile = restoreWorkerRegistrationForAccount(account);
     clearMistriHubSession();
-    saveMockAccount(account);
+    if (workerProfile) {
+      restoreWorkerRegistrationForAccount(account);
+    }
+    saveMockAccount(workerProfile ? { ...account, role: "worker", id: workerProfile.id, name: workerProfile.name, phone: workerProfile.phone, email: workerProfile.email } : account);
     setLoading(false);
 
-    router.push("/dashboard/user");
+    router.push(workerProfile ? "/dashboard/worker" : "/dashboard/user");
   }
 
   if (account) {
