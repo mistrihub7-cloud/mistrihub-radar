@@ -79,8 +79,8 @@ export function WorkerProfileForm() {
   }
 
   async function saveProfile() {
-    if (!name.trim() || !phone.trim() || !email.trim() || !experience.trim() || !city.trim()) {
-      setMessage("Name, phone, email, experience aur city zaroori hai.");
+    if (!name.trim() || !phone.trim() || !experience.trim() || !city.trim()) {
+      setMessage("Name, phone, experience aur city zaroori hai.");
       return;
     }
 
@@ -131,7 +131,7 @@ export function WorkerProfileForm() {
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setPhone(event.target.value)} value={phone} />
         </label>
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">Email address</span>
+          <span className="mb-2 block text-sm font-bold">Email optional</span>
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setEmail(event.target.value)} type="email" value={email} />
         </label>
         <label className="block">
