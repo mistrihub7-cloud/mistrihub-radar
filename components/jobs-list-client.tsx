@@ -43,7 +43,11 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     loadJobs();
     const onChange = () => loadJobs();
     window.addEventListener("mistrihub-mock-change", onChange);
-    return () => window.removeEventListener("mistrihub-mock-change", onChange);
+    const timer = owner === "worker" ? window.setInterval(loadJobs, 20000) : undefined;
+    return () => {
+      window.removeEventListener("mistrihub-mock-change", onChange);
+      if (timer) window.clearInterval(timer);
+    };
   }, [owner]);
 
   if (loading) {
