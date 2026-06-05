@@ -132,13 +132,6 @@ function normalizeEmail(value?: string | null) {
   return (value || "").trim().toLowerCase();
 }
 
-function workerIdentityKey(row: WorkerRow) {
-  const email = normalizeEmail(row.email);
-  if (email) return `email:${email}`;
-  const phone = normalizeContact(row.phone || row.whatsapp).slice(-10);
-  return phone ? `phone:${phone}` : `id:${row.id}`;
-}
-
 function workerMatchesLogin(row: WorkerRow, login: { phone?: string; email?: string }) {
   const loginEmail = normalizeEmail(login.email);
   if (loginEmail && normalizeEmail(row.email) === loginEmail) return true;
@@ -680,7 +673,9 @@ export async function loadWorkersFromSupabase() {
     const { data, error } = result as { data?: WorkerRow[] | null; error?: { message?: string } | null };
     if (error || !data) return workers;
 
-    const seenWorkers = new Set<string>();
+    const seenWorkerEmails = new Set<string>();
+    const seenWorkerPhones = new Set<string>();
+    const seenWorkerIds = new Set<string>();
     return [...data]
       .sort((a, b) => {
         const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -688,9 +683,13 @@ export async function loadWorkersFromSupabase() {
         return bTime - aTime;
       })
       .filter((row) => {
-        const key = workerIdentityKey(row);
-        if (seenWorkers.has(key)) return false;
-        seenWorkers.add(key);
+        const email = normalizeEmail(row.email);
+        const phone = normalizeContact(row.phone || row.whatsapp).slice(-10);
+        if ((email && seenWorkerEmails.has(email)) || (phone && seenWorkerPhones.has(phone))) return false;
+        if (!email && !phone && seenWorkerIds.has(row.id)) return false;
+        if (email) seenWorkerEmails.add(email);
+        if (phone) seenWorkerPhones.add(phone);
+        if (!email && !phone) seenWorkerIds.add(row.id);
         return true;
       })
       .map(mapWorker);

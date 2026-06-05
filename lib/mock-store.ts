@@ -101,11 +101,13 @@ function writeJson<T>(key: string, value: T) {
   }
 }
 
-function accountKeyFor(value: { phone?: string; email?: string }) {
+function accountKeysFor(value: { phone?: string; email?: string }) {
+  const keys: string[] = [];
   const email = value.email?.trim().toLowerCase();
-  if (email) return `email:${email}`;
+  if (email) keys.push(`email:${email}`);
   const phone = (value.phone || "").replace(/\D/g, "").slice(-10);
-  return phone ? `phone:${phone}` : "";
+  if (phone) keys.push(`phone:${phone}`);
+  return keys;
 }
 
 function getSavedWorkerProfiles() {
@@ -117,36 +119,42 @@ function getSavedAccounts() {
 }
 
 function saveAccountByLogin(account: MockAccount) {
-  const key = accountKeyFor(account);
-  if (!key) return;
+  const keys = accountKeysFor(account);
+  if (!keys.length) return;
+  const savedAccounts = getSavedAccounts();
+  keys.forEach((key) => {
+    savedAccounts[key] = account;
+  });
   writeJson(SAVED_ACCOUNTS_KEY, {
-    ...getSavedAccounts(),
-    [key]: account
+    ...savedAccounts
   });
 }
 
 export function findSavedAccount(account: Pick<MockAccount, "phone" | "email">) {
-  const key = accountKeyFor(account);
-  const savedAccount = key ? getSavedAccounts()[key] || null : null;
+  const savedAccounts = getSavedAccounts();
+  const savedAccount = accountKeysFor(account).map((key) => savedAccounts[key]).find(Boolean) || null;
   return savedAccount && (savedAccount.role === "user" || savedAccount.role === "worker") ? savedAccount : null;
 }
 
 function saveWorkerProfileByAccount(profile: WorkerRegistration) {
-  const key = accountKeyFor(profile);
-  if (!key) return;
-  writeJson(SAVED_WORKER_PROFILES_KEY, {
-    ...getSavedWorkerProfiles(),
-    [key]: {
+  const keys = accountKeysFor(profile);
+  if (!keys.length) return;
+  const savedProfiles = getSavedWorkerProfiles();
+  keys.forEach((key) => {
+    savedProfiles[key] = {
       ...profile,
       profilePhoto: profile.profilePhoto || "",
       idVerificationFile: profile.idVerificationFile ? "Selected" : ""
-    }
+    };
+  });
+  writeJson(SAVED_WORKER_PROFILES_KEY, {
+    ...savedProfiles
   });
 }
 
 export function findSavedWorkerRegistration(account: Pick<MockAccount, "phone" | "email">) {
-  const key = accountKeyFor(account);
-  return key ? getSavedWorkerProfiles()[key] || null : null;
+  const savedProfiles = getSavedWorkerProfiles();
+  return accountKeysFor(account).map((key) => savedProfiles[key]).find(Boolean) || null;
 }
 
 export function restoreWorkerRegistrationForAccount(account: Pick<MockAccount, "phone" | "email">) {
