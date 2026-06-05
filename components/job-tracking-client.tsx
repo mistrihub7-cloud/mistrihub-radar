@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getMockJob, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
+import { getMockAccount, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
 import { loadJobFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { ContactActions } from "./contact-actions";
 import { Icon } from "./simple-icons";
@@ -17,11 +17,13 @@ function normalizeTimelineStatus(status: MockJobRequest["status"]) {
 
 export function JobTrackingClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<MockJobRequest | null>(null);
+  const [isWorkerMode, setIsWorkerMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadJob() {
       setLoading(true);
+      setIsWorkerMode(getMockAccount()?.role === "worker");
       setJob(await loadJobFromSupabase(jobId));
       setLoading(false);
     }
@@ -110,17 +112,29 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
 
       <aside className="space-y-5">
         <ContactActions unlocked={contactUnlocked} />
-        <div className="card p-4">
-          <h2 className="font-black">Status controls</h2>
-          <p className="mt-1 text-xs text-slate-500">Status updates are saved to Supabase when available.</p>
-          <div className="mt-3 grid gap-2">
-            {(["Accepted", "On The Way", "In Progress", "Completed", "Cancelled"] as const).map((item) => (
-              <button className="btn-outline h-10 text-sm" key={item} onClick={() => setStatus(item)} type="button">
-                Mark {item}
-              </button>
-            ))}
+        {isWorkerMode ? (
+          <div className="card p-4">
+            <h2 className="font-black">Worker status controls</h2>
+            <p className="mt-1 text-xs text-slate-500">Sirf worker mode mein status update available hai.</p>
+            <div className="mt-3 grid gap-2">
+              {(["Accepted", "On The Way", "In Progress", "Completed", "Cancelled"] as const).map((item) => (
+                <button className="btn-outline h-10 text-sm" key={item} onClick={() => setStatus(item)} type="button">
+                  Mark {item}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="card p-4">
+            <h2 className="font-black">Request sent</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Ye booking matching {job.service} workers ke New Job Requests mein jayegi. First worker jo accept karega, uske baad contact unlock hoga.
+            </p>
+            <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-xs font-black leading-5 text-amber-800">
+              WhatsApp auto-send ke liye WhatsApp Cloud API connect karna hoga. Abhi website request flow active hai.
+            </p>
+          </div>
+        )}
       </aside>
     </div>
   );
