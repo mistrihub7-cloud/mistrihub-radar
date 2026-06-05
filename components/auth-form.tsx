@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { accountDisplayName } from "@/lib/display-name";
-import { clearMistriHubSession, findSavedAccount, restoreWorkerRegistrationForAccount, saveMockAccount } from "@/lib/mock-store";
+import { clearMistriHubSession, findSavedAccount, findSavedWorkerRegistration, restoreWorkerRegistrationForAccount, saveMockAccount, saveWorkerRegistration } from "@/lib/mock-store";
+import { findWorkerRegistrationByLogin } from "@/lib/supabase-flow";
 import { useAccountState } from "./use-account-state";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -36,15 +37,19 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     };
     const savedAccount = findSavedAccount(loginAccount);
     const account = savedAccount || loginAccount;
-    const workerProfile = restoreWorkerRegistrationForAccount(account);
+    const workerProfile = findSavedWorkerRegistration(account) || (await findWorkerRegistrationByLogin(account));
     clearMistriHubSession();
     if (workerProfile) {
-      restoreWorkerRegistrationForAccount(account);
+      saveWorkerRegistration(workerProfile);
+      setLoading(false);
+      router.push("/dashboard/worker");
+      return;
     }
-    saveMockAccount(workerProfile ? { ...account, role: "worker", id: workerProfile.id, name: workerProfile.name, phone: workerProfile.phone, email: workerProfile.email } : account);
+    restoreWorkerRegistrationForAccount(account);
+    saveMockAccount(account);
     setLoading(false);
 
-    router.push(workerProfile ? "/dashboard/worker" : "/dashboard/user");
+    router.push("/dashboard/user");
   }
 
   if (account) {

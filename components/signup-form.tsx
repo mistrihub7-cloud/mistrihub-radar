@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { categories } from "@/lib/data";
-import { clearMistriHubSession, saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
-import { saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
+import { clearMistriHubSession, findSavedAccount, findSavedWorkerRegistration, saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
+import { findWorkerRegistrationByLogin, saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
 import { SuccessPopup } from "./success-popup";
 
@@ -43,8 +43,29 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     setMessage("");
     setSubmitting(true);
     const id = globalThis.crypto?.randomUUID?.() || `${Date.now()}`;
+    const loginIdentity = { phone: phone.trim(), email: email.trim() || undefined };
+    const existingWorker = findSavedWorkerRegistration(loginIdentity) || (await findWorkerRegistrationByLogin(loginIdentity));
 
     if (role === "user") {
+      if (existingWorker) {
+        clearMistriHubSession();
+        saveWorkerRegistration(existingWorker);
+        setShowSuccess(true);
+        setSubmitting(false);
+        window.setTimeout(() => router.replace("/dashboard/worker"), 700);
+        return;
+      }
+
+      const savedAccount = findSavedAccount(loginIdentity);
+      if (savedAccount) {
+        clearMistriHubSession();
+        saveMockAccount(savedAccount);
+        setShowSuccess(true);
+        setSubmitting(false);
+        window.setTimeout(() => router.replace(savedAccount.role === "worker" ? "/dashboard/worker" : "/dashboard/user"), 700);
+        return;
+      }
+
       const account: MockAccount = { id, role: "user", name, phone, email };
       try {
         clearMistriHubSession();
@@ -57,6 +78,16 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         setMessage(error instanceof Error ? error.message : "User account save nahi hua.");
         setSubmitting(false);
       }
+      return;
+    }
+
+    if (existingWorker) {
+      clearMistriHubSession();
+      saveWorkerRegistration(existingWorker);
+      setMessage("Ye mobile/email already registered hai. Existing worker profile login kar diya.");
+      setShowSuccess(true);
+      setSubmitting(false);
+      window.setTimeout(() => router.replace("/dashboard/worker"), 900);
       return;
     }
 

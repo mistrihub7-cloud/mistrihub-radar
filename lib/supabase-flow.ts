@@ -59,6 +59,8 @@ type WorkerRow = {
   available_today?: boolean | null;
   service_radius?: number | null;
   fast_response_time?: number | null;
+  experience_years?: number | string | null;
+  email?: string | null;
   phone?: string | null;
   whatsapp?: string | null;
   profile_photo?: string | null;
@@ -124,6 +126,26 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
 
 function normalizeContact(value?: string | null) {
   return (value || "").replace(/\D/g, "");
+}
+
+function normalizeEmail(value?: string | null) {
+  return (value || "").trim().toLowerCase();
+}
+
+function workerIdentityKey(row: WorkerRow) {
+  const email = normalizeEmail(row.email);
+  if (email) return `email:${email}`;
+  const phone = normalizeContact(row.phone || row.whatsapp).slice(-10);
+  return phone ? `phone:${phone}` : `id:${row.id}`;
+}
+
+function workerMatchesLogin(row: WorkerRow, login: { phone?: string; email?: string }) {
+  const loginEmail = normalizeEmail(login.email);
+  if (loginEmail && normalizeEmail(row.email) === loginEmail) return true;
+
+  const loginPhone = normalizeContact(login.phone).slice(-10);
+  const workerPhone = normalizeContact(row.phone || row.whatsapp).slice(-10);
+  return Boolean(loginPhone && workerPhone && loginPhone === workerPhone);
 }
 
 function jobBelongsToAccount(row: JobRequestRow, account: MockAccount | null) {
@@ -221,6 +243,27 @@ function mapWorker(row: WorkerRow): Worker {
   };
 }
 
+function mapWorkerRegistration(row: WorkerRow): WorkerRegistration {
+  const radius = normalizeRadius(row.service_radius);
+  return {
+    id: row.id,
+    role: "worker",
+    name: row.name || "Worker",
+    phone: row.phone || row.whatsapp || "",
+    email: row.email || undefined,
+    skill: row.category || row.skill || "Worker",
+    experience: row.experience_years ? String(row.experience_years) : "0",
+    city: row.city || "City",
+    location: row.location || row.service_area || row.city || "Saved location",
+    latitude: row.latitude ?? undefined,
+    longitude: row.longitude ?? undefined,
+    serviceRadius: `${radius} km`,
+    availability: normalizeStatus(row.availability_status, row.available_today),
+    profilePhoto: row.profile_photo || "",
+    idVerificationFile: ""
+  };
+}
+
 async function withTimeout<T>(promise: PromiseLike<T>, ms: number, label: string) {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
@@ -300,10 +343,44 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
       "Supabase save timeout. workers table policy/columns/env check karo."
     );
     const { error } = result as { error?: { message?: string } | null };
+    if (!error && profile.email) {
+      try {
+        await supabase
+          .from("workers")
+          .update({ email: profile.email })
+          .eq("id", workerId)
+          .throwOnError();
+      } catch {
+        // Older workers tables may not have the optional email column yet.
+      }
+    }
 
     return { ok: !error, error: error?.message };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Worker save failed." };
+  }
+}
+
+export async function findWorkerRegistrationByLogin(login: { phone?: string; email?: string }) {
+  if (!hasSupabaseConfig || !supabase) return null;
+
+  const loginEmail = normalizeEmail(login.email);
+  const loginPhone = normalizeContact(login.phone).slice(-10);
+  if (!loginEmail && !loginPhone) return null;
+
+  try {
+    const result = await withTimeout(
+      supabase.from("workers").select("*").order("created_at", { ascending: false }).range(0, 999),
+      8000,
+      "Supabase worker login lookup timeout."
+    );
+    const { data, error } = result as { data?: WorkerRow[] | null; error?: { message?: string } | null };
+    if (error || !data) return null;
+
+    const match = data.find((worker) => workerMatchesLogin(worker, login));
+    return match ? mapWorkerRegistration(match) : null;
+  } catch {
+    return null;
   }
 }
 
@@ -603,11 +680,18 @@ export async function loadWorkersFromSupabase() {
     const { data, error } = result as { data?: WorkerRow[] | null; error?: { message?: string } | null };
     if (error || !data) return workers;
 
+    const seenWorkers = new Set<string>();
     return [...data]
       .sort((a, b) => {
         const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
         const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
         return bTime - aTime;
+      })
+      .filter((row) => {
+        const key = workerIdentityKey(row);
+        if (seenWorkers.has(key)) return false;
+        seenWorkers.add(key);
+        return true;
       })
       .map(mapWorker);
   } catch {
