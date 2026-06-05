@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { categories, workers, type Worker } from "@/lib/data";
 import { createMockJob, getMockAccount, saveMockAccount } from "@/lib/mock-store";
+import { hasSupabaseConfig } from "@/lib/supabase-client";
 import { createJobInSupabase, saveProfileToSupabase } from "@/lib/supabase-flow";
 import { DEFAULT_LOCATION, LOCATION_KEY, LOCATION_LAT_KEY, LOCATION_LNG_KEY } from "./location-label";
 import { FilePreviewInput } from "./file-preview-input";
@@ -55,39 +56,50 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
 
     setError("");
     setSubmitting(true);
-    const rawLatitude = localStorage.getItem(LOCATION_LAT_KEY);
-    const rawLongitude = localStorage.getItem(LOCATION_LNG_KEY);
-    const userLatitude = rawLatitude ? Number(rawLatitude) : undefined;
-    const userLongitude = rawLongitude ? Number(rawLongitude) : undefined;
-    localStorage.setItem("mistrihub.bookingContact", JSON.stringify({ name: bookingName, phone: bookingPhone }));
-    if (!currentAccount || currentAccount.role === "user") {
-      const account = {
-        id: currentAccount?.id || globalThis.crypto?.randomUUID?.() || `local-${Date.now()}`,
-        role: "user" as const,
-        name: bookingName,
-        phone: bookingPhone,
-        email: currentAccount?.email
+    try {
+      const rawLatitude = localStorage.getItem(LOCATION_LAT_KEY);
+      const rawLongitude = localStorage.getItem(LOCATION_LNG_KEY);
+      const userLatitude = rawLatitude ? Number(rawLatitude) : undefined;
+      const userLongitude = rawLongitude ? Number(rawLongitude) : undefined;
+      localStorage.setItem("mistrihub.bookingContact", JSON.stringify({ name: bookingName, phone: bookingPhone }));
+      if (!currentAccount || currentAccount.role === "user") {
+        const account = {
+          id: currentAccount?.id || globalThis.crypto?.randomUUID?.() || `local-${Date.now()}`,
+          role: "user" as const,
+          name: bookingName,
+          phone: bookingPhone,
+          email: currentAccount?.email
+        };
+        saveMockAccount(account);
+        await saveProfileToSupabase(account);
+      }
+      const input = {
+        workerId: matchedWorker?.id || "",
+        service,
+        problem,
+        urgency,
+        preferredDate,
+        preferredTime,
+        area,
+        customerName: bookingName,
+        customerPhone: bookingPhone,
+        userLatitude: Number.isFinite(userLatitude) ? userLatitude : undefined,
+        userLongitude: Number.isFinite(userLongitude) ? userLongitude : undefined,
+        photoPreview,
+        photoPreview2
       };
-      saveMockAccount(account);
-      await saveProfileToSupabase(account);
+      const supabaseJob = await createJobInSupabase(input);
+      if (!supabaseJob && hasSupabaseConfig) {
+        setError("Request server par save nahi hua. job_requests table policy/columns check karo, phir dobara try karo.");
+        return;
+      }
+      const job = supabaseJob || createMockJob(input);
+      router.push(`/jobs/${job.id}`);
+    } catch {
+      setError("Request create nahi hua. Please dobara try karo.");
+    } finally {
+      setSubmitting(false);
     }
-    const input = {
-      workerId: matchedWorker?.id || "",
-      service,
-      problem,
-      urgency,
-      preferredDate,
-      preferredTime,
-      area,
-      customerName: bookingName,
-      customerPhone: bookingPhone,
-      userLatitude: Number.isFinite(userLatitude) ? userLatitude : undefined,
-      userLongitude: Number.isFinite(userLongitude) ? userLongitude : undefined,
-      photoPreview,
-      photoPreview2
-    };
-    const job = (await createJobInSupabase(input)) || createMockJob(input);
-    router.push(`/jobs/${job.id}`);
   }
 
   return (

@@ -150,6 +150,13 @@ function isValidCoordinate(latitude?: number, longitude?: number) {
   );
 }
 
+function isUuid(value?: string | null) {
+  return Boolean(
+    value &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+  );
+}
+
 function normalizeRadius(value?: number | null): 5 | 10 | 15 | 20 {
   return value === 5 || value === 10 || value === 15 || value === 20 ? value : 10;
 }
@@ -203,17 +210,21 @@ export async function loadAccountFromSupabase() {
 
 export async function saveProfileToSupabase(account: MockAccount) {
   saveMockAccount(account);
-  if (!hasSupabaseConfig || !supabase || account.id.startsWith("mock-")) return { ok: true, fallback: true };
+  if (!hasSupabaseConfig || !supabase || !isUuid(account.id)) return { ok: true, fallback: true };
 
-  const { error } = await supabase.from("profiles").upsert({
-    id: account.id,
-    full_name: account.name,
-    phone: account.phone,
-    email: account.email || null,
-    role: account.role
-  });
+  try {
+    const { error } = await supabase.from("profiles").upsert({
+      id: account.id,
+      full_name: account.name,
+      phone: account.phone,
+      email: account.email || null,
+      role: account.role
+    });
 
-  return { ok: !error, error: error?.message };
+    return { ok: !error, error: error?.message };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Profile save failed." };
+  }
 }
 
 export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistration) {
@@ -300,30 +311,36 @@ async function loadMatchingWorkersForJob(input: CreateJobInput) {
 }
 
 async function notifyMatchingWorkers(jobId: string, input: CreateJobInput) {
-  if (!supabase) return;
+  if (!supabase) return 0;
 
-  const matchingWorkers = await loadMatchingWorkersForJob(input);
-  if (!matchingWorkers.length) return;
+  try {
+    const matchingWorkers = await loadMatchingWorkersForJob(input);
+    if (!matchingWorkers.length) return 0;
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mistrihub-radar.vercel.app";
-  const requestUrl = `${siteUrl}/jobs/${jobId}`;
-  const summary = input.problem.trim().slice(0, 120);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mistrihub-radar.vercel.app";
+    const requestUrl = `${siteUrl}/jobs/${jobId}`;
+    const summary = input.problem.trim().slice(0, 120);
 
-  const websiteNotifications = matchingWorkers.map((worker) => ({
-    user_id: worker.user_id || null,
-    title: "New job request",
-    message: `${input.service} request in ${input.area}. ${input.urgency}. ${summary}`,
-    type: "new_job_request"
-  }));
+    const websiteNotifications = matchingWorkers.map((worker) => ({
+      user_id: worker.user_id || null,
+      title: "New job request",
+      message: `${input.service} request in ${input.area}. ${input.urgency}. ${summary}`,
+      type: "new_job_request"
+    }));
 
-  const whatsappNotifications = matchingWorkers.map((worker) => ({
-    user_id: worker.user_id || null,
-    title: "WhatsApp: new job request",
-    message: `New job request\nService: ${input.service}\nArea: ${input.area}\nProblem: ${summary}\nOpen: ${requestUrl}`,
-    type: "whatsapp_notification"
-  }));
+    const whatsappNotifications = matchingWorkers.map((worker) => ({
+      user_id: worker.user_id || null,
+      title: "WhatsApp: new job request",
+      message: `New job request\nService: ${input.service}\nArea: ${input.area}\nProblem: ${summary}\nOpen: ${requestUrl}`,
+      type: "whatsapp_notification"
+    }));
 
-  await supabase.from("notifications").insert([...websiteNotifications, ...whatsappNotifications]);
+    const { error } = await supabase.from("notifications").insert([...websiteNotifications, ...whatsappNotifications]);
+    if (error) return 0;
+    return matchingWorkers.length;
+  } catch {
+    return 0;
+  }
 }
 
 export async function createJobInSupabase(input: CreateJobInput) {
@@ -331,43 +348,59 @@ export async function createJobInSupabase(input: CreateJobInput) {
     return null;
   }
 
-  const userId = await getSessionUserId();
-  const id = `MH${Date.now().toString().slice(-6)}`;
+  try {
+    const userId = await getSessionUserId();
+    const id = `MH${Date.now().toString().slice(-6)}`;
 
-  const { data, error } = await supabase
-    .from("job_requests")
-    .insert({
-      id,
-      user_id: userId,
-      worker_id: input.workerId || null,
-      service: input.service,
-      problem_description: input.problem,
-      urgency: input.urgency,
-      preferred_date: input.preferredDate || null,
-      preferred_time: input.preferredTime || null,
-      area: input.area,
-      photo_url: input.photoPreview && !input.photoPreview.startsWith("data:") ? input.photoPreview : null,
-      status: "Requested"
-    })
-    .select(JOB_SELECT_BASE)
-    .single();
+    const { data, error } = await supabase
+      .from("job_requests")
+      .insert({
+        id,
+        user_id: userId,
+        worker_id: input.workerId || null,
+        service: input.service,
+        problem_description: input.problem,
+        urgency: input.urgency,
+        preferred_date: input.preferredDate || null,
+        preferred_time: input.preferredTime || null,
+        area: input.area,
+        photo_url: input.photoPreview && !input.photoPreview.startsWith("data:") ? input.photoPreview : null,
+        status: "Requested"
+      })
+      .select(JOB_SELECT_BASE)
+      .single();
 
-  if (error || !data) return null;
+    if (error || !data) return null;
 
-  await supabase
-    .from("job_requests")
-    .update({
-      customer_name: input.customerName || null,
-      customer_phone: input.customerPhone || null,
-      user_latitude: input.userLatitude ?? null,
-      user_longitude: input.userLongitude ?? null
-    })
-    .eq("id", id);
+    try {
+      await supabase
+        .from("job_requests")
+        .update({
+          customer_name: input.customerName || null,
+          customer_phone: input.customerPhone || null,
+          user_latitude: input.userLatitude ?? null,
+          user_longitude: input.userLongitude ?? null
+        })
+        .eq("id", id)
+        .throwOnError();
+    } catch {
+      // Older databases may not have the optional contact/location columns yet.
+    }
 
-  await supabase.from("job_status_history").insert({ job_id: id, status: "Requested", note: "Job request created" });
-  await notifyMatchingWorkers(id, input);
+    try {
+      await supabase
+        .from("job_status_history")
+        .insert({ job_id: id, status: "Requested", note: "Job request created" })
+        .throwOnError();
+    } catch {
+      // History is helpful, but the job request itself is the important record.
+    }
+    await notifyMatchingWorkers(id, input);
 
-  return mapJob(data as JobRequestRow);
+    return mapJob(data as JobRequestRow);
+  } catch {
+    return null;
+  }
 }
 
 export async function loadJobsFromSupabase(owner: "user" | "worker" = "user") {
