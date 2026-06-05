@@ -7,7 +7,12 @@ export const LOCATION_LAT_KEY = "mistrihub.locationLatitude";
 export const LOCATION_LNG_KEY = "mistrihub.locationLongitude";
 export const LOCATION_LOCK_KEY = "mistrihub.locationLocked";
 export const LOCATION_SKIP_KEY = "mistrihub.locationSkipped";
+export const OPEN_LOCATION_EVENT = "mistrihub-open-location-popup";
 export const DEFAULT_LOCATION = "Set your location";
+
+export function openLocationPopup() {
+  window.dispatchEvent(new Event(OPEN_LOCATION_EVENT));
+}
 
 export function saveLocationLabel(value: string, lockLocation = true, coordinates?: { latitude: number; longitude: number }) {
   const cleanValue = value.trim() || DEFAULT_LOCATION;
@@ -26,7 +31,7 @@ export function saveLocationLabel(value: string, lockLocation = true, coordinate
   window.dispatchEvent(new CustomEvent("mistrihub-location-change", { detail: cleanValue }));
 }
 
-export function LocationLabel({ className }: { className?: string }) {
+export function LocationLabel({ className, clickable = false }: { className?: string; clickable?: boolean }) {
   const [label, setLabel] = useState(DEFAULT_LOCATION);
 
   useEffect(() => {
@@ -44,6 +49,14 @@ export function LocationLabel({ className }: { className?: string }) {
       window.removeEventListener("storage", onChange);
     };
   }, []);
+
+  if (clickable) {
+    return (
+      <button className={className} onClick={openLocationPopup} type="button">
+        {label}
+      </button>
+    );
+  }
 
   return <span className={className}>{label}</span>;
 }

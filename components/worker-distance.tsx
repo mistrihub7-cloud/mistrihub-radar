@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LOCATION_KEY, LOCATION_LAT_KEY, LOCATION_LNG_KEY } from "./location-label";
+import { LOCATION_KEY, LOCATION_LAT_KEY, LOCATION_LNG_KEY, openLocationPopup } from "./location-label";
 
 type WorkerDistanceProps = {
   workerLatitude?: number;
@@ -53,10 +53,11 @@ function parseSavedCoordinates() {
 
 export function WorkerDistance({ workerLatitude, workerLongitude, missingWorkerText = "Unavailable", missingUserText = "Set location" }: WorkerDistanceProps) {
   const [label, setLabel] = useState(missingUserText);
+  const canOpenLocation = !label.endsWith(" km");
 
   useEffect(() => {
     if (workerLatitude == null || workerLongitude == null) {
-      setLabel(missingWorkerText);
+      setLabel(missingWorkerText === "Unavailable" ? "Worker location missing" : missingWorkerText);
       return;
     }
 
@@ -69,6 +70,14 @@ export function WorkerDistance({ workerLatitude, workerLongitude, missingWorkerT
     const kilometers = distanceKm(userCoordinates, { latitude: workerLatitude, longitude: workerLongitude });
     setLabel(kilometers < 1 ? `${Math.max(0.1, kilometers).toFixed(1)} km` : `${kilometers.toFixed(1)} km`);
   }, [missingUserText, missingWorkerText, workerLatitude, workerLongitude]);
+
+  if (canOpenLocation) {
+    return (
+      <button className="font-black text-brand-600 underline-offset-2 hover:underline" onClick={openLocationPopup} type="button">
+        {label}
+      </button>
+    );
+  }
 
   return <>{label}</>;
 }

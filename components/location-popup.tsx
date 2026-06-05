@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { resolveAreaName } from "./location-geocode";
-import { DEFAULT_LOCATION, LOCATION_KEY, LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, saveLocationLabel } from "./location-label";
+import { DEFAULT_LOCATION, LOCATION_KEY, LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, OPEN_LOCATION_EVENT, saveLocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 
 type LocationState = "idle" | "loading" | "saved" | "denied" | "unsupported";
@@ -13,6 +13,13 @@ export function LocationPopup() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    const openPopup = () => {
+      setArea(localStorage.getItem(LOCATION_KEY) || "");
+      setState("idle");
+      setVisible(true);
+    };
+    window.addEventListener(OPEN_LOCATION_EVENT, openPopup);
+
     const alreadyLocked = localStorage.getItem(LOCATION_LOCK_KEY) === "true";
     const alreadySkipped = localStorage.getItem(LOCATION_SKIP_KEY) === "true";
     const savedLocation = localStorage.getItem(LOCATION_KEY);
@@ -21,13 +28,18 @@ export function LocationPopup() {
     if (hasSavedLocation) {
       localStorage.setItem(LOCATION_LOCK_KEY, "true");
       localStorage.removeItem(LOCATION_SKIP_KEY);
-      return;
+      return () => window.removeEventListener(OPEN_LOCATION_EVENT, openPopup);
     }
 
     if (!alreadyLocked && !alreadySkipped) {
       const timer = window.setTimeout(() => setVisible(true), 700);
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(timer);
+        window.removeEventListener(OPEN_LOCATION_EVENT, openPopup);
+      };
     }
+
+    return () => window.removeEventListener(OPEN_LOCATION_EVENT, openPopup);
   }, []);
 
   const closeForLater = () => {
@@ -61,7 +73,7 @@ export function LocationPopup() {
         setVisible(false);
       },
       () => setState("denied"),
-      { enableHighAccuracy: false, maximumAge: 86400000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 300000, timeout: 12000 }
     );
   };
 

@@ -43,7 +43,7 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
               <div className="rounded-2xl bg-slate-50 p-4">
                 <p className="text-xs font-bold text-slate-500">Your area</p>
                 <p className="mt-1 font-black">
-                  <LocationLabel />
+                  <LocationLabel clickable className="text-left font-black text-brand-600" />
                 </p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-4">

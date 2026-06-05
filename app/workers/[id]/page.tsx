@@ -82,18 +82,6 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
           </div>
 
           <div className="card p-5">
-            <h2 className="text-xl font-black">Work gallery</h2>
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              {[1, 2, 3].map((item) => (
-                <div className="grid aspect-square place-items-center rounded-2xl bg-slate-100 text-xs font-bold text-slate-500" key={item}>
-                  Photo
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-slate-500">TODO: connect worker gallery to Supabase Storage.</p>
-          </div>
-
-          <div className="card p-5">
             <h2 className="text-xl font-black">Reviews</h2>
             <p className="mt-2 text-sm font-bold text-slate-600">{worker.reviews ? `${worker.reviews} review(s) available` : "No reviews yet."}</p>
           </div>

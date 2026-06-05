@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { accountDisplayName } from "@/lib/display-name";
 import { clearMistriHubSession } from "@/lib/mock-store";
-import { LocationLabel } from "./location-label";
+import { LocationLabel, openLocationPopup } from "./location-label";
 import { Icon } from "./simple-icons";
 import { Logo } from "./logo";
 import { useAccountState } from "./use-account-state";
@@ -34,11 +34,11 @@ export function SiteHeader() {
       <div className="container-page flex h-[74px] items-center justify-between gap-7">
         <div className="flex items-center gap-7">
           <Logo />
-          <Link className="flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800" href="/workers">
+          <button className="flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800" onClick={openLocationPopup} type="button">
             <Icon className="h-4 w-4 text-brand-600" name="location" />
             <LocationLabel />
             <span className="text-slate-400">v</span>
-          </Link>
+          </button>
         </div>
         <nav className="flex items-center gap-8 text-sm font-extrabold text-slate-900">
           {links.map(([label, href]) => (

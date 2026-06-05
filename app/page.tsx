@@ -130,7 +130,7 @@ export default async function HomePage() {
             <div>
               <p className="flex items-center gap-1 text-xs font-bold text-slate-700">
                 <Icon className="h-4 w-4 text-brand-600" name="location" />
-                <LocationLabel />
+                <LocationLabel clickable className="text-left" />
               </p>
               <Logo />
             </div>
