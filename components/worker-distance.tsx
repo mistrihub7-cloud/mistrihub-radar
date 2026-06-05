@@ -51,13 +51,13 @@ function parseSavedCoordinates() {
   return isValidCoordinate(latitude, longitude) ? { latitude, longitude } : null;
 }
 
-export function WorkerDistance({ workerLatitude, workerLongitude, missingWorkerText = "Unavailable", missingUserText = "Set location" }: WorkerDistanceProps) {
+export function WorkerDistance({ workerLatitude, workerLongitude, missingWorkerText = "Worker location off", missingUserText = "Set location" }: WorkerDistanceProps) {
   const [label, setLabel] = useState(missingUserText);
-  const canOpenLocation = !label.endsWith(" km");
+  const canOpenLocation = label === missingUserText;
 
   useEffect(() => {
     if (workerLatitude == null || workerLongitude == null) {
-      setLabel(missingWorkerText === "Unavailable" ? "Worker location missing" : missingWorkerText);
+      setLabel(missingWorkerText);
       return;
     }
 

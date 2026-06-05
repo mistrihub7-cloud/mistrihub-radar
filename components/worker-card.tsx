@@ -57,7 +57,7 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-slate-600">
             <span className="min-w-0 rounded-xl bg-slate-50 px-2 py-2">
               <b className="block break-words text-slate-950">
-                <WorkerDistance missingWorkerText="Unavailable" workerLatitude={worker.latitude} workerLongitude={worker.longitude} />
+                <WorkerDistance workerLatitude={worker.latitude} workerLongitude={worker.longitude} />
               </b>
               Distance
             </span>
