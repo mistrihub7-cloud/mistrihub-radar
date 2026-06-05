@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 const INSTALL_DISMISSED_KEY = "mistrihub.installPromptDismissed";
+const INSTALL_INSTALLED_KEY = "mistrihub.installPromptInstalled";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -14,23 +15,47 @@ export function InstallPrompt() {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
     const isInstalled =
       window.matchMedia("(display-mode: standalone)").matches ||
       window.matchMedia("(display-mode: fullscreen)").matches ||
       navigatorWithStandalone.standalone === true;
     const dismissed = localStorage.getItem(INSTALL_DISMISSED_KEY) === "true";
+    const installed = localStorage.getItem(INSTALL_INSTALLED_KEY) === "true";
 
-    if (isInstalled || dismissed) {
+    if (isInstalled || installed) {
+      localStorage.setItem(INSTALL_INSTALLED_KEY, "true");
+      localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
       setHidden(true);
       return;
     }
 
+    if (dismissed) {
+      setHidden(true);
+      return;
+    }
+
+    const relatedApps = (navigator as Navigator & {
+      getInstalledRelatedApps?: () => Promise<Array<unknown>>;
+    }).getInstalledRelatedApps;
+    if (relatedApps) {
+      relatedApps.call(navigator).then((apps) => {
+        if (cancelled || !apps.length) return;
+        localStorage.setItem(INSTALL_INSTALLED_KEY, "true");
+        localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
+        setHidden(true);
+        setEvent(null);
+      }).catch(() => null);
+    }
+
     const onPrompt = (installEvent: Event) => {
       installEvent.preventDefault();
+      if (localStorage.getItem(INSTALL_DISMISSED_KEY) === "true" || localStorage.getItem(INSTALL_INSTALLED_KEY) === "true") return;
       setEvent(installEvent as BeforeInstallPromptEvent);
     };
     const onInstalled = () => {
+      localStorage.setItem(INSTALL_INSTALLED_KEY, "true");
       localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
       setHidden(true);
       setEvent(null);
@@ -39,6 +64,7 @@ export function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
+      cancelled = true;
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
@@ -60,6 +86,7 @@ export function InstallPrompt() {
             const choice = await event.userChoice;
             localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
             if (choice.outcome === "accepted") {
+              localStorage.setItem(INSTALL_INSTALLED_KEY, "true");
               setEvent(null);
             }
             setHidden(true);

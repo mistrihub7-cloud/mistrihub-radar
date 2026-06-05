@@ -72,6 +72,8 @@ const PRESERVED_SESSION_KEYS = new Set([
   "mistrihub.locationLongitude",
   "mistrihub.locationLocked",
   "mistrihub.locationSkipped",
+  "mistrihub.installPromptDismissed",
+  "mistrihub.installPromptInstalled",
   SAVED_ACCOUNTS_KEY,
   SAVED_WORKER_PROFILES_KEY
 ]);
