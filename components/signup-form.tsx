@@ -31,8 +31,8 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
 
   async function submit() {
     if (submitting) return;
-    if (!name.trim() || !phone.trim()) {
-      setMessage("Name aur phone number zaroori hai.");
+    if (!name.trim() || !phone.trim() || !email.trim()) {
+      setMessage("Name, mobile number aur email zaroori hai.");
       return;
     }
     if (role === "worker" && (!experience.trim() || !city.trim())) {
@@ -173,7 +173,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setPhone(event.target.value)} value={phone} />
         </label>
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">Email optional</span>
+          <span className="mb-2 block text-sm font-bold">Email address</span>
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setEmail(event.target.value)} type="email" value={email} />
         </label>
       </div>

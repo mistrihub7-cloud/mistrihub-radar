@@ -320,6 +320,7 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
         city: profile.city,
         latitude: profile.latitude ?? null,
         longitude: profile.longitude ?? null,
+        email: profile.email,
         phone: profile.phone,
         whatsapp: profile.phone,
         profile_photo: profile.profilePhoto || "",
@@ -336,17 +337,6 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
       "Supabase save timeout. workers table policy/columns/env check karo."
     );
     const { error } = result as { error?: { message?: string } | null };
-    if (!error && profile.email) {
-      try {
-        await supabase
-          .from("workers")
-          .update({ email: profile.email })
-          .eq("id", workerId)
-          .throwOnError();
-      } catch {
-        // Older workers tables may not have the optional email column yet.
-      }
-    }
 
     return { ok: !error, error: error?.message };
   } catch (error) {
