@@ -1,10 +1,7 @@
 import Link from "next/link";
-import { LocationLabel } from "@/components/location-label";
 import { LocalWorkerList } from "@/components/local-worker-list";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { NearbyWorkerList } from "@/components/nearby-worker-list";
-import { Icon } from "@/components/simple-icons";
-import { discoveryRules } from "@/lib/data";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 const tabs = ["All", "Available Today", "Busy", "Not Available"];
@@ -35,36 +32,7 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
           <aside className="card p-5">
             <p className="text-sm font-black text-brand-600">Nearby Worker Discovery</p>
             <h1 className="mt-1 break-words text-2xl font-black text-slate-950 md:text-3xl">Workers serving your area</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Showing workers by saved service area, availability, nearby km, trust score and rating. Distance updates after user location is allowed.
-            </p>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs font-bold text-slate-500">Your area</p>
-                <p className="mt-1 font-black">
-                  <LocationLabel clickable className="text-left font-black text-brand-600" />
-                </p>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs font-bold text-slate-500">Nearby km</p>
-                <p className="mt-1 font-black">Calculated from saved GPS</p>
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <h2 className="font-black">Search priority</h2>
-              <div className="mt-3 space-y-2">
-                {discoveryRules.priority.map((item, index) => (
-                  <div className="flex items-start gap-3 rounded-2xl bg-white p-3 text-sm font-bold leading-5 shadow-sm" key={item}>
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600">
-                      {index + 1}
-                    </span>
-                    <span className="min-w-0 break-words">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Nearby trusted workers available for booking requests.</p>
 
             <div className="mt-5 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
               <b className="block">Emergency requests</b>
