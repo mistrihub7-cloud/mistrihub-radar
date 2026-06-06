@@ -62,7 +62,7 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
               Distance
             </span>
             <span className="rounded-xl bg-slate-50 px-2 py-2">
-              <b className="block text-slate-950">{worker.jobs || "New"}</b>Jobs
+              <b className="block text-slate-950">{worker.jobs}</b>Jobs
             </span>
             <span className="rounded-xl bg-slate-50 px-2 py-2">
               <b className="block text-slate-950">{hasReviews ? worker.reviews : "No"}</b>Reviews

@@ -113,13 +113,13 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       saveWorkerRegistration(profile);
       const result = await saveWorkerRegistrationToSupabase(profile);
       if (!result.ok) {
-        setMessage("Profile save nahi hua. Supabase workers table columns, RLS policy, aur Vercel env ek baar check karo.");
+        setMessage(`Profile save nahi hua. ${result.error || "Supabase workers table columns/RLS policy check karo."}`);
         setSubmitting(false);
         return;
       }
       setShowSuccess(true);
       setSubmitting(false);
-      window.setTimeout(() => router.replace(`/workers/${id}`), 1200);
+      window.setTimeout(() => router.replace(`/workers/${result.workerId || id}`), 1200);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Worker profile save nahi hua.");
       setSubmitting(false);

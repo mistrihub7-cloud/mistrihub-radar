@@ -331,47 +331,87 @@ export async function saveProfileToSupabase(account: MockAccount) {
 }
 
 export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistration) {
-  saveWorkerRegistration(profile);
-  if (!hasSupabaseConfig || !supabase) return { ok: true, fallback: true };
+  if (!hasSupabaseConfig || !supabase) {
+    saveWorkerRegistration(profile);
+    return { ok: true, fallback: true, workerId: profile.id };
+  }
+
+  const existingProfile = await findWorkerRegistrationByLogin({ phone: profile.phone, email: profile.email });
+  const profileToSave = existingProfile ? { ...profile, id: existingProfile.id } : profile;
+  saveWorkerRegistration(profileToSave);
 
   const radius = Number.parseInt(profile.serviceRadius, 10) || 10;
   const categorySlug = categorySlugFor(profile.skill);
-  const workerId = profile.id;
+  const workerId = profileToSave.id;
+  const corePayload = {
+    id: workerId,
+    user_id: null,
+    name: profile.name,
+    category: profile.skill,
+    category_slug: categorySlug,
+    experience_years: Number.parseInt(profile.experience, 10) || 0,
+    rating: 0,
+    review_count: 0,
+    location: profile.location,
+    city: profile.city,
+    latitude: profile.latitude ?? null,
+    longitude: profile.longitude ?? null,
+    email: profile.email || null,
+    phone: profile.phone,
+    whatsapp: profile.phone,
+    profile_photo: profile.profilePhoto || "",
+    available_today: profile.availability === "Available Today",
+    service_radius: radius,
+    availability_status: profile.availability,
+    service_area: profile.location
+  };
 
   try {
-    const result = await withTimeout(
-      supabase.from("workers").upsert({
+    const payloads = [
+      {
+        ...corePayload,
+        short_description: `${profile.skill} service in ${profile.location}`,
+        bio: `${profile.name} provides ${profile.skill} service from saved location in ${profile.city}.`,
+        service_details: [profile.skill],
+        verified_status: profile.idVerificationFile ? "Pending" : "Not Submitted"
+      },
+      corePayload,
+      {
         id: workerId,
         user_id: null,
         name: profile.name,
         category: profile.skill,
-        category_slug: categorySlug,
-        experience_years: Number.parseInt(profile.experience, 10) || 0,
-        rating: 0,
-        review_count: 0,
         location: profile.location,
         city: profile.city,
         latitude: profile.latitude ?? null,
         longitude: profile.longitude ?? null,
-        email: profile.email,
+        email: profile.email || null,
         phone: profile.phone,
-        whatsapp: profile.phone,
-        profile_photo: profile.profilePhoto || "",
-        short_description: `${profile.skill} service in ${profile.location}`,
-        bio: `${profile.name} provides ${profile.skill} service from saved location in ${profile.city}.`,
-        service_details: [profile.skill],
-        available_today: profile.availability === "Available Today",
-        service_radius: radius,
-        availability_status: profile.availability,
-        service_area: profile.location,
-        verified_status: profile.idVerificationFile ? "Pending" : "Not Submitted"
-      }),
-      8000,
-      "Supabase save timeout. workers table policy/columns/env check karo."
-    );
-    const { error } = result as { error?: { message?: string } | null };
+        whatsapp: profile.phone
+      },
+      {
+        id: workerId,
+        name: profile.name,
+        category: profile.skill,
+        location: profile.location,
+        city: profile.city,
+        phone: profile.phone
+      }
+    ];
 
-    return { ok: !error, error: error?.message };
+    let lastError = "";
+    for (const payload of payloads) {
+      const result = await withTimeout(
+        supabase.from("workers").upsert(payload as Record<string, unknown>).select("id").maybeSingle(),
+        8000,
+        "Supabase save timeout. workers table policy/columns/env check karo."
+      );
+      const { error } = result as { error?: { message?: string } | null };
+      if (!error) return { ok: true, workerId };
+      lastError = error.message || lastError;
+    }
+
+    return { ok: false, error: lastError || "Worker save failed." };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Worker save failed." };
   }
@@ -752,6 +792,26 @@ export async function saveWorkerSettingsToSupabase(settings: { availability: str
   return { ok: !error && Boolean(data), error: error?.message || (!data ? "Worker row not found." : undefined) };
 }
 
+async function loadCompletedJobCountsByWorker() {
+  if (!supabase) return new Map<string, number>();
+
+  try {
+    const { data, error } = await supabase
+      .from("job_requests")
+      .select("worker_id,status")
+      .eq("status", "Completed")
+      .range(0, 999);
+    if (error || !data) return new Map<string, number>();
+
+    return (data as Array<{ worker_id?: string | null; status?: string | null }>).reduce((counts, job) => {
+      if (job.worker_id) counts.set(job.worker_id, (counts.get(job.worker_id) || 0) + 1);
+      return counts;
+    }, new Map<string, number>());
+  } catch {
+    return new Map<string, number>();
+  }
+}
+
 export async function loadWorkersFromSupabase() {
   if (!hasSupabaseConfig || !supabase) return workers;
 
@@ -763,6 +823,7 @@ export async function loadWorkersFromSupabase() {
     );
     const { data, error } = result as { data?: WorkerRow[] | null; error?: { message?: string } | null };
     if (error || !data) return workers;
+    const completedJobCounts = await loadCompletedJobCountsByWorker();
 
     const seenWorkerEmails = new Set<string>();
     const seenWorkerPhones = new Set<string>();
@@ -783,7 +844,12 @@ export async function loadWorkersFromSupabase() {
         if (!email && !phone) seenWorkerIds.add(row.id);
         return true;
       })
-      .map(mapWorker);
+      .map((row) =>
+        mapWorker({
+          ...row,
+          jobs_completed: Math.max(Number(row.jobs_completed ?? row.jobs ?? 0), completedJobCounts.get(row.id) || 0)
+        })
+      );
   } catch {
     return workers;
   }
@@ -795,5 +861,10 @@ export async function loadWorkerFromSupabase(workerId: string) {
   const { data, error } = await supabase.from("workers").select("*").eq("id", workerId).maybeSingle();
   if (error || !data) return workers.find((worker) => worker.id === workerId) || null;
 
-  return mapWorker(data as WorkerRow);
+  const completedJobCounts = await loadCompletedJobCountsByWorker();
+  const row = data as WorkerRow;
+  return mapWorker({
+    ...row,
+    jobs_completed: Math.max(Number(row.jobs_completed ?? row.jobs ?? 0), completedJobCounts.get(row.id) || 0)
+  });
 }

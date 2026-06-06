@@ -109,13 +109,14 @@ export function WorkerProfileForm() {
     const result = await saveWorkerRegistrationToSupabase(nextProfile);
     setSaving(false);
     if (!result.ok) {
-      setMessage("Profile local update hua. Supabase columns/policy check karo.");
+      setMessage(`Profile save nahi hua. ${result.error || "Supabase workers table columns/RLS policy check karo."}`);
       return;
     }
 
-    setProfile(nextProfile);
+    const savedProfile = { ...nextProfile, id: result.workerId || nextProfile.id };
+    setProfile(savedProfile);
     setShowSuccess(true);
-    window.setTimeout(() => router.replace(`/workers/${nextProfile.id}`), 1200);
+    window.setTimeout(() => router.replace(`/workers/${savedProfile.id}`), 1200);
   }
 
   return (
