@@ -12,6 +12,7 @@ import { useAccountState } from "./use-account-state";
 const links = [
   ["Home", "/"],
   ["Workers", "/workers"],
+  ["Services", "/categories"],
   ["Book Worker", "/book"],
   ["Jobs", "/jobs"],
   ["How It Works", "/#how-it-works"]
@@ -40,7 +41,7 @@ export function SiteHeader() {
             <span className="text-slate-400">v</span>
           </button>
         </div>
-        <nav className="flex items-center gap-8 text-sm font-extrabold text-slate-900">
+        <nav className="flex items-center gap-6 text-sm font-extrabold text-slate-900">
           {links.map(([label, href]) => (
             <Link
               className={isActive(href) ? "border-b-4 border-brand-600 py-7 text-brand-600" : "py-7"}

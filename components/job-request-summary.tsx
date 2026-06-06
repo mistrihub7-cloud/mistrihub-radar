@@ -8,7 +8,7 @@ export function JobRequestSummary({ request }: { request: JobRequest }) {
     ["Distance", request.distance],
     ["Area", request.area],
     ["Urgency", request.urgency],
-    ["Preferred time", request.preferredTime]
+    ["Preferred date", request.preferredTime]
   ];
 
   return (

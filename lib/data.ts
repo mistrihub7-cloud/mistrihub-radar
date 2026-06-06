@@ -44,7 +44,7 @@ export const categories = [
   { name: "Carpenter", tone: "text-orange-600", bg: "bg-orange-50", icon: "hammer" },
   { name: "Labour / Helper", tone: "text-emerald-600", bg: "bg-emerald-50", icon: "worker" },
   { name: "Home Cleaning", tone: "text-cyan-600", bg: "bg-cyan-50", icon: "broom" },
-  { name: "Driver", tone: "text-blue-700", bg: "bg-blue-50", icon: "car" },
+  { name: "Driver / Car Booking", tone: "text-blue-700", bg: "bg-blue-50", icon: "car" },
   { name: "Mason", tone: "text-stone-600", bg: "bg-stone-100", icon: "mason" },
   { name: "Welder", tone: "text-yellow-600", bg: "bg-yellow-50", icon: "weld" },
   { name: "RO Service", tone: "text-indigo-600", bg: "bg-indigo-50", icon: "water" },

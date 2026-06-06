@@ -29,6 +29,11 @@ export function JobChat({
   const account = typeof window !== "undefined" ? getMockAccount() : null;
   const workerProfile = typeof window !== "undefined" && account?.role === "worker" ? getWorkerRegistration() : null;
   const scopedWorkerId = account?.role === "worker" ? workerProfile?.id : undefined;
+  const displayName = accountDisplayName(account, workerProfile || undefined);
+  const notice =
+    account?.role === "worker"
+      ? `Dear ${displayName}, job accept karne se pehle user se price, work details aur timing properly discuss kar lein. Agar sab details clear ho tabhi job accept karein. Accept karne ke baad unnecessary cancel na karein, isse aapka score affect ho sakta hai. MistriHub sirf users aur workers ko connect karta hai. Final deal, payment aur work agreement user aur worker ke beech hoga.`
+      : `Dear ${displayName}, worker ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple workers aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi worker ko hire karein. MistriHub sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.`;
 
   useEffect(() => {
     let cancelled = false;
@@ -131,6 +136,10 @@ export function JobChat({
           </p>
         </div>
         <span className="status-pill bg-brand-50 text-brand-600">{messages.length}</span>
+      </div>
+      <div className="mt-4 rounded-2xl bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-900">
+        <p className="font-black">⚠ Important Notice</p>
+        <p className="mt-1">{notice}</p>
       </div>
       {account?.role !== "worker" && conversations.length > 1 ? (
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1">

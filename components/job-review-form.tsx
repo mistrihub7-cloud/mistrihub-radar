@@ -10,6 +10,7 @@ export function JobReviewForm({ job }: { job: MockJobRequest }) {
   const [comment, setComment] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const account = typeof window !== "undefined" ? getMockAccount() : null;
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export function JobReviewForm({ job }: { job: MockJobRequest }) {
       if (!existing || cancelled) return;
       setRating(existing.rating);
       setComment(existing.comment || "");
+      setSaved(true);
       setMessage("Review saved.");
     }
 
@@ -31,6 +33,10 @@ export function JobReviewForm({ job }: { job: MockJobRequest }) {
   if (job.status !== "Completed" || !job.workerId || account?.role === "worker") return null;
 
   async function submitReview() {
+    if (saved) {
+      setMessage("Is job ke liye review already submit ho chuka hai.");
+      return;
+    }
     if (!rating) {
       setMessage("Rating select karo.");
       return;
@@ -46,7 +52,12 @@ export function JobReviewForm({ job }: { job: MockJobRequest }) {
       comment: comment.trim()
     });
     setSaving(false);
-    setMessage(result.ok ? "Review saved. Worker rating update ho jayegi." : `Review save nahi hua. ${result.error || "worker_reviews table/policy check karo."}`);
+    if (result.ok) {
+      setSaved(true);
+      setMessage(result.fallback ? "Review saved on this device. Public sync ke liye latest SQL run karo." : "Review saved. Worker rating update ho jayegi.");
+      return;
+    }
+    setMessage(`Review save nahi hua. ${result.error || "worker_reviews table/policy check karo."}`);
   }
 
   return (
@@ -58,6 +69,7 @@ export function JobReviewForm({ job }: { job: MockJobRequest }) {
           <button
             className={`grid h-11 w-11 place-items-center rounded-xl border ${rating >= item ? "border-amber-300 bg-amber-50 text-amber-500" : "border-slate-200 bg-white text-slate-300"}`}
             key={item}
+            disabled={saved}
             onClick={() => setRating(item)}
             type="button"
           >
@@ -67,13 +79,14 @@ export function JobReviewForm({ job }: { job: MockJobRequest }) {
       </div>
       <textarea
         className="mt-4 h-24 w-full rounded-2xl border border-slate-200 p-4 text-sm font-bold outline-none focus:border-brand-500"
+        disabled={saved}
         onChange={(event) => setComment(event.target.value)}
         placeholder="Short review optional"
         value={comment}
       />
       {message ? <p className="mt-3 rounded-2xl bg-brand-50 p-3 text-xs font-black text-brand-700">{message}</p> : null}
-      <button className="btn-primary mt-4 w-full" disabled={saving} onClick={submitReview} type="button">
-        {saving ? "Saving..." : "Save Review"}
+      <button className="btn-primary mt-4 w-full" disabled={saving || saved} onClick={submitReview} type="button">
+        {saved ? "Review Submitted" : saving ? "Saving..." : "Save Review"}
       </button>
     </div>
   );

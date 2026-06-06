@@ -14,7 +14,6 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
-import { hasFirebaseMessagingConfig, registerFcmToken } from "@/lib/fcm-client";
 import { getJobAlertsEnabled, requestJobAlertPermission, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
 import { NotificationBell } from "./notification-bell";
@@ -118,6 +117,7 @@ export function WorkerDashboardClient() {
       return;
     }
 
+    const { hasFirebaseMessagingConfig, registerFcmToken } = await import("@/lib/fcm-client");
     const tokenResult = await registerFcmToken();
     setAlertMessage(
       tokenResult.ok

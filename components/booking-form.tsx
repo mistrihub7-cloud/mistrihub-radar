@@ -35,6 +35,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
   const [photoPreview2, setPhotoPreview2] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const noticeName = loggedInAccount?.name || customerName.trim() || "User";
 
   function switchToUserMode() {
     if (!loggedInAccount) return;
@@ -232,6 +233,16 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
       <div className="grid gap-4 sm:grid-cols-2">
         <FilePreviewInput label="Problem photo 1 (optional)" onPreview={(preview) => setPhotoPreview(preview)} />
         <FilePreviewInput label="Problem photo 2 (optional)" onPreview={(preview) => setPhotoPreview2(preview)} />
+      </div>
+
+      <div className="rounded-2xl bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-900">
+        <p className="font-black">⚠ Important Notice</p>
+        <p className="mt-1">
+          Dear {noticeName}, worker ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple workers aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi worker ko hire karein.
+        </p>
+        <p className="mt-2">
+          MistriHub sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.
+        </p>
       </div>
 
       {error ? <p className="rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600">{error}</p> : null}

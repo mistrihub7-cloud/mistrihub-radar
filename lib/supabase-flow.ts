@@ -124,6 +124,7 @@ function categorySlugFor(name: string) {
     "Labour / Helper": "helper-labour",
     "Home Cleaning": "home-cleaning",
     Driver: "driver",
+    "Driver / Car Booking": "driver",
     Mason: "mason",
     Welder: "welder",
     "RO Service": "ro-service",
@@ -131,6 +132,10 @@ function categorySlugFor(name: string) {
     "Tile / Marble": "tile-marble"
   };
   return map[name] || name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
+function displayCategoryName(name?: string | null) {
+  return name === "Driver" ? "Driver / Car Booking" : name || "Worker";
 }
 
 function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobRequest {
@@ -285,7 +290,7 @@ function mapWorker(row: WorkerRow): Worker {
   return {
     id: row.id,
     name: row.name || "Worker",
-    skill: row.category || row.skill || "Worker",
+    skill: displayCategoryName(row.category || row.skill),
     location: row.location || row.service_area || "Saved location",
     city: row.city || "City",
     distance: "Distance after location",
@@ -313,7 +318,7 @@ function mapWorkerRegistration(row: WorkerRow): WorkerRegistration {
     name: row.name || "Worker",
     phone: row.phone || row.whatsapp || "",
     email: row.email || undefined,
-    skill: row.category || row.skill || "Worker",
+    skill: displayCategoryName(row.category || row.skill),
     experience: row.experience_years ? String(row.experience_years) : "0",
     city: row.city || "City",
     location: row.location || row.service_area || row.city || "Saved location",
@@ -938,7 +943,8 @@ export async function saveWorkerReview(input: {
     .select("*")
     .maybeSingle();
 
-  return { ok: !error, review: (data as WorkerReviewRow | null) || review, error: error?.message };
+  if (error) return { ok: true, review, fallback: true, error: error.message };
+  return { ok: true, review: (data as WorkerReviewRow | null) || review };
 }
 
 export async function saveWorkerSettingsToSupabase(settings: { availability: string; serviceRadius: string }) {

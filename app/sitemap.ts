@@ -4,7 +4,7 @@ import { seoCities, seoServices } from "@/lib/seo-pages";
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mistrihub-radar.vercel.app";
   const now = new Date();
-  const staticRoutes = ["", "/workers", "/categories", "/book", "/jobs", "/login", "/signup"];
+  const staticRoutes = ["", "/workers", "/categories", "/book", "/jobs", "/login", "/signup", "/about", "/contact", "/privacy", "/terms"];
   const serviceRoutes = seoServices.map((service) => `/services/${service.slug}`);
   const cityServiceRoutes = seoServices.flatMap((service) => seoCities.map((city) => `/services/${service.slug}/${city.slug}`));
 

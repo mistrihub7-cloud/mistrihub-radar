@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { InstallPrompt } from "@/components/install-prompt";
 import { LocationPopup } from "@/components/location-popup";
 import { PwaRegister } from "@/components/pwa-register";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mistrihub-radar.vercel.app";
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PwaRegister />
         <SiteHeader />
         {children}
+        <SiteFooter />
         <BottomNav />
         <LocationPopup />
         <InstallPrompt />

@@ -29,6 +29,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<MockJobRequest | null>(null);
   const [isWorkerMode, setIsWorkerMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedPhoto, setSelectedPhoto] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -66,7 +67,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   }
 
   const timelineStatus = normalizeTimelineStatus(job.status);
-  const contactStatusUnlocked = ["Accepted", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+  const contactStatusUnlocked = ["Accepted", "Quote Accepted", "On The Way", "In Progress"].includes(job.status);
   const currentWorkerProfile = isWorkerMode ? getWorkerRegistration() : null;
   const acceptedByAnotherWorker = Boolean(isWorkerMode && job.workerId && currentWorkerProfile?.id && job.workerId !== currentWorkerProfile.id);
   const acceptedByThisWorker = Boolean(isWorkerMode && currentWorkerProfile?.id && job.workerId === currentWorkerProfile.id);
@@ -75,7 +76,12 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   const contactPhone = contactUnlocked ? (isWorkerMode ? job.customerPhone : job.workerPhone) : undefined;
   const nextStatus = nextWorkerStatus(job.status);
   const lockedWorkerId = contactStatusUnlocked && job.workerId ? job.workerId : undefined;
-  const chatDisabledReason = acceptedByAnotherWorker ? "User ne is job ke liye dusre worker ko hire kar liya hai. Is job par ab chat/status action band hai." : undefined;
+  const chatDisabledReason =
+    job.status === "Completed"
+      ? "Job completed ho chuka hai. Chat aur contact ab locked hai."
+      : acceptedByAnotherWorker
+        ? "User ne is job ke liye dusre worker ko hire kar liya hai. Is job par ab chat/status action band hai."
+        : undefined;
 
   async function setStatus(status: MockJobRequest["status"]) {
     if (!job) return;
@@ -116,7 +122,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
               ["Problem", job.problem],
               ["Urgency", job.urgency],
               ["Location", job.area],
-              ["Preferred time", `${job.preferredDate} ${job.preferredTime}`]
+              ["Preferred date", job.preferredDate || "Not selected"]
             ].map(([label, value]) => (
               <div className="rounded-2xl bg-slate-50 p-3" key={label}>
                 <p className="text-xs font-bold text-slate-500">{label}</p>
@@ -127,10 +133,10 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
           {job.photoPreview || job.photoPreview2 ? (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {[job.photoPreview, job.photoPreview2].filter(Boolean).map((photo, index) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <a className="block" href={photo} key={photo} rel="noreferrer" target="_blank">
+                <button className="block text-left" key={photo} onClick={() => setSelectedPhoto(photo || "")} type="button">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img alt={`Problem upload ${index + 1}`} className="h-44 w-full rounded-2xl object-cover transition hover:scale-[1.01]" src={photo} />
-                </a>
+                </button>
               ))}
             </div>
           ) : null}
@@ -195,6 +201,13 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
           </div>
         </div>
       </aside>
+      {selectedPhoto ? (
+        <button className="fixed inset-0 z-[80] grid bg-slate-950/80 p-4" onClick={() => setSelectedPhoto("")} type="button">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt="Problem upload preview" className="m-auto max-h-[86vh] max-w-full rounded-2xl object-contain shadow-card" src={selectedPhoto} />
+          <span className="mt-3 text-center text-sm font-black text-white">Tap anywhere to close</span>
+        </button>
+      ) : null}
     </div>
   );
 }
