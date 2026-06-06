@@ -1,4 +1,4 @@
-const CACHE_NAME = "mistrihub-cache-v1";
+const CACHE_NAME = "mistrihub-cache-v2";
 const APP_SHELL = ["/", "/offline", "/manifest.json", "/icon.svg"];
 
 self.addEventListener("install", (event) => {

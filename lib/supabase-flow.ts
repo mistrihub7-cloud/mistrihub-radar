@@ -70,6 +70,14 @@ type WorkerRow = {
   profile_photo?: string | null;
 };
 
+type ProfileRow = {
+  id: string;
+  full_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  role?: MockAccount["role"] | null;
+};
+
 type RequestMessageRow = {
   id: string;
   job_id: string;
@@ -387,6 +395,41 @@ export async function findWorkerRegistrationByLogin(login: { phone?: string; ema
 
     const match = data.find((worker) => workerMatchesLogin(worker, login));
     return match ? mapWorkerRegistration(match) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function findUserAccountByLogin(login: { phone?: string; email?: string }) {
+  if (!hasSupabaseConfig || !supabase) return null;
+
+  const loginEmail = normalizeEmail(login.email);
+  const loginPhone = normalizeContact(login.phone).slice(-10);
+  if (!loginEmail && !loginPhone) return null;
+
+  try {
+    const result = await withTimeout(
+      supabase.from("profiles").select("id,full_name,phone,email,role").range(0, 999),
+      8000,
+      "Supabase user login lookup timeout."
+    );
+    const { data, error } = result as { data?: ProfileRow[] | null; error?: { message?: string } | null };
+    if (error || !data) return null;
+
+    const match = data.find((profile) => {
+      if (loginEmail && normalizeEmail(profile.email) === loginEmail) return true;
+      const profilePhone = normalizeContact(profile.phone).slice(-10);
+      return Boolean(loginPhone && profilePhone && loginPhone === profilePhone);
+    });
+    if (!match) return null;
+
+    return {
+      id: match.id,
+      role: match.role === "worker" ? "worker" : "user",
+      name: match.full_name || "User",
+      phone: match.phone || login.phone || "",
+      email: match.email || login.email
+    } satisfies MockAccount;
   } catch {
     return null;
   }

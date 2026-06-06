@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { categories } from "@/lib/data";
 import { clearMistriHubSession, findSavedAccount, findSavedWorkerRegistration, saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
-import { findWorkerRegistrationByLogin, saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
+import { findUserAccountByLogin, findWorkerRegistrationByLogin, saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
 import { SuccessPopup } from "./success-popup";
 
@@ -56,7 +56,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         return;
       }
 
-      const savedAccount = findSavedAccount(loginIdentity);
+      const savedAccount = findSavedAccount(loginIdentity) || (await findUserAccountByLogin(loginIdentity));
       if (savedAccount) {
         clearMistriHubSession();
         saveMockAccount(savedAccount);

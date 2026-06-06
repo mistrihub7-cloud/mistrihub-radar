@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { accountDisplayName } from "@/lib/display-name";
 import { clearMistriHubSession, findSavedAccount, findSavedWorkerRegistration, restoreWorkerRegistrationForAccount, saveMockAccount, saveWorkerRegistration } from "@/lib/mock-store";
-import { findWorkerRegistrationByLogin } from "@/lib/supabase-flow";
+import { findUserAccountByLogin, findWorkerRegistrationByLogin } from "@/lib/supabase-flow";
 import { useAccountState } from "./use-account-state";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -34,16 +34,23 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
     setLoading(true);
     setMessage("");
-    const loginAccount = {
+    const loginIdentity = {
       id: `local-${Date.now()}`,
       role: "user" as const,
       name: name.trim() || "User",
       phone: cleanIdentifier.includes("@") ? "" : cleanIdentifier,
       email: cleanIdentifier.includes("@") ? cleanIdentifier : undefined
     };
-    const savedAccount = findSavedAccount(loginAccount);
-    const account = savedAccount || loginAccount;
-    const workerProfile = findSavedWorkerRegistration(account) || (await findWorkerRegistrationByLogin(account));
+    const savedAccount = findSavedAccount(loginIdentity) || (await findUserAccountByLogin(loginIdentity));
+    const workerProfile = findSavedWorkerRegistration(loginIdentity) || (await findWorkerRegistrationByLogin(loginIdentity));
+
+    if (!isRegister && !savedAccount && !workerProfile) {
+      setLoading(false);
+      setMessage("Account registered nahi hai. Pehle signup karo, phir login karo.");
+      return;
+    }
+
+    const account = savedAccount || loginIdentity;
     clearMistriHubSession();
     if (workerProfile) {
       saveWorkerRegistration(workerProfile);
