@@ -10,7 +10,6 @@ export function JobChat({ jobId }: { jobId: string }) {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const messagesListRef = useRef<HTMLDivElement | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const account = typeof window !== "undefined" ? getMockAccount() : null;
 
   useEffect(() => {
@@ -30,13 +29,21 @@ export function JobChat({ jobId }: { jobId: string }) {
 
   useEffect(() => {
     if (!messages.length) return;
-    window.requestAnimationFrame(() => {
+    const scrollToLatestMessage = () => {
       messagesListRef.current?.scrollTo({
         behavior: "smooth",
         top: messagesListRef.current.scrollHeight
       });
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    });
+      const page = document.scrollingElement ?? document.documentElement;
+      const bottom = page.scrollHeight - window.innerHeight;
+      if (bottom > page.scrollTop) {
+        page.scrollTo({ behavior: "smooth", top: bottom });
+      }
+    };
+
+    window.requestAnimationFrame(scrollToLatestMessage);
+    const timer = window.setTimeout(scrollToLatestMessage, 120);
+    return () => window.clearTimeout(timer);
   }, [messages.length]);
 
   async function submitMessage() {
@@ -81,7 +88,6 @@ export function JobChat({ jobId }: { jobId: string }) {
         ) : (
           <p className="py-6 text-center text-sm font-bold text-slate-500">No chat yet. Start with one short message.</p>
         )}
-        <div ref={messagesEndRef} />
       </div>
       <div className="mt-4 flex gap-2">
         <input
