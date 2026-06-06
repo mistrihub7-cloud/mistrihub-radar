@@ -16,6 +16,14 @@ function normalizeTimelineStatus(status: MockJobRequest["status"]) {
   return status;
 }
 
+function nextWorkerStatus(status: MockJobRequest["status"]): MockJobRequest["status"] | null {
+  if (status === "Requested" || status === "Need More Details") return "Accepted";
+  if (status === "Accepted" || status === "Quote Sent" || status === "Quote Accepted") return "On The Way";
+  if (status === "On The Way") return "In Progress";
+  if (status === "In Progress") return "Completed";
+  return null;
+}
+
 export function JobTrackingClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<MockJobRequest | null>(null);
   const [isWorkerMode, setIsWorkerMode] = useState(false);
@@ -59,6 +67,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   const timelineStatus = normalizeTimelineStatus(job.status);
   const contactUnlocked = ["Accepted", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
   const contactPhone = isWorkerMode ? job.customerPhone : job.workerPhone;
+  const nextStatus = nextWorkerStatus(job.status);
 
   async function setStatus(status: MockJobRequest["status"]) {
     if (!job) return;
@@ -130,13 +139,17 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
         {isWorkerMode ? (
           <div className="card p-4">
             <h2 className="font-black">Worker status controls</h2>
-            <p className="mt-1 text-xs text-slate-500">Sirf worker mode mein status update available hai.</p>
+            <p className="mt-1 text-xs text-slate-500">Sirf next step ka action yahan dikhega.</p>
             <div className="mt-3 grid gap-2">
-              {(["Accepted", "On The Way", "In Progress", "Completed", "Cancelled"] as const).map((item) => (
-                <button className="btn-outline h-10 text-sm" key={item} onClick={() => setStatus(item)} type="button">
-                  Mark {item}
+              {nextStatus ? (
+                <button className="btn-primary h-10 text-sm" onClick={() => setStatus(nextStatus)} type="button">
+                  Mark {nextStatus}
                 </button>
-              ))}
+              ) : (
+                <p className="rounded-2xl bg-slate-50 p-3 text-sm font-bold text-slate-600">
+                  {job.status === "Completed" ? "Job completed. No more status action needed." : "No next action available."}
+                </p>
+              )}
             </div>
           </div>
         ) : (

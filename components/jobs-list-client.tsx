@@ -155,7 +155,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
                 </button>
               </>
             ) : null}
-            {owner === "user" && job.status !== "Cancelled" ? (
+            {owner === "user" && ["Requested", "Need More Details"].includes(job.status) ? (
               <button
                 className="btn-outline h-10 border-red-500 px-4 text-sm text-red-600"
                 onClick={async () => {
