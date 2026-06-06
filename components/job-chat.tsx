@@ -9,6 +9,7 @@ export function JobChat({ jobId }: { jobId: string }) {
   const [messages, setMessages] = useState<MockRequestMessage[]>([]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const messagesListRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const account = typeof window !== "undefined" ? getMockAccount() : null;
 
@@ -28,7 +29,14 @@ export function JobChat({ jobId }: { jobId: string }) {
   }, [jobId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    if (!messages.length) return;
+    window.requestAnimationFrame(() => {
+      messagesListRef.current?.scrollTo({
+        behavior: "smooth",
+        top: messagesListRef.current.scrollHeight
+      });
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
   }, [messages.length]);
 
   async function submitMessage() {
@@ -57,7 +65,7 @@ export function JobChat({ jobId }: { jobId: string }) {
         </div>
         <span className="status-pill bg-brand-50 text-brand-600">{messages.length}</span>
       </div>
-      <div className="mt-4 max-h-72 space-y-3 overflow-y-auto rounded-2xl bg-slate-50 p-3">
+      <div ref={messagesListRef} className="mt-4 max-h-72 space-y-3 overflow-y-auto rounded-2xl bg-slate-50 p-3">
         {messages.length ? (
           messages.map((item) => {
             const mine = item.senderRole === account?.role;
