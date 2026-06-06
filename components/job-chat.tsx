@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { accountDisplayName } from "@/lib/display-name";
 import { getMockAccount, type MockRequestMessage } from "@/lib/mock-store";
 import { loadRequestMessages, sendRequestMessage } from "@/lib/supabase-flow";
@@ -9,6 +9,7 @@ export function JobChat({ jobId }: { jobId: string }) {
   const [messages, setMessages] = useState<MockRequestMessage[]>([]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const account = typeof window !== "undefined" ? getMockAccount() : null;
 
   useEffect(() => {
@@ -25,6 +26,10 @@ export function JobChat({ jobId }: { jobId: string }) {
       window.clearInterval(timer);
     };
   }, [jobId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages.length]);
 
   async function submitMessage() {
     const text = message.trim();
@@ -68,6 +73,7 @@ export function JobChat({ jobId }: { jobId: string }) {
         ) : (
           <p className="py-6 text-center text-sm font-bold text-slate-500">No chat yet. Start with one short message.</p>
         )}
+        <div ref={messagesEndRef} />
       </div>
       <div className="mt-4 flex gap-2">
         <input
