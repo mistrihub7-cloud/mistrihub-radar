@@ -14,6 +14,12 @@ import {
 import { loadJobsFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
+function isVisibleForWorker(job: MockJobRequest, profile: WorkerRegistration | null, declinedJobs: string[]) {
+  if (!profile || declinedJobs.includes(job.id) || job.service !== profile.skill) return false;
+  if (["Requested", "Need More Details"].includes(job.status)) return !job.workerId || job.workerId === profile.id;
+  return job.workerId === profile.id && ["Accepted", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+}
+
 export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }) {
   const router = useRouter();
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
@@ -28,14 +34,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
         const profile = getWorkerRegistration();
         const declinedJobs = getWorkerDeclinedJobs();
         setWorkerProfile(profile);
-        setJobs(
-          nextJobs.filter((job) => {
-            if (declinedJobs.includes(job.id)) return false;
-            if (profile && job.service !== profile.skill) return false;
-            if (job.workerId && profile && job.workerId !== profile.id) return false;
-            return ["Requested", "Need More Details", "Accepted", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
-          })
-        );
+        setJobs(nextJobs.filter((job) => isVisibleForWorker(job, profile, declinedJobs)));
       } else {
         setJobs(nextJobs);
       }
@@ -83,14 +82,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     const profile = getWorkerRegistration();
     const declinedJobs = getWorkerDeclinedJobs();
     setWorkerProfile(profile);
-    setJobs(
-      nextJobs.filter((job) => {
-        if (declinedJobs.includes(job.id)) return false;
-        if (profile && job.service !== profile.skill) return false;
-        if (job.workerId && profile && job.workerId !== profile.id) return false;
-        return ["Requested", "Need More Details", "Accepted", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
-      })
-    );
+    setJobs(nextJobs.filter((job) => isVisibleForWorker(job, profile, declinedJobs)));
   }
 
   async function acceptJob(job: MockJobRequest) {
@@ -98,7 +90,8 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     const update = {
       status: "Accepted" as const,
       workerId: workerProfile.id,
-      workerName: workerProfile.name
+      workerName: workerProfile.name,
+      workerPhone: workerProfile.phone
     };
     updateMockJob(job.id, update);
     setJobs((currentJobs) => currentJobs.map((item) => (item.id === job.id ? { ...item, ...update } : item)));

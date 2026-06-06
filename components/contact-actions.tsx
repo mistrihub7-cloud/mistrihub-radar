@@ -56,7 +56,7 @@ export function ContactActions({ phone, unlocked }: { phone?: string; unlocked: 
         </a>
         </div>
         <a className="flex h-12 items-center justify-center rounded-2xl bg-brand-600 font-black text-white" href="#job-chat">
-          Open Platform Chat
+          You Can Talk Directly Now
         </a>
         {!cleanPhone ? <p className="text-xs font-bold text-slate-500">Phone number not saved for this request.</p> : null}
       </div>

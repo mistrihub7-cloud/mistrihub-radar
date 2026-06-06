@@ -14,6 +14,7 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
+import { getJobAlertsEnabled, requestJobAlertPermission, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
 import { NotificationBell } from "./notification-bell";
 import { Icon } from "./simple-icons";
@@ -32,6 +33,12 @@ function MenuRow({ href, icon, label, value, badge }: { href: string; icon: stri
   );
 }
 
+function isVisibleForWorker(job: MockJobRequest, profile: WorkerRegistration | null) {
+  if (!profile || job.service !== profile.skill) return false;
+  if (["Requested", "Need More Details"].includes(job.status)) return !job.workerId || job.workerId === profile.id;
+  return job.workerId === profile.id && ["Accepted", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+}
+
 export function WorkerDashboardClient() {
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
   const [availability, setAvailability] = useState("Available Today");
@@ -41,6 +48,7 @@ export function WorkerDashboardClient() {
   const [statusMessage, setStatusMessage] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">("unsupported");
+  const [alertsEnabled, setAlertsEnabled] = useState(false);
   const availabilityOptions = ["Available Today", "Busy", "Not Available"];
 
   useEffect(() => {
@@ -63,11 +71,7 @@ export function WorkerDashboardClient() {
 
     async function refreshWorkerJobs(currentProfile: WorkerRegistration | null, notify: boolean) {
       const nextJobs = await loadJobsFromSupabase("worker");
-      const visibleJobs = nextJobs.filter((job) => {
-        if (currentProfile && job.service !== currentProfile.skill) return false;
-        if (job.workerId && currentProfile && job.workerId !== currentProfile.id) return false;
-        return ["Requested", "Need More Details", "Accepted", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
-      });
+      const visibleJobs = nextJobs.filter((job) => isVisibleForWorker(job, currentProfile));
       setJobs(visibleJobs);
 
       if (!notify || typeof window === "undefined" || !currentProfile) return;
@@ -81,16 +85,18 @@ export function WorkerDashboardClient() {
       localStorage.setItem(seenKey, JSON.stringify(Array.from(new Set(Array.from(seen).concat(pendingJobs.map((job) => job.id))))));
       const latestJob = newJobs[0];
       setAlertMessage(`${newJobs.length} new job request${newJobs.length > 1 ? "s" : ""} received.`);
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("New MistriHub job request", {
+      if (getJobAlertsEnabled() && "Notification" in window && Notification.permission === "granted") {
+        showJobNotification("New MistriHub job request", {
           body: `${latestJob.service} - ${latestJob.area}`,
-          tag: latestJob.id
-        });
+          tag: latestJob.id,
+          data: { url: "/worker-request" }
+        }).catch(() => undefined);
       }
     }
 
     loadDashboard();
     setNotificationPermission("Notification" in window ? Notification.permission : "unsupported");
+    setAlertsEnabled(getJobAlertsEnabled());
     const timer = window.setInterval(() => refreshWorkerJobs(workerProfile, true), 20000);
     return () => window.clearInterval(timer);
   }, []);
@@ -102,9 +108,11 @@ export function WorkerDashboardClient() {
       return;
     }
 
-    const permission = await Notification.requestPermission();
+    const permission = await requestJobAlertPermission();
     setNotificationPermission(permission);
-    setAlertMessage(permission === "granted" ? "Job alerts enabled." : "Notification allow nahi hua.");
+    setAlertsEnabled(permission === "granted");
+    saveJobAlertsEnabled(permission === "granted");
+    setAlertMessage(permission === "granted" ? "Job alerts saved. New requests par browser/PWA alert milega." : "Notification allow nahi hua.");
   }
 
   async function saveAvailability(nextAvailability: string) {
@@ -138,8 +146,8 @@ export function WorkerDashboardClient() {
     window.location.href = "/dashboard/user";
   }
 
-  const activeRequests = jobs.filter((job) => job.status === "Requested").length;
-  const completedJobs = jobs.filter((job) => job.status === "Completed").length;
+  const activeRequests = jobs.filter((job) => job.status === "Requested" && (!profile?.id || !job.workerId || job.workerId === profile.id)).length;
+  const completedJobs = jobs.filter((job) => job.status === "Completed" && profile?.id && job.workerId === profile.id).length;
 
   return (
     <div className="space-y-7 pb-24">
@@ -172,14 +180,14 @@ export function WorkerDashboardClient() {
           <div>
             <h2 className="font-black text-slate-950">Job alerts</h2>
             <p className="mt-1 text-sm font-bold text-slate-500">
-              {notificationPermission === "granted"
-                ? "Browser notifications enabled. Dashboard open rahe toh new request alert milega."
+              {notificationPermission === "granted" && alertsEnabled
+                ? "Job alerts saved. Dashboard/PWA open rahe toh new request alert milega."
                 : "New job ke liye browser/PWA notification allow karo."}
             </p>
           </div>
           {activeRequests ? <span className="grid h-8 min-w-8 place-items-center rounded-full bg-red-500 px-2 text-sm font-black text-white">{activeRequests}</span> : null}
         </div>
-        {notificationPermission !== "granted" ? (
+        {notificationPermission !== "granted" || !alertsEnabled ? (
           <button className="btn-primary mt-4 w-full" onClick={enableJobAlerts} type="button">
             Allow Job Alerts
           </button>

@@ -6,10 +6,55 @@ import { LocationPopup } from "@/components/location-popup";
 import { PwaRegister } from "@/components/pwa-register";
 import { SiteHeader } from "@/components/site-header";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mistrihub-radar.vercel.app";
+
 export const metadata: Metadata = {
-  title: "MistriHub - Trusted Workers Near You",
-  description: "Book nearby trusted electricians, plumbers, mechanics, painters, AC technicians and repair workers.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "MistriHub - Nearby Trusted Workers for Home Services",
+    template: "%s | MistriHub"
+  },
+  description: "Find nearby trusted electricians, plumbers, mechanics, painters, AC repair workers, carpenters, drivers and helpers. Book local workers with contact unlock after acceptance.",
   applicationName: "MistriHub",
+  keywords: [
+    "nearby workers",
+    "nearby electrician",
+    "nearby plumber",
+    "local mechanic",
+    "AC repair near me",
+    "painter near me",
+    "carpenter near me",
+    "labour helper",
+    "driver near me",
+    "home service worker",
+    "MistriHub"
+  ],
+  alternates: {
+    canonical: "/"
+  },
+  openGraph: {
+    title: "MistriHub - Nearby Trusted Workers",
+    description: "Book local electricians, plumbers, mechanics, painters and repair workers near your area.",
+    url: siteUrl,
+    siteName: "MistriHub",
+    locale: "en_IN",
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MistriHub - Nearby Trusted Workers",
+    description: "Find and book nearby trusted workers for Indian home services."
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1
+    }
+  },
   manifest: "/manifest.json",
   icons: {
     icon: "/icon.svg",

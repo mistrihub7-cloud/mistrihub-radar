@@ -18,7 +18,11 @@ export function BottomNav() {
   const { account } = useAccountState();
   const profileHref = account?.role === "worker" ? "/dashboard/worker" : account ? "/dashboard/user" : "/login";
   const profileLabel = account ? "Profile" : "Login";
-  const navItems = items.map((item) => (item.label === "Profile" ? { ...item, href: profileHref, label: profileLabel } : item));
+  const navItems = items.map((item) => {
+    if (item.label === "Profile") return { ...item, href: profileHref, label: profileLabel };
+    if (item.label === "Book" && account?.role === "worker") return { ...item, label: "Mode" };
+    return item;
+  });
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[74px] max-w-[430px] items-center justify-around border-t border-slate-200 bg-white px-3 md:hidden">

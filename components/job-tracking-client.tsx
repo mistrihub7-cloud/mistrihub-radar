@@ -6,6 +6,7 @@ import { getMockAccount, getWorkerRegistration, updateMockJob, type MockJobReque
 import { loadJobFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { ContactActions } from "./contact-actions";
 import { JobChat } from "./job-chat";
+import { JobReviewForm } from "./job-review-form";
 import { Icon } from "./simple-icons";
 
 const timeline = ["Requested", "Accepted", "On The Way", "In Progress", "Completed", "Declined", "Cancelled"];
@@ -65,16 +66,23 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   }
 
   const timelineStatus = normalizeTimelineStatus(job.status);
-  const contactUnlocked = ["Accepted", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
-  const contactPhone = isWorkerMode ? job.customerPhone : job.workerPhone;
+  const contactStatusUnlocked = ["Accepted", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+  const currentWorkerProfile = isWorkerMode ? getWorkerRegistration() : null;
+  const acceptedByAnotherWorker = Boolean(isWorkerMode && job.workerId && currentWorkerProfile?.id && job.workerId !== currentWorkerProfile.id);
+  const acceptedByThisWorker = Boolean(isWorkerMode && currentWorkerProfile?.id && job.workerId === currentWorkerProfile.id);
+  const canWorkerControl = Boolean(isWorkerMode && currentWorkerProfile?.id && !acceptedByAnotherWorker && (!job.workerId || acceptedByThisWorker));
+  const contactUnlocked = contactStatusUnlocked && (isWorkerMode ? acceptedByThisWorker : Boolean(job.workerId));
+  const contactPhone = contactUnlocked ? (isWorkerMode ? job.customerPhone : job.workerPhone) : undefined;
   const nextStatus = nextWorkerStatus(job.status);
+  const lockedWorkerId = contactStatusUnlocked && job.workerId ? job.workerId : undefined;
+  const chatDisabledReason = acceptedByAnotherWorker ? "User ne is job ke liye dusre worker ko hire kar liya hai. Is job par ab chat/status action band hai." : undefined;
 
   async function setStatus(status: MockJobRequest["status"]) {
     if (!job) return;
     const workerProfile = isWorkerMode ? getWorkerRegistration() : null;
     const update: Partial<MockJobRequest> = {
       status,
-      ...(workerProfile && !job.workerId
+      ...(workerProfile && (!job.workerId || job.workerId === workerProfile.id)
         ? { workerId: workerProfile.id, workerName: workerProfile.name, workerPhone: workerProfile.phone }
         : {})
     };
@@ -82,7 +90,13 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
     updateMockJob(job.id, update);
     setJob(optimisticJob);
     const nextJob = await updateJobInSupabase(job.id, update);
-    if (nextJob) setJob({ ...optimisticJob, ...nextJob });
+    if (nextJob) {
+      setJob({
+        ...nextJob,
+        workerName: nextJob.workerName && nextJob.workerName !== "Nearby matching workers" ? nextJob.workerName : optimisticJob.workerName,
+        workerPhone: nextJob.workerPhone || optimisticJob.workerPhone
+      });
+    }
   }
 
   return (
@@ -114,41 +128,33 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {[job.photoPreview, job.photoPreview2].filter(Boolean).map((photo, index) => (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img alt={`Problem upload ${index + 1}`} className="h-44 w-full rounded-2xl object-cover" key={photo} src={photo} />
+                <a className="block" href={photo} key={photo} rel="noreferrer" target="_blank">
+                  <img alt={`Problem upload ${index + 1}`} className="h-44 w-full rounded-2xl object-cover transition hover:scale-[1.01]" src={photo} />
+                </a>
               ))}
             </div>
           ) : null}
         </div>
 
-        <div className="card p-5">
-          <h2 className="font-black">Status timeline</h2>
-          <div className="relative ml-2 mt-5 space-y-5">
-            {timeline.map((item) => {
-              const active = item === timelineStatus;
-              const done = timeline.indexOf(item) < timeline.indexOf(timelineStatus);
-              return (
-                <div className="flex gap-3" key={item}>
-                  <span className={`mt-1 grid h-5 w-5 place-items-center rounded-full text-white ${active ? "bg-brand-600" : done ? "bg-emerald-600" : "bg-slate-300"}`}>
-                    {done ? <Icon className="h-3 w-3" name="check" /> : null}
-                  </span>
-                  <span className="font-bold">{item}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <JobChat jobId={job.id} worker={{ id: job.workerId, name: job.workerName }} />
+        <JobChat disabledReason={chatDisabledReason} jobId={job.id} lockedWorkerId={lockedWorkerId} worker={{ id: job.workerId, name: job.workerName }} />
+        <JobReviewForm job={job} />
       </div>
 
       <aside className="space-y-5">
         <ContactActions phone={contactPhone} unlocked={contactUnlocked} />
-        {isWorkerMode ? (
+        {isWorkerMode && acceptedByAnotherWorker ? (
+          <div className="card p-4">
+            <h2 className="font-black">Job already hired</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              User ne is job ke liye dusre worker ko hire kar liya hai. Aapka contact locked rahega aur status control yahan nahi dikhega.
+            </p>
+          </div>
+        ) : isWorkerMode ? (
           <div className="card p-4">
             <h2 className="font-black">Worker status controls</h2>
             <p className="mt-1 text-xs text-slate-500">Sirf next step ka action yahan dikhega.</p>
             <div className="mt-3 grid gap-2">
-              {nextStatus ? (
+              {canWorkerControl && nextStatus ? (
                 <button className="btn-primary h-10 text-sm" onClick={() => setStatus(nextStatus)} type="button">
                   Mark {nextStatus}
                 </button>
@@ -170,6 +176,24 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
             </p>
           </div>
         )}
+
+        <div className="card p-5">
+          <h2 className="font-black">Status timeline</h2>
+          <div className="relative ml-2 mt-5 space-y-5">
+            {timeline.map((item) => {
+              const active = item === timelineStatus;
+              const done = timeline.indexOf(item) < timeline.indexOf(timelineStatus);
+              return (
+                <div className="flex gap-3" key={item}>
+                  <span className={`mt-1 grid h-5 w-5 place-items-center rounded-full text-white ${active ? "bg-brand-600" : done ? "bg-emerald-600" : "bg-slate-300"}`}>
+                    {done ? <Icon className="h-3 w-3" name="check" /> : null}
+                  </span>
+                  <span className="font-bold">{item}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </aside>
     </div>
   );

@@ -12,6 +12,11 @@ export function LocationPopup() {
   const [state, setState] = useState<LocationState>("idle");
   const [visible, setVisible] = useState(false);
 
+  function closeAndReload() {
+    setVisible(false);
+    window.setTimeout(() => window.location.reload(), 120);
+  }
+
   useEffect(() => {
     const openPopup = () => {
       setArea(localStorage.getItem(LOCATION_KEY) || "");
@@ -54,7 +59,7 @@ export function LocationPopup() {
     }
     saveLocationLabel(area);
     setState("saved");
-    setVisible(false);
+    closeAndReload();
   };
 
   const requestLocation = () => {
@@ -70,7 +75,7 @@ export function LocationPopup() {
         const areaName = await resolveAreaName(latitude, longitude);
         saveLocationLabel(areaName, true, { latitude, longitude });
         setState("saved");
-        setVisible(false);
+        closeAndReload();
       },
       () => setState("denied"),
       { enableHighAccuracy: true, maximumAge: 300000, timeout: 12000 }

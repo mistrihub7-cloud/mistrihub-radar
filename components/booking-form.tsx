@@ -36,6 +36,12 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  function switchToUserMode() {
+    if (!loggedInAccount) return;
+    saveMockAccount({ ...loggedInAccount, role: "user" });
+    window.location.reload();
+  }
+
   async function submitRequest() {
     const currentAccount = getMockAccount();
     const bookingName = currentAccount?.name || customerName.trim();
@@ -104,6 +110,23 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
 
   return (
     <div className="space-y-5">
+      {loggedInAccount?.role === "worker" ? (
+        <div className="card p-5 text-center">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand-50 text-brand-600">
+            <Icon name="user" />
+          </span>
+          <h1 className="mt-4 text-2xl font-black">Switch to User Mode</h1>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
+            Aap abhi worker mode mein ho. Service book karne ke liye pehle user mode par switch karo.
+          </p>
+          <button className="btn-primary mx-auto mt-5 max-w-xs" onClick={switchToUserMode} type="button">
+            Switch and Continue Booking
+          </button>
+        </div>
+      ) : null}
+
+      {loggedInAccount?.role === "worker" ? null : (
+        <>
       {matchedWorker ? (
         <div className="card p-4">
           <p className="text-sm font-black text-brand-600">Selected worker</p>
@@ -219,6 +242,8 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
       <p className="text-xs leading-5 text-slate-500">
         Contact stays locked until a worker accepts. Alerts use website and WhatsApp notification flow.
       </p>
+        </>
+      )}
     </div>
   );
 }

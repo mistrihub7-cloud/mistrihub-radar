@@ -119,12 +119,51 @@ function TrustStatsSection({ workers }: { workers: Awaited<ReturnType<typeof loa
   );
 }
 
+function StructuredData() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mistrihub-radar.vercel.app";
+  const data = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: "MistriHub",
+        url: siteUrl,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${siteUrl}/workers?service={search_term_string}`,
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "LocalBusiness",
+        name: "MistriHub",
+        url: siteUrl,
+        areaServed: "India",
+        description: "Nearby trusted workers for electrician, plumber, mechanic, painter, AC repair, carpenter, driver and helper services."
+      },
+      {
+        "@type": "ItemList",
+        name: "MistriHub service categories",
+        itemListElement: categories.map((category, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: category.name,
+          url: `${siteUrl}/workers?service=${encodeURIComponent(category.name)}`
+        }))
+      }
+    ]
+  };
+
+  return <script dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} type="application/ld+json" />;
+}
+
 export default async function HomePage() {
   const workers = await loadWorkersFromSupabase();
   const topWorkers = workers.filter((worker) => worker.trust >= 92).slice(0, 4);
 
   return (
     <main className="mobile-shell min-h-screen md:min-h-0 md:bg-transparent">
+      <StructuredData />
       <section className="container-page grid gap-7 py-4 md:grid-cols-[1fr_0.9fr] md:py-10 xl:grid-cols-[1.25fr_0.9fr_0.95fr]">
         <div className="md:hidden">
           <div className="flex items-center justify-between">

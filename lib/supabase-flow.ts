@@ -90,12 +90,23 @@ type RequestMessageRow = {
   created_at: string;
 };
 
+type WorkerReviewRow = {
+  id: string;
+  job_id: string;
+  worker_id: string;
+  customer_name?: string | null;
+  rating: number;
+  comment?: string | null;
+  created_at: string;
+};
+
 type CreateJobInput = Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">;
 
 const JOB_SELECT =
   "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,photo_url_2,status,created_at,customer_name,customer_phone,user_latitude,user_longitude,worker_question,quote_amount,quote_note,quote_eta";
 const JOB_SELECT_BASE =
   "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at";
+const LOCAL_REVIEWS_KEY = "mistrihub.workerReviews";
 
 function findWorker(workerId?: string | null) {
   return workers.find((worker) => worker.id === workerId);
@@ -236,9 +247,41 @@ function normalizeRadius(value?: number | null): 5 | 10 | 15 | 20 {
   return value === 5 || value === 10 || value === 15 || value === 20 ? value : 10;
 }
 
+function calculateTrustScore(input: {
+  jobs: number;
+  reviews: number;
+  rating: number;
+  status: WorkerStatus;
+  hasContact: boolean;
+  hasLocation: boolean;
+}) {
+  const ratingBonus = input.reviews ? Math.max(0, Math.min(10, Math.round((input.rating - 3.5) * 8))) : 0;
+  const score =
+    55 +
+    (input.hasContact ? 5 : 0) +
+    (input.hasLocation ? 5 : 0) +
+    (input.status === "Available Today" ? 5 : input.status === "Busy" ? 2 : 0) +
+    Math.min(input.jobs * 3, 15) +
+    Math.min(input.reviews * 2, 10) +
+    ratingBonus;
+
+  return Math.max(50, Math.min(95, score));
+}
+
 function mapWorker(row: WorkerRow): Worker {
   const status = normalizeStatus(row.availability_status, row.available_today);
-  const rating = row.rating == null ? "0.0" : String(row.rating);
+  const rawRating = Number(row.rating ?? 0);
+  const reviews = Number(row.review_count ?? row.reviews ?? 0);
+  const jobs = Number(row.jobs_completed ?? row.jobs ?? 0);
+  const rating = reviews && rawRating ? rawRating.toFixed(1) : "0.0";
+  const trust = calculateTrustScore({
+    jobs,
+    reviews,
+    rating: rawRating,
+    status,
+    hasContact: Boolean(row.phone || row.whatsapp),
+    hasLocation: isValidCoordinate(row.latitude ?? undefined, row.longitude ?? undefined)
+  });
   return {
     id: row.id,
     name: row.name || "Worker",
@@ -247,9 +290,9 @@ function mapWorker(row: WorkerRow): Worker {
     city: row.city || "City",
     distance: "Distance after location",
     rating,
-    reviews: Number(row.review_count ?? row.reviews ?? 0),
-    trust: Number(row.trust_score ?? row.trust ?? 70),
-    jobs: Number(row.jobs_completed ?? row.jobs ?? 0),
+    reviews,
+    trust,
+    jobs,
     response: row.fast_response_time ? `${row.fast_response_time} min` : "After request",
     status,
     serviceRadius: normalizeRadius(row.service_radius),
@@ -790,6 +833,70 @@ export async function sendRequestMessage(input: Omit<MockRequestMessage, "id" | 
   return mapRequestMessage(data as RequestMessageRow);
 }
 
+function readLocalReviews() {
+  if (typeof window === "undefined") return [] as WorkerReviewRow[];
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_REVIEWS_KEY) || "[]") as WorkerReviewRow[];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalReviews(reviews: WorkerReviewRow[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(LOCAL_REVIEWS_KEY, JSON.stringify(reviews));
+}
+
+export async function loadReviewForJob(jobId: string) {
+  if (!hasSupabaseConfig || !supabase) {
+    return readLocalReviews().find((review) => review.job_id === jobId) || null;
+  }
+
+  const { data, error } = await supabase.from("worker_reviews").select("*").eq("job_id", jobId).maybeSingle();
+  if (error || !data) return readLocalReviews().find((review) => review.job_id === jobId) || null;
+  return data as WorkerReviewRow;
+}
+
+export async function saveWorkerReview(input: {
+  jobId: string;
+  workerId: string;
+  customerName?: string;
+  rating: number;
+  comment?: string;
+}) {
+  const review: WorkerReviewRow = {
+    id: globalThis.crypto?.randomUUID?.() || `review-${Date.now()}`,
+    job_id: input.jobId,
+    worker_id: input.workerId,
+    customer_name: input.customerName || null,
+    rating: input.rating,
+    comment: input.comment || null,
+    created_at: new Date().toISOString()
+  };
+
+  const localReviews = readLocalReviews().filter((item) => item.job_id !== input.jobId);
+  writeLocalReviews([...localReviews, review]);
+
+  if (!hasSupabaseConfig || !supabase) return { ok: true, review, fallback: true };
+
+  const { data, error } = await supabase
+    .from("worker_reviews")
+    .upsert(
+      {
+        job_id: input.jobId,
+        worker_id: input.workerId,
+        customer_name: input.customerName || null,
+        rating: input.rating,
+        comment: input.comment || null
+      },
+      { onConflict: "job_id" }
+    )
+    .select("*")
+    .maybeSingle();
+
+  return { ok: !error, review: (data as WorkerReviewRow | null) || review, error: error?.message };
+}
+
 export async function saveWorkerSettingsToSupabase(settings: { availability: string; serviceRadius: string }) {
   if (!hasSupabaseConfig || !supabase) return { ok: true, fallback: true };
 
@@ -810,6 +917,33 @@ export async function saveWorkerSettingsToSupabase(settings: { availability: str
 
   const { data, error } = await supabase.from("workers").update(update).eq("id", workerProfile.id).select("id").maybeSingle();
   return { ok: !error && Boolean(data), error: error?.message || (!data ? "Worker row not found." : undefined) };
+}
+
+async function loadReviewStatsByWorker() {
+  const stats = new Map<string, { rating: number; reviews: number }>();
+  if (!supabase) return stats;
+
+  try {
+    const { data, error } = await supabase.from("worker_reviews").select("worker_id,rating").range(0, 999);
+    if (error || !data) return stats;
+
+    (data as Array<{ worker_id?: string | null; rating?: number | null }>).forEach((review) => {
+      if (!review.worker_id || !review.rating) return;
+      const current = stats.get(review.worker_id) || { rating: 0, reviews: 0 };
+      stats.set(review.worker_id, {
+        rating: current.rating + Number(review.rating),
+        reviews: current.reviews + 1
+      });
+    });
+
+    stats.forEach((value, workerId) => {
+      stats.set(workerId, { rating: value.reviews ? value.rating / value.reviews : 0, reviews: value.reviews });
+    });
+  } catch {
+    return stats;
+  }
+
+  return stats;
 }
 
 async function loadCompletedJobCountsByWorker() {
@@ -844,6 +978,7 @@ export async function loadWorkersFromSupabase() {
     const { data, error } = result as { data?: WorkerRow[] | null; error?: { message?: string } | null };
     if (error || !data) return workers;
     const completedJobCounts = await loadCompletedJobCountsByWorker();
+    const reviewStats = await loadReviewStatsByWorker();
 
     const seenWorkerEmails = new Set<string>();
     const seenWorkerPhones = new Set<string>();
@@ -865,10 +1000,15 @@ export async function loadWorkersFromSupabase() {
         return true;
       })
       .map((row) =>
-        mapWorker({
+        {
+          const stats = reviewStats.get(row.id);
+          return mapWorker({
           ...row,
-          jobs_completed: Math.max(Number(row.jobs_completed ?? row.jobs ?? 0), completedJobCounts.get(row.id) || 0)
-        })
+            rating: stats?.rating ?? row.rating,
+            review_count: stats?.reviews ?? row.review_count,
+            jobs_completed: Math.max(Number(row.jobs_completed ?? row.jobs ?? 0), completedJobCounts.get(row.id) || 0)
+          });
+        }
       );
   } catch {
     return workers;
@@ -882,9 +1022,13 @@ export async function loadWorkerFromSupabase(workerId: string) {
   if (error || !data) return workers.find((worker) => worker.id === workerId) || null;
 
   const completedJobCounts = await loadCompletedJobCountsByWorker();
+  const reviewStats = await loadReviewStatsByWorker();
   const row = data as WorkerRow;
+  const stats = reviewStats.get(row.id);
   return mapWorker({
     ...row,
+    rating: stats?.rating ?? row.rating,
+    review_count: stats?.reviews ?? row.review_count,
     jobs_completed: Math.max(Number(row.jobs_completed ?? row.jobs ?? 0), completedJobCounts.get(row.id) || 0)
   });
 }

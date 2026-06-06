@@ -24,6 +24,18 @@ add column if not exists sender_name text,
 add column if not exists worker_id text,
 add column if not exists worker_name text;
 
+create table if not exists public.worker_reviews (
+  id uuid primary key default gen_random_uuid(),
+  job_id text not null unique,
+  worker_id text not null,
+  customer_name text,
+  rating integer not null check (rating between 1 and 5),
+  comment text,
+  created_at timestamptz not null default now()
+);
+
+alter table if exists public.worker_reviews enable row level security;
+
 drop policy if exists "mistrihub public read job requests" on public.job_requests;
 drop policy if exists "mistrihub public create job requests" on public.job_requests;
 drop policy if exists "mistrihub public update job requests" on public.job_requests;
@@ -98,4 +110,27 @@ create policy "mistrihub public create request messages"
 on public.request_messages
 for insert
 to anon, authenticated
+with check (true);
+
+drop policy if exists "mistrihub public read worker reviews" on public.worker_reviews;
+drop policy if exists "mistrihub public create worker reviews" on public.worker_reviews;
+drop policy if exists "mistrihub public update worker reviews" on public.worker_reviews;
+
+create policy "mistrihub public read worker reviews"
+on public.worker_reviews
+for select
+to anon, authenticated
+using (true);
+
+create policy "mistrihub public create worker reviews"
+on public.worker_reviews
+for insert
+to anon, authenticated
+with check (true);
+
+create policy "mistrihub public update worker reviews"
+on public.worker_reviews
+for update
+to anon, authenticated
+using (true)
 with check (true);
