@@ -15,6 +15,7 @@ import {
   type WorkerRegistration
 } from "@/lib/mock-store";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
+import { NotificationBell } from "./notification-bell";
 import { Icon } from "./simple-icons";
 
 function MenuRow({ href, icon, label, value, badge }: { href: string; icon: string; label: string; value?: string; badge?: string }) {
@@ -155,10 +156,7 @@ export function WorkerDashboardClient() {
             <p className="text-base font-bold text-slate-500">{profile?.skill || "Worker profile"}</p>
           </div>
         </div>
-        <button className="relative grid h-12 w-12 place-items-center rounded-full text-slate-900" type="button">
-          <Icon className="h-8 w-8" name="bell" />
-          {activeRequests ? <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-red-500" /> : null}
-        </button>
+        <NotificationBell className="grid h-12 w-12 place-items-center rounded-full text-slate-900" />
       </div>
 
       <section className="card p-4">

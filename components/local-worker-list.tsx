@@ -29,43 +29,12 @@ function mapLocalWorker(profile: WorkerRegistration): Worker {
 }
 
 export function LocalWorkerList() {
-  const [worker, setWorker] = useState<Worker | null>(null);
+  const [, setWorker] = useState<Worker | null>(null);
 
   useEffect(() => {
     const profile = getWorkerRegistration();
     setWorker(profile ? mapLocalWorker(profile) : null);
   }, []);
 
-  if (!worker) return null;
-
-  return (
-    <div className="mb-4">
-      <p className="mb-2 text-sm font-black text-brand-600">Recently added on this device</p>
-      <div className="card p-4">
-        <div className="flex items-start gap-4">
-          {worker.profilePhoto ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              alt={worker.name}
-              className="h-24 w-20 shrink-0 rounded-2xl border border-slate-200 object-cover object-top shadow-sm ring-4 ring-blue-50"
-              src={worker.profilePhoto}
-            />
-          ) : (
-            <div className="worker-avatar !h-24 !w-20 !rounded-2xl shadow-sm ring-4 ring-blue-50" />
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="truncate font-black text-slate-950">{worker.name}</h3>
-                <p className="text-sm font-semibold text-slate-600">{worker.skill}</p>
-                <p className="text-sm text-slate-600">{worker.location}, {worker.city}</p>
-              </div>
-              <span className="status-pill status-available">{worker.status}</span>
-            </div>
-            <p className="mt-3 text-xs font-bold text-slate-500">Newly added worker profile.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }

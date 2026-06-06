@@ -4,6 +4,7 @@ import { Icon } from "@/components/simple-icons";
 import { LocationLabel } from "@/components/location-label";
 import { Logo } from "@/components/logo";
 import { NearbyWorkerList } from "@/components/nearby-worker-list";
+import { NotificationBell } from "@/components/notification-bell";
 import { SectionTitle } from "@/components/section-title";
 import { LocalWorkerList } from "@/components/local-worker-list";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
@@ -134,9 +135,7 @@ export default async function HomePage() {
               </p>
               <Logo />
             </div>
-            <button className="grid h-10 w-10 place-items-center rounded-full border border-slate-200">
-              <Icon name="bell" />
-            </button>
+            <NotificationBell />
           </div>
         </div>
 

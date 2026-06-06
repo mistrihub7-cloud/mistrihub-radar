@@ -30,6 +30,7 @@ type JobRequestRow = {
   customer_phone?: string | null;
   user_latitude?: number | null;
   user_longitude?: number | null;
+  worker_question?: string | null;
   quote_amount?: string | null;
   quote_note?: string | null;
   quote_eta?: string | null;
@@ -69,7 +70,7 @@ type WorkerRow = {
 type CreateJobInput = Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">;
 
 const JOB_SELECT =
-  "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at,customer_name,customer_phone,user_latitude,user_longitude,quote_amount,quote_note,quote_eta";
+  "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at,customer_name,customer_phone,user_latitude,user_longitude,worker_question,quote_amount,quote_note,quote_eta";
 const JOB_SELECT_BASE =
   "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at";
 
@@ -117,7 +118,7 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
     photoPreview: row.photo_url || "",
     status: row.status,
     createdAt: row.created_at,
-    workerQuestion: "",
+    workerQuestion: row.worker_question || "",
     quoteAmount: row.quote_amount || "",
     quoteNote: row.quote_note || "",
     quoteEta: row.quote_eta || ""
@@ -576,6 +577,7 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
   const dbUpdate: Record<string, string | null> = {};
   if (update.status) dbUpdate.status = update.status;
   if (update.workerId !== undefined) dbUpdate.worker_id = update.workerId || null;
+  if (update.workerQuestion !== undefined) dbUpdate.worker_question = update.workerQuestion || null;
   if (update.quoteAmount !== undefined) dbUpdate.quote_amount = update.quoteAmount || null;
   if (update.quoteNote !== undefined) dbUpdate.quote_note = update.quoteNote || null;
   if (update.quoteEta !== undefined) dbUpdate.quote_eta = update.quoteEta || null;
@@ -599,7 +601,7 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
       return mapJob(data as JobRequestRow);
     }
 
-    if (error && (update.quoteAmount !== undefined || update.quoteNote !== undefined || update.quoteEta !== undefined)) {
+    if (error && (update.quoteAmount !== undefined || update.quoteNote !== undefined || update.quoteEta !== undefined || update.workerQuestion !== undefined)) {
       const fallbackUpdate: Record<string, string | null> = {};
       if (update.status) fallbackUpdate.status = update.status;
       if (update.workerId !== undefined) fallbackUpdate.worker_id = update.workerId || null;

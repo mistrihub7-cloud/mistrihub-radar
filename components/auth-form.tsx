@@ -18,16 +18,22 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const { account } = useAccountState();
   const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : "/dashboard/user";
   const loggedInName = accountDisplayName(account);
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const isValidMobile = (value: string) => value.replace(/\D/g, "").length === 10;
 
   async function handleSubmit() {
-    if (!identifier) {
-      setMessage("Email ya phone bharna zaroori hai.");
+    const cleanIdentifier = identifier.trim();
+    if (!cleanIdentifier) {
+      setMessage("Email ya mobile number bharna zaroori hai.");
+      return;
+    }
+    if (cleanIdentifier.includes("@") ? !isValidEmail(cleanIdentifier) : !isValidMobile(cleanIdentifier)) {
+      setMessage("Valid email ya 10 digit mobile number enter karo.");
       return;
     }
 
     setLoading(true);
     setMessage("");
-    const cleanIdentifier = identifier.trim();
     const loginAccount = {
       id: `local-${Date.now()}`,
       role: "user" as const,

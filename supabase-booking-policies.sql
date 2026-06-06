@@ -2,6 +2,16 @@
 -- Run this once in Supabase SQL Editor for the project connected to Vercel.
 -- These policies are intentionally permissive because the current app has auth disabled.
 
+alter table if exists public.job_requests
+add column if not exists customer_name text,
+add column if not exists customer_phone text,
+add column if not exists user_latitude double precision,
+add column if not exists user_longitude double precision,
+add column if not exists worker_question text,
+add column if not exists quote_amount text,
+add column if not exists quote_note text,
+add column if not exists quote_eta text;
+
 alter table if exists public.job_requests enable row level security;
 alter table if exists public.job_status_history enable row level security;
 alter table if exists public.notifications enable row level security;

@@ -6,6 +6,7 @@ import { accountDisplayName } from "@/lib/display-name";
 import { clearMistriHubSession, getMockAccount, getWorkerRegistration, saveMockAccount, type MockAccount, type MockJobRequest, type WorkerRegistration } from "@/lib/mock-store";
 import { loadJobsFromSupabase } from "@/lib/supabase-flow";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
+import { NotificationBell } from "./notification-bell";
 import { Icon } from "./simple-icons";
 
 function MenuRow({ href, icon, label, value }: { href: string; icon: string; label: string; value?: string }) {
@@ -75,9 +76,7 @@ export function UserDashboardClient() {
             <p className="text-base font-bold text-slate-500">{location}</p>
           </div>
         </div>
-        <button className="grid h-12 w-12 place-items-center rounded-full text-slate-900" type="button">
-          <Icon className="h-8 w-8" name="bell" />
-        </button>
+        <NotificationBell className="grid h-12 w-12 place-items-center rounded-full text-slate-900" />
       </div>
 
       <section>

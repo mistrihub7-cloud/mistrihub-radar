@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   getWorkerDeclinedJobs,
@@ -14,6 +15,7 @@ import { loadJobsFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
 export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }) {
+  const router = useRouter();
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [workerProfile, setWorkerProfile] = useState<WorkerRegistration | null>(null);
@@ -43,7 +45,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     loadJobs();
     const onChange = () => loadJobs();
     window.addEventListener("mistrihub-mock-change", onChange);
-    const timer = owner === "worker" ? window.setInterval(loadJobs, 20000) : undefined;
+    const timer = window.setInterval(loadJobs, 5000);
     return () => {
       window.removeEventListener("mistrihub-mock-change", onChange);
       if (timer) window.clearInterval(timer);
@@ -99,11 +101,13 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
       workerName: workerProfile.name
     };
     updateMockJob(job.id, update);
+    setJobs((currentJobs) => currentJobs.map((item) => (item.id === job.id ? { ...item, ...update } : item)));
     const nextJob = await updateJobInSupabase(job.id, update);
     if (nextJob?.status === "Accepted" && nextJob.workerId && nextJob.workerId !== workerProfile.id) {
       markWorkerDeclinedJob(job.id);
     }
     await refreshJobs();
+    router.push(`/jobs/${job.id}`);
   }
 
   async function declineJob(job: MockJobRequest) {
@@ -120,6 +124,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     const question = window.prompt("User se ek short question poochho:");
     if (!question?.trim()) return;
     updateMockJob(job.id, { status: "Need More Details", workerQuestion: question.trim() });
+    setJobs((currentJobs) => currentJobs.map((item) => (item.id === job.id ? { ...item, status: "Need More Details", workerQuestion: question.trim() } : item)));
     await updateJobInSupabase(job.id, { status: "Need More Details", workerQuestion: question.trim() });
     await refreshJobs();
   }
@@ -164,6 +169,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
                 className="btn-outline h-10 border-red-500 px-4 text-sm text-red-600"
                 onClick={async () => {
                   updateMockJob(job.id, { status: "Cancelled" });
+                  setJobs((currentJobs) => currentJobs.map((item) => (item.id === job.id ? { ...item, status: "Cancelled" } : item)));
                   await updateJobInSupabase(job.id, { status: "Cancelled" });
                   setJobs(await loadJobsFromSupabase(owner));
                 }}

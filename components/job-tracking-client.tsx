@@ -21,14 +21,24 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     async function loadJob() {
       setLoading(true);
       setIsWorkerMode(getMockAccount()?.role === "worker");
-      setJob(await loadJobFromSupabase(jobId));
+      const nextJob = await loadJobFromSupabase(jobId);
+      if (!cancelled) setJob(nextJob);
       setLoading(false);
     }
 
     loadJob();
+    const timer = window.setInterval(async () => {
+      const nextJob = await loadJobFromSupabase(jobId);
+      if (!cancelled) setJob(nextJob);
+    }, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [jobId]);
 
   if (loading) {
@@ -50,9 +60,11 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
 
   async function setStatus(status: MockJobRequest["status"]) {
     if (!job) return;
+    const optimisticJob = { ...job, status };
     updateMockJob(job.id, { status });
+    setJob(optimisticJob);
     const nextJob = await updateJobInSupabase(job.id, { status });
-    if (nextJob) setJob(nextJob);
+    if (nextJob) setJob({ ...optimisticJob, ...nextJob });
   }
 
   return (

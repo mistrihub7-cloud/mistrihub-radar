@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getMockAccount, getWorkerRegistration } from "@/lib/mock-store";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
-import { Icon } from "./simple-icons";
+import { NotificationBell } from "./notification-bell";
 
 export function AccountDashboardHeader({ type }: { type: "user" | "worker" }) {
   const [name, setName] = useState("Loading...");
@@ -37,9 +37,7 @@ export function AccountDashboardHeader({ type }: { type: "user" | "worker" }) {
           <p className="text-sm text-slate-500">{subtitle || "Profile not completed"}</p>
         </div>
       </div>
-      <button className="grid h-10 w-10 place-items-center rounded-full border border-slate-200" type="button">
-        <Icon name="bell" />
-      </button>
+      <NotificationBell />
     </div>
   );
 }
