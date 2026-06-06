@@ -81,6 +81,8 @@ type ProfileRow = {
 type RequestMessageRow = {
   id: string;
   job_id: string;
+  worker_id?: string | null;
+  worker_name?: string | null;
   sender_role?: MockAccount["role"] | null;
   sender_name?: string | null;
   message: string;
@@ -283,6 +285,8 @@ function mapRequestMessage(row: RequestMessageRow): MockRequestMessage {
   return {
     id: row.id,
     jobId: row.job_id,
+    workerId: row.worker_id || undefined,
+    workerName: row.worker_name || undefined,
     senderRole: row.sender_role === "worker" ? "worker" : "user",
     senderName: row.sender_name || (row.sender_role === "worker" ? "Worker" : "User"),
     message: row.message,
@@ -741,17 +745,25 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
   return localJob;
 }
 
-export async function loadRequestMessages(jobId: string) {
-  if (!hasSupabaseConfig || !supabase) return getMockRequestMessages(jobId);
+export async function loadRequestMessages(jobId: string, workerId?: string) {
+  if (!hasSupabaseConfig || !supabase) {
+    const localMessages = getMockRequestMessages(jobId);
+    return workerId ? localMessages.filter((message) => !message.workerId || message.workerId === workerId) : localMessages;
+  }
 
   const { data, error } = await supabase
     .from("request_messages")
-    .select("id,job_id,sender_role,sender_name,message,created_at")
+    .select("id,job_id,worker_id,worker_name,sender_role,sender_name,message,created_at")
     .eq("job_id", jobId)
     .order("created_at", { ascending: true });
 
-  if (error || !data) return getMockRequestMessages(jobId);
-  return (data as RequestMessageRow[]).map(mapRequestMessage);
+  if (error || !data) {
+    const localMessages = getMockRequestMessages(jobId);
+    return workerId ? localMessages.filter((message) => !message.workerId || message.workerId === workerId) : localMessages;
+  }
+  const messages = (data as RequestMessageRow[]).map(mapRequestMessage);
+  if (!workerId) return messages;
+  return messages.filter((message) => !message.workerId || message.workerId === workerId);
 }
 
 export async function sendRequestMessage(input: Omit<MockRequestMessage, "id" | "createdAt">) {
@@ -762,11 +774,13 @@ export async function sendRequestMessage(input: Omit<MockRequestMessage, "id" | 
     .from("request_messages")
     .insert({
       job_id: input.jobId,
+      worker_id: input.workerId || null,
+      worker_name: input.workerName || null,
       sender_role: input.senderRole,
       sender_name: input.senderName,
       message: input.message
     })
-    .select("id,job_id,sender_role,sender_name,message,created_at")
+    .select("id,job_id,worker_id,worker_name,sender_role,sender_name,message,created_at")
     .maybeSingle();
 
   if (error || !data) return localMessage;

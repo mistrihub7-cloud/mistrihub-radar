@@ -1,21 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { accountDisplayName } from "@/lib/display-name";
-import { getMockAccount, type MockRequestMessage } from "@/lib/mock-store";
+import { getMockAccount, getWorkerRegistration, type MockRequestMessage } from "@/lib/mock-store";
 import { loadRequestMessages, sendRequestMessage } from "@/lib/supabase-flow";
 
-export function JobChat({ jobId }: { jobId: string }) {
+type ChatWorker = {
+  id?: string;
+  name?: string;
+};
+
+export function JobChat({ jobId, worker }: { jobId: string; worker?: ChatWorker }) {
   const [messages, setMessages] = useState<MockRequestMessage[]>([]);
   const [message, setMessage] = useState("");
+  const [selectedWorkerId, setSelectedWorkerId] = useState("");
   const [sending, setSending] = useState(false);
   const messagesListRef = useRef<HTMLDivElement | null>(null);
   const account = typeof window !== "undefined" ? getMockAccount() : null;
+  const workerProfile = typeof window !== "undefined" && account?.role === "worker" ? getWorkerRegistration() : null;
+  const scopedWorkerId = account?.role === "worker" ? workerProfile?.id : undefined;
 
   useEffect(() => {
     let cancelled = false;
     async function loadMessages() {
-      const nextMessages = await loadRequestMessages(jobId);
+      const nextMessages = await loadRequestMessages(jobId, scopedWorkerId);
       if (!cancelled) setMessages(nextMessages);
     }
 
@@ -25,7 +33,7 @@ export function JobChat({ jobId }: { jobId: string }) {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [jobId]);
+  }, [jobId, scopedWorkerId]);
 
   useEffect(() => {
     if (!messages.length) return;
@@ -51,10 +59,15 @@ export function JobChat({ jobId }: { jobId: string }) {
     if (!text || sending) return;
     const senderRole = account?.role === "worker" ? "worker" : "user";
     const senderName = accountDisplayName(account);
+    const targetWorker = conversations.find((item) => item.id === selectedWorkerId);
+    const targetWorkerId = account?.role === "worker" ? workerProfile?.id : targetWorker?.id || worker?.id;
+    const targetWorkerName = account?.role === "worker" ? workerProfile?.name : targetWorker?.name || worker?.name;
     setSending(true);
     setMessage("");
     const nextMessage = await sendRequestMessage({
       jobId,
+      workerId: targetWorkerId || undefined,
+      workerName: targetWorkerName || undefined,
       senderRole,
       senderName,
       message: text
@@ -62,6 +75,32 @@ export function JobChat({ jobId }: { jobId: string }) {
     setMessages((currentMessages) => [...currentMessages, nextMessage]);
     setSending(false);
   }
+
+  const conversations = useMemo(() => {
+    const nextConversations = Array.from(
+      messages.reduce((map, item) => {
+        if (item.workerId) map.set(item.workerId, item.workerName || item.senderName || "Worker");
+        return map;
+      }, new Map<string, string>())
+    ).map(([id, name]) => ({ id, name }));
+
+    if (account?.role !== "worker" && worker?.id && !nextConversations.some((item) => item.id === worker.id)) {
+      nextConversations.unshift({ id: worker.id, name: worker.name || "Worker" });
+    }
+
+    return nextConversations;
+  }, [account?.role, messages, worker?.id, worker?.name]);
+
+  const visibleMessages =
+    account?.role === "worker" || !selectedWorkerId
+      ? messages
+      : messages.filter((item) => item.workerId === selectedWorkerId || (!item.workerId && conversations.length <= 1));
+
+  useEffect(() => {
+    if (account?.role === "worker") return;
+    if (selectedWorkerId && conversations.some((item) => item.id === selectedWorkerId)) return;
+    setSelectedWorkerId(conversations[0]?.id || "");
+  }, [account?.role, conversations, selectedWorkerId]);
 
   return (
     <div className="card p-5" id="job-chat">
@@ -72,9 +111,25 @@ export function JobChat({ jobId }: { jobId: string }) {
         </div>
         <span className="status-pill bg-brand-50 text-brand-600">{messages.length}</span>
       </div>
+      {account?.role !== "worker" && conversations.length > 1 ? (
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+          {conversations.map((item) => (
+            <button
+              className={`shrink-0 rounded-full px-3 py-2 text-xs font-black ${
+                selectedWorkerId === item.id ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-700"
+              }`}
+              key={item.id}
+              onClick={() => setSelectedWorkerId(item.id)}
+              type="button"
+            >
+              {item.name}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div ref={messagesListRef} className="mt-4 max-h-72 space-y-3 overflow-y-auto rounded-2xl bg-slate-50 p-3">
-        {messages.length ? (
-          messages.map((item) => {
+        {visibleMessages.length ? (
+          visibleMessages.map((item) => {
             const mine = item.senderRole === account?.role;
             return (
               <div className={`flex ${mine ? "justify-end" : "justify-start"}`} key={item.id}>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getMockAccount, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
+import { getMockAccount, getWorkerRegistration, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
 import { loadJobFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { ContactActions } from "./contact-actions";
 import { JobChat } from "./job-chat";
@@ -71,10 +71,17 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
 
   async function setStatus(status: MockJobRequest["status"]) {
     if (!job) return;
-    const optimisticJob = { ...job, status };
-    updateMockJob(job.id, { status });
+    const workerProfile = isWorkerMode ? getWorkerRegistration() : null;
+    const update: Partial<MockJobRequest> = {
+      status,
+      ...(workerProfile && !job.workerId
+        ? { workerId: workerProfile.id, workerName: workerProfile.name, workerPhone: workerProfile.phone }
+        : {})
+    };
+    const optimisticJob = { ...job, ...update };
+    updateMockJob(job.id, update);
     setJob(optimisticJob);
-    const nextJob = await updateJobInSupabase(job.id, { status });
+    const nextJob = await updateJobInSupabase(job.id, update);
     if (nextJob) setJob({ ...optimisticJob, ...nextJob });
   }
 
@@ -131,7 +138,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
           </div>
         </div>
 
-        <JobChat jobId={job.id} />
+        <JobChat jobId={job.id} worker={{ id: job.workerId, name: job.workerName }} />
       </div>
 
       <aside className="space-y-5">

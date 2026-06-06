@@ -19,7 +19,9 @@ alter table if exists public.request_messages enable row level security;
 
 alter table if exists public.request_messages
 add column if not exists sender_role text,
-add column if not exists sender_name text;
+add column if not exists sender_name text,
+add column if not exists worker_id text,
+add column if not exists worker_name text;
 
 drop policy if exists "mistrihub public read job requests" on public.job_requests;
 drop policy if exists "mistrihub public create job requests" on public.job_requests;

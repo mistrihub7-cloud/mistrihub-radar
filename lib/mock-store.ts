@@ -49,6 +49,8 @@ export type MockJobRequest = {
 export type MockRequestMessage = {
   id: string;
   jobId: string;
+  workerId?: string;
+  workerName?: string;
   senderRole: MockRole;
   senderName: string;
   message: string;

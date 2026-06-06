@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { NotificationBell } from "./notification-bell";
 import { Icon } from "./simple-icons";
 import { useAccountState } from "./use-account-state";
 
 export function MobileTopbar({ title, back = false }: { title?: string; back?: boolean }) {
+  const router = useRouter();
   const { account } = useAccountState();
   const menuHref = account?.role === "worker" ? "/dashboard/worker" : account ? "/dashboard/user" : "/login";
 
@@ -13,9 +15,9 @@ export function MobileTopbar({ title, back = false }: { title?: string; back?: b
     <div className="flex h-16 items-center justify-between px-4 md:hidden">
       <div className="flex items-center gap-2">
         {back ? (
-          <Link className="grid h-9 w-9 place-items-center rounded-full text-slate-900" href="/">
+          <button className="grid h-9 w-9 place-items-center rounded-full text-slate-900" onClick={() => router.back()} type="button">
             <span className="text-2xl">&lt;</span>
-          </Link>
+          </button>
         ) : (
           <Link aria-label="Open dashboard" className="grid h-9 w-9 place-items-center rounded-full text-slate-900" href={menuHref}>
             <Icon name="menu" />
