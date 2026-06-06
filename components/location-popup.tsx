@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { resolveAreaName } from "./location-geocode";
+import { resolveAreaName, searchAreaSuggestions, type LocationSuggestion } from "./location-geocode";
 import { DEFAULT_LOCATION, LOCATION_KEY, LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, OPEN_LOCATION_EVENT, saveLocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 
@@ -11,6 +11,9 @@ export function LocationPopup() {
   const [area, setArea] = useState("");
   const [state, setState] = useState<LocationState>("idle");
   const [visible, setVisible] = useState(false);
+  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<LocationSuggestion | null>(null);
 
   function closeAndReload() {
     setVisible(false);
@@ -47,6 +50,28 @@ export function LocationPopup() {
     return () => window.removeEventListener(OPEN_LOCATION_EVENT, openPopup);
   }, []);
 
+  useEffect(() => {
+    if (!visible || area.trim().length < 2 || selectedSuggestion?.label === area.trim()) {
+      setSuggestions([]);
+      setSuggestionLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSuggestionLoading(true);
+    const timer = window.setTimeout(async () => {
+      const nextSuggestions = await searchAreaSuggestions(area);
+      if (cancelled) return;
+      setSuggestions(nextSuggestions);
+      setSuggestionLoading(false);
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [area, selectedSuggestion?.label, visible]);
+
   const closeForLater = () => {
     localStorage.setItem(LOCATION_SKIP_KEY, "true");
     setVisible(false);
@@ -57,7 +82,26 @@ export function LocationPopup() {
       setState("denied");
       return;
     }
-    saveLocationLabel(area);
+    if (selectedSuggestion && selectedSuggestion.label === area.trim()) {
+      saveLocationLabel(selectedSuggestion.label, true, {
+        latitude: selectedSuggestion.latitude,
+        longitude: selectedSuggestion.longitude
+      });
+    } else {
+      saveLocationLabel(area);
+    }
+    setState("saved");
+    closeAndReload();
+  };
+
+  const selectSuggestion = (suggestion: LocationSuggestion) => {
+    setArea(suggestion.label);
+    setSelectedSuggestion(suggestion);
+    setSuggestions([]);
+    saveLocationLabel(suggestion.label, true, {
+      latitude: suggestion.latitude,
+      longitude: suggestion.longitude
+    });
     setState("saved");
     closeAndReload();
   };
@@ -112,10 +156,31 @@ export function LocationPopup() {
         <input
           className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-bold outline-none focus:border-brand-500"
           id="saved-area"
-          onChange={(event) => setArea(event.target.value)}
+          onChange={(event) => {
+            setArea(event.target.value);
+            setSelectedSuggestion(null);
+          }}
           placeholder="Area, city"
           value={area}
         />
+        {suggestionLoading || suggestions.length ? (
+          <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+            {suggestionLoading ? <p className="px-4 py-3 text-sm font-bold text-slate-500">Searching area...</p> : null}
+            {suggestions.map((suggestion) => (
+              <button
+                className="flex w-full items-start gap-3 border-t border-slate-100 px-4 py-3 text-left first:border-t-0 hover:bg-brand-50"
+                key={`${suggestion.label}-${suggestion.latitude}-${suggestion.longitude}`}
+                onClick={() => selectSuggestion(suggestion)}
+                type="button"
+              >
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" name="location" />
+                <span className="text-sm font-bold leading-5 text-slate-800">{suggestion.label}</span>
+              </button>
+            ))}
+          </div>
+        ) : area.trim().length >= 2 && !selectedSuggestion ? (
+          <p className="mt-2 text-xs font-bold text-slate-500">Related area list type karte hi yahan aayegi.</p>
+        ) : null}
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           <button className="btn-primary h-11 text-sm" disabled={state === "loading"} onClick={requestLocation} type="button">
