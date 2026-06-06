@@ -14,6 +14,7 @@ export type MockJobRequest = {
   id: string;
   workerId: string;
   workerName: string;
+  workerPhone?: string;
   service: string;
   problem: string;
   urgency: "Normal" | "Urgent" | "Emergency";
@@ -45,6 +46,15 @@ export type MockJobRequest = {
   quoteEta?: string;
 };
 
+export type MockRequestMessage = {
+  id: string;
+  jobId: string;
+  senderRole: MockRole;
+  senderName: string;
+  message: string;
+  createdAt: string;
+};
+
 export type WorkerRegistration = MockAccount & {
   skill: string;
   experience: string;
@@ -63,6 +73,7 @@ const SAVED_ACCOUNTS_KEY = "mistrihub.saved.accounts";
 const WORKER_PROFILE_KEY = "mistrihub.mock.workerProfile";
 const SAVED_WORKER_PROFILES_KEY = "mistrihub.saved.workerProfiles";
 const JOBS_KEY = "mistrihub.mock.jobs";
+const REQUEST_MESSAGES_KEY = "mistrihub.mock.requestMessages";
 const WORKER_SETTINGS_KEY = "mistrihub.mock.workerSettings";
 const WORKER_DECLINED_JOBS_KEY = "mistrihub.mock.workerDeclinedJobs";
 const SESSION_PREFIXES = ["mistrihub.", "sb-"];
@@ -225,6 +236,20 @@ export function updateMockJob(jobId: string, update: Partial<MockJobRequest>) {
   const nextJobs = getMockJobs().map((job) => (job.id === jobId ? { ...job, ...update } : job));
   writeJson(JOBS_KEY, nextJobs);
   return nextJobs.find((job) => job.id === jobId) || null;
+}
+
+export function getMockRequestMessages(jobId: string) {
+  return readJson<MockRequestMessage[]>(REQUEST_MESSAGES_KEY, []).filter((message) => message.jobId === jobId);
+}
+
+export function addMockRequestMessage(input: Omit<MockRequestMessage, "id" | "createdAt">) {
+  const message: MockRequestMessage = {
+    ...input,
+    id: `MSG${Date.now()}`,
+    createdAt: new Date().toISOString()
+  };
+  writeJson(REQUEST_MESSAGES_KEY, [...readJson<MockRequestMessage[]>(REQUEST_MESSAGES_KEY, []), message]);
+  return message;
 }
 
 export function getWorkerDeclinedJobs() {

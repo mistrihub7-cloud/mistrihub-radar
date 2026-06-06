@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getMockAccount, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
 import { loadJobFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { ContactActions } from "./contact-actions";
+import { JobChat } from "./job-chat";
 import { Icon } from "./simple-icons";
 
 const timeline = ["Requested", "Accepted", "On The Way", "In Progress", "Completed", "Declined", "Cancelled"];
@@ -57,6 +58,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
 
   const timelineStatus = normalizeTimelineStatus(job.status);
   const contactUnlocked = ["Accepted", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+  const contactPhone = isWorkerMode ? job.customerPhone : job.workerPhone;
 
   async function setStatus(status: MockJobRequest["status"]) {
     if (!job) return;
@@ -120,10 +122,12 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
             })}
           </div>
         </div>
+
+        <JobChat jobId={job.id} />
       </div>
 
       <aside className="space-y-5">
-        <ContactActions unlocked={contactUnlocked} />
+        <ContactActions phone={contactPhone} unlocked={contactUnlocked} />
         {isWorkerMode ? (
           <div className="card p-4">
             <h2 className="font-black">Worker status controls</h2>

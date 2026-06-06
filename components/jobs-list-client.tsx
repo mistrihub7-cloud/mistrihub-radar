@@ -11,7 +11,7 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
-import { loadJobsFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
+import { loadJobsFromSupabase, sendRequestMessage, updateJobInSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
 export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }) {
@@ -126,6 +126,14 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     updateMockJob(job.id, { status: "Need More Details", workerQuestion: question.trim() });
     setJobs((currentJobs) => currentJobs.map((item) => (item.id === job.id ? { ...item, status: "Need More Details", workerQuestion: question.trim() } : item)));
     await updateJobInSupabase(job.id, { status: "Need More Details", workerQuestion: question.trim() });
+    if (workerProfile) {
+      await sendRequestMessage({
+        jobId: job.id,
+        senderRole: "worker",
+        senderName: workerProfile.name,
+        message: question.trim()
+      });
+    }
     await refreshJobs();
   }
 

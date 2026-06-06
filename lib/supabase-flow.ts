@@ -3,12 +3,15 @@ import {
   getMockAccount,
   getMockJob,
   getMockJobs,
+  getMockRequestMessages,
   getWorkerRegistration,
+  addMockRequestMessage,
   saveMockAccount,
   saveWorkerRegistration,
   updateMockJob,
   type MockAccount,
   type MockJobRequest,
+  type MockRequestMessage,
   type WorkerRegistration
 } from "./mock-store";
 import { hasSupabaseConfig, supabase } from "./supabase-client";
@@ -67,6 +70,15 @@ type WorkerRow = {
   profile_photo?: string | null;
 };
 
+type RequestMessageRow = {
+  id: string;
+  job_id: string;
+  sender_role?: MockAccount["role"] | null;
+  sender_name?: string | null;
+  message: string;
+  created_at: string;
+};
+
 type CreateJobInput = Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">;
 
 const JOB_SELECT =
@@ -105,6 +117,7 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
     id: row.id,
     workerId: row.worker_id || worker?.id || "",
     workerName: workerRow?.name || worker?.name || "Nearby matching workers",
+    workerPhone: workerRow?.phone || workerRow?.whatsapp || worker?.phone || "",
     service: row.service,
     problem: row.problem_description,
     urgency: row.urgency,
@@ -255,6 +268,17 @@ function mapWorkerRegistration(row: WorkerRow): WorkerRegistration {
     availability: normalizeStatus(row.availability_status, row.available_today),
     profilePhoto: row.profile_photo || "",
     idVerificationFile: ""
+  };
+}
+
+function mapRequestMessage(row: RequestMessageRow): MockRequestMessage {
+  return {
+    id: row.id,
+    jobId: row.job_id,
+    senderRole: row.sender_role === "worker" ? "worker" : "user",
+    senderName: row.sender_name || (row.sender_role === "worker" ? "Worker" : "User"),
+    message: row.message,
+    createdAt: row.created_at
   };
 }
 
@@ -507,7 +531,7 @@ export async function loadJobsFromSupabase(owner: "user" | "worker" = "user") {
   const userId = await getSessionUserId();
   let query = supabase
     .from("job_requests")
-    .select(`${JOB_SELECT},workers(id,name,category,location,city)`)
+    .select(`${JOB_SELECT},workers(id,name,category,location,city,phone,whatsapp)`)
     .order("created_at", { ascending: false });
 
   if (userId && owner === "user") {
@@ -525,7 +549,7 @@ export async function loadJobsFromSupabase(owner: "user" | "worker" = "user") {
   if (error) {
     let fallbackQuery = supabase
       .from("job_requests")
-      .select(`${JOB_SELECT_BASE},workers(id,name,category,location,city)`)
+      .select(`${JOB_SELECT_BASE},workers(id,name,category,location,city,phone,whatsapp)`)
       .order("created_at", { ascending: false });
     if (userId && owner === "user") fallbackQuery = fallbackQuery.eq("user_id", userId);
     if (userId && owner === "worker") {
@@ -552,14 +576,14 @@ export async function loadJobFromSupabase(jobId: string) {
 
   const { data, error } = await supabase
     .from("job_requests")
-    .select(`${JOB_SELECT},workers(id,name,category,location,city)`)
+    .select(`${JOB_SELECT},workers(id,name,category,location,city,phone,whatsapp)`)
     .eq("id", jobId)
     .maybeSingle();
 
   if (error || !data) {
     const fallback = await supabase
       .from("job_requests")
-      .select(`${JOB_SELECT_BASE},workers(id,name,category,location,city)`)
+      .select(`${JOB_SELECT_BASE},workers(id,name,category,location,city,phone,whatsapp)`)
       .eq("id", jobId)
       .maybeSingle();
     if (fallback.error || !fallback.data) return getMockJob(jobId);
@@ -629,6 +653,38 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
   }
 
   return localJob;
+}
+
+export async function loadRequestMessages(jobId: string) {
+  if (!hasSupabaseConfig || !supabase) return getMockRequestMessages(jobId);
+
+  const { data, error } = await supabase
+    .from("request_messages")
+    .select("id,job_id,sender_role,sender_name,message,created_at")
+    .eq("job_id", jobId)
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return getMockRequestMessages(jobId);
+  return (data as RequestMessageRow[]).map(mapRequestMessage);
+}
+
+export async function sendRequestMessage(input: Omit<MockRequestMessage, "id" | "createdAt">) {
+  const localMessage = addMockRequestMessage(input);
+  if (!hasSupabaseConfig || !supabase) return localMessage;
+
+  const { data, error } = await supabase
+    .from("request_messages")
+    .insert({
+      job_id: input.jobId,
+      sender_role: input.senderRole,
+      sender_name: input.senderName,
+      message: input.message
+    })
+    .select("id,job_id,sender_role,sender_name,message,created_at")
+    .maybeSingle();
+
+  if (error || !data) return localMessage;
+  return mapRequestMessage(data as RequestMessageRow);
 }
 
 export async function saveWorkerSettingsToSupabase(settings: { availability: string; serviceRadius: string }) {
