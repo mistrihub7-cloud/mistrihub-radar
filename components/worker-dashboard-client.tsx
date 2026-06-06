@@ -72,7 +72,7 @@ export function WorkerDashboardClient() {
 
       if (!notify || typeof window === "undefined" || !currentProfile) return;
 
-      const pendingJobs = visibleJobs.filter((job) => job.status === "Requested" || job.status === "Need More Details");
+      const pendingJobs = visibleJobs.filter((job) => job.status === "Requested");
       const seenKey = `mistrihub.workerSeenJobs.${currentProfile.id}`;
       const seen = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]") as string[]);
       const newJobs = pendingJobs.filter((job) => !seen.has(job.id));
@@ -138,7 +138,7 @@ export function WorkerDashboardClient() {
     window.location.href = "/dashboard/user";
   }
 
-  const activeRequests = jobs.filter((job) => job.status === "Requested" || job.status === "Need More Details").length;
+  const activeRequests = jobs.filter((job) => job.status === "Requested").length;
   const completedJobs = jobs.filter((job) => job.status === "Completed").length;
 
   return (

@@ -102,7 +102,6 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
               ))}
             </div>
           ) : null}
-          {job.workerQuestion ? <p className="mt-4 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-amber-800">Worker asked: {job.workerQuestion}</p> : null}
         </div>
 
         <div className="card p-5">

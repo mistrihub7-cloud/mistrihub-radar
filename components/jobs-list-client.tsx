@@ -11,7 +11,7 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
-import { loadJobsFromSupabase, sendRequestMessage, updateJobInSupabase } from "@/lib/supabase-flow";
+import { loadJobsFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
 export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }) {
@@ -120,23 +120,6 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     await refreshJobs();
   }
 
-  async function askDetails(job: MockJobRequest) {
-    const question = window.prompt("User se ek short question poochho:");
-    if (!question?.trim()) return;
-    updateMockJob(job.id, { status: "Need More Details", workerQuestion: question.trim() });
-    setJobs((currentJobs) => currentJobs.map((item) => (item.id === job.id ? { ...item, status: "Need More Details", workerQuestion: question.trim() } : item)));
-    await updateJobInSupabase(job.id, { status: "Need More Details", workerQuestion: question.trim() });
-    if (workerProfile) {
-      await sendRequestMessage({
-        jobId: job.id,
-        senderRole: "worker",
-        senderName: workerProfile.name,
-        message: question.trim()
-      });
-    }
-    await refreshJobs();
-  }
-
   return (
     <div className="space-y-4">
       {jobs.map((job) => (
@@ -147,7 +130,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
               <h2 className="mt-1 text-xl font-black">{job.service}</h2>
               <p className="mt-1 text-sm text-slate-600">{job.workerName} - {job.area}</p>
             </div>
-            <span className="status-pill bg-blue-50 text-brand-600">{job.status}</span>
+            <span className="status-pill bg-blue-50 text-brand-600">{job.status === "Need More Details" ? "Requested" : job.status}</span>
           </div>
           {owner === "worker" && !job.workerId ? (
             <p className="mt-3 rounded-2xl bg-brand-50 p-3 text-xs font-black text-brand-700">
@@ -164,9 +147,9 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
                 <button className="btn-primary h-10 px-4 text-sm" disabled={!workerProfile} onClick={() => acceptJob(job)} type="button">
                   Accept Job
                 </button>
-                <button className="btn-outline h-10 px-4 text-sm" onClick={() => askDetails(job)} type="button">
-                  Need More Details
-                </button>
+                <Link className="btn-outline h-10 px-4 text-sm" href={`/jobs/${job.id}#job-chat`}>
+                  Chat
+                </Link>
                 <button className="btn-outline h-10 border-red-500 px-4 text-sm text-red-600" onClick={() => declineJob(job)} type="button">
                   Decline
                 </button>

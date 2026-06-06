@@ -68,7 +68,7 @@ export function JobChat({ jobId }: { jobId: string }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-black">Job Chat</h2>
-          <p className="mt-1 text-sm text-slate-500">Need more details, quote, and clarification ka record yahin rahega.</p>
+          <p className="mt-1 text-sm text-slate-500">User aur worker ki job discussion ka record yahin rahega.</p>
         </div>
         <span className="status-pill bg-brand-50 text-brand-600">{messages.length}</span>
       </div>

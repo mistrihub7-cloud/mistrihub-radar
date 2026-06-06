@@ -19,13 +19,13 @@ function visibleWorkerJobs(jobs: MockJobRequest[], profile: WorkerRegistration |
     if (declined.includes(job.id)) return false;
     if (profile && job.service !== profile.skill) return false;
     if (job.workerId && profile && job.workerId !== profile.id) return false;
-    return ["Requested", "Need More Details"].includes(job.status);
+    return job.status === "Requested";
   });
 }
 
 function alertJobsFor(account: MockAccount | null, jobs: MockJobRequest[], profile: WorkerRegistration | null) {
   if (account?.role === "worker") return visibleWorkerJobs(jobs, profile);
-  return jobs.filter((job) => ["Accepted", "Need More Details", "On The Way", "In Progress", "Cancelled"].includes(job.status));
+  return jobs.filter((job) => ["Accepted", "On The Way", "In Progress", "Cancelled"].includes(job.status));
 }
 
 export function NotificationBell({ className = "grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-900" }: { className?: string }) {
