@@ -9,6 +9,7 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
+import { registerFcmToken } from "@/lib/fcm-client";
 import { getJobAlertsEnabled, requestJobAlertPermission, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
 import { loadJobsFromSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
@@ -81,8 +82,13 @@ export function NotificationBell({ className = "grid h-10 w-10 place-items-cente
       onClick={() => {
         if ("Notification" in window && Notification.permission === "granted") {
           saveJobAlertsEnabled(true);
+          registerFcmToken().catch(() => null);
         } else if ("Notification" in window) {
-          requestJobAlertPermission().catch(() => null);
+          requestJobAlertPermission()
+            .then((permission) => {
+              if (permission === "granted") registerFcmToken().catch(() => null);
+            })
+            .catch(() => null);
         }
       }}
     >

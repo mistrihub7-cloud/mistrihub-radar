@@ -597,6 +597,45 @@ async function notifyMatchingWorkers(jobId: string, input: CreateJobInput) {
   }
 }
 
+async function sendFcmJobCreated(jobId: string, input: CreateJobInput) {
+  if (typeof window === "undefined") return;
+
+  try {
+    await fetch("/api/push/job-created", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId,
+        service: input.service,
+        area: input.area,
+        problem: input.problem
+      })
+    });
+  } catch {
+    // Push is a bonus channel; booking should continue even if push fails.
+  }
+}
+
+async function sendFcmJobUpdated(job: MockJobRequest) {
+  if (typeof window === "undefined") return;
+
+  try {
+    await fetch("/api/push/job-updated", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId: job.id,
+        status: job.status,
+        customerPhone: job.customerPhone,
+        workerId: job.workerId,
+        service: job.service
+      })
+    });
+  } catch {
+    // Push is a bonus channel; status update should continue even if push fails.
+  }
+}
+
 export async function createJobInSupabase(input: CreateJobInput) {
   if (!hasSupabaseConfig || !supabase) {
     return null;
@@ -651,6 +690,7 @@ export async function createJobInSupabase(input: CreateJobInput) {
       // History is helpful, but the job request itself is the important record.
     }
     await notifyMatchingWorkers(id, input);
+    await sendFcmJobCreated(id, input);
 
     return { ...mapJob(data as JobRequestRow), photoPreview2: input.photoPreview2 || "" };
   } catch {
@@ -758,7 +798,9 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
 
     if (!error && data && update.status) {
       await supabase.from("job_status_history").insert({ job_id: jobId, status: update.status, note: "Status updated" });
-      return mapJob(data as JobRequestRow);
+      const mappedJob = mapJob(data as JobRequestRow);
+      await sendFcmJobUpdated(mappedJob);
+      return mappedJob;
     }
 
     if (error && (update.quoteAmount !== undefined || update.quoteNote !== undefined || update.quoteEta !== undefined || update.workerQuestion !== undefined)) {
@@ -772,7 +814,9 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
       const fallback = await fallbackQuery.select(JOB_SELECT_BASE).maybeSingle();
       if (!fallback.error && fallback.data && update.status) {
         await supabase.from("job_status_history").insert({ job_id: jobId, status: update.status, note: "Status updated" });
-        return { ...mapJob(fallback.data as JobRequestRow), ...update };
+        const mappedJob = { ...mapJob(fallback.data as JobRequestRow), ...update };
+        await sendFcmJobUpdated(mappedJob);
+        return mappedJob;
       }
     }
 

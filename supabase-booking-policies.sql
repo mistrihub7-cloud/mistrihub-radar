@@ -34,7 +34,21 @@ create table if not exists public.worker_reviews (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.push_tokens (
+  id uuid primary key default gen_random_uuid(),
+  token text not null unique,
+  account_id text,
+  role text not null default 'user',
+  name text,
+  phone text,
+  service text,
+  worker_id text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 alter table if exists public.worker_reviews enable row level security;
+alter table if exists public.push_tokens enable row level security;
 
 drop policy if exists "mistrihub public read job requests" on public.job_requests;
 drop policy if exists "mistrihub public create job requests" on public.job_requests;
@@ -130,6 +144,22 @@ with check (true);
 
 create policy "mistrihub public update worker reviews"
 on public.worker_reviews
+for update
+to anon, authenticated
+using (true)
+with check (true);
+
+drop policy if exists "mistrihub public create push tokens" on public.push_tokens;
+drop policy if exists "mistrihub public update push tokens" on public.push_tokens;
+
+create policy "mistrihub public create push tokens"
+on public.push_tokens
+for insert
+to anon, authenticated
+with check (true);
+
+create policy "mistrihub public update push tokens"
+on public.push_tokens
 for update
 to anon, authenticated
 using (true)

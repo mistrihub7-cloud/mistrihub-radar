@@ -14,6 +14,7 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
+import { hasFirebaseMessagingConfig, registerFcmToken } from "@/lib/fcm-client";
 import { getJobAlertsEnabled, requestJobAlertPermission, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
 import { NotificationBell } from "./notification-bell";
@@ -112,7 +113,19 @@ export function WorkerDashboardClient() {
     setNotificationPermission(permission);
     setAlertsEnabled(permission === "granted");
     saveJobAlertsEnabled(permission === "granted");
-    setAlertMessage(permission === "granted" ? "Job alerts saved. New requests par browser/PWA alert milega." : "Notification allow nahi hua.");
+    if (permission !== "granted") {
+      setAlertMessage("Notification allow nahi hua.");
+      return;
+    }
+
+    const tokenResult = await registerFcmToken();
+    setAlertMessage(
+      tokenResult.ok
+        ? "Job alerts saved. Mobile/PWA push notification active hai."
+        : hasFirebaseMessagingConfig()
+          ? `Browser alert saved. FCM token save nahi hua: ${tokenResult.reason}`
+          : "Browser alert saved. FCM keys add karne ke baad mobile push active hoga."
+    );
   }
 
   async function saveAvailability(nextAvailability: string) {
