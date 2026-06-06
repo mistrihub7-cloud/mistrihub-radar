@@ -27,6 +27,7 @@ type JobRequestRow = {
   preferred_time: string | null;
   area: string;
   photo_url: string | null;
+  photo_url_2?: string | null;
   status: MockJobRequest["status"];
   created_at: string;
   customer_name?: string | null;
@@ -92,7 +93,7 @@ type RequestMessageRow = {
 type CreateJobInput = Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">;
 
 const JOB_SELECT =
-  "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at,customer_name,customer_phone,user_latitude,user_longitude,worker_question,quote_amount,quote_note,quote_eta";
+  "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,photo_url_2,status,created_at,customer_name,customer_phone,user_latitude,user_longitude,worker_question,quote_amount,quote_note,quote_eta";
 const JOB_SELECT_BASE =
   "id,user_id,worker_id,service,problem_description,urgency,preferred_date,preferred_time,area,photo_url,status,created_at";
 
@@ -139,6 +140,7 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
     userLatitude: row.user_latitude ?? undefined,
     userLongitude: row.user_longitude ?? undefined,
     photoPreview: row.photo_url || "",
+    photoPreview2: row.photo_url_2 || "",
     status: row.status,
     createdAt: row.created_at,
     workerQuestion: row.worker_question || "",
@@ -573,7 +575,7 @@ export async function createJobInSupabase(input: CreateJobInput) {
         preferred_date: input.preferredDate || null,
         preferred_time: input.preferredTime || null,
         area: input.area,
-        photo_url: input.photoPreview && !input.photoPreview.startsWith("data:") ? input.photoPreview : null,
+        photo_url: input.photoPreview || null,
         status: "Requested"
       })
       .select(JOB_SELECT_BASE)
@@ -588,7 +590,8 @@ export async function createJobInSupabase(input: CreateJobInput) {
           customer_name: input.customerName || null,
           customer_phone: input.customerPhone || null,
           user_latitude: input.userLatitude ?? null,
-          user_longitude: input.userLongitude ?? null
+          user_longitude: input.userLongitude ?? null,
+          photo_url_2: input.photoPreview2 || null
         })
         .eq("id", id)
         .throwOnError();
@@ -606,7 +609,7 @@ export async function createJobInSupabase(input: CreateJobInput) {
     }
     await notifyMatchingWorkers(id, input);
 
-    return mapJob(data as JobRequestRow);
+    return { ...mapJob(data as JobRequestRow), photoPreview2: input.photoPreview2 || "" };
   } catch {
     return null;
   }
