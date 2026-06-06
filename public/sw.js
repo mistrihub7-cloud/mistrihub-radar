@@ -1,4 +1,4 @@
-const CACHE_NAME = "mistrihub-cache-v2";
+const CACHE_NAME = "mistrihub-cache-v3";
 const APP_SHELL = ["/", "/offline", "/manifest.json", "/icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -15,8 +15,21 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
+    return;
+  }
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match("/offline"))
+    );
     return;
   }
 
