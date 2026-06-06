@@ -343,6 +343,7 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
   const radius = Number.parseInt(profile.serviceRadius, 10) || 10;
   const categorySlug = categorySlugFor(profile.skill);
   const workerId = profileToSave.id;
+  const contactPhone = profile.phone.trim();
   const corePayload = {
     id: workerId,
     user_id: null,
@@ -357,8 +358,8 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
     latitude: profile.latitude ?? null,
     longitude: profile.longitude ?? null,
     email: profile.email || null,
-    phone: profile.phone,
-    whatsapp: profile.phone,
+    phone: contactPhone,
+    whatsapp: contactPhone,
     profile_photo: profile.profilePhoto || "",
     available_today: profile.availability === "Available Today",
     service_radius: radius,
@@ -386,8 +387,9 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
         latitude: profile.latitude ?? null,
         longitude: profile.longitude ?? null,
         email: profile.email || null,
-        phone: profile.phone,
-        whatsapp: profile.phone
+        phone: contactPhone,
+        whatsapp: contactPhone,
+        profile_photo: profile.profilePhoto || ""
       },
       {
         id: workerId,
@@ -395,7 +397,8 @@ export async function saveWorkerRegistrationToSupabase(profile: WorkerRegistrati
         category: profile.skill,
         location: profile.location,
         city: profile.city,
-        phone: profile.phone
+        phone: contactPhone,
+        whatsapp: contactPhone
       }
     ];
 

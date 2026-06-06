@@ -26,6 +26,13 @@ add column if not exists availability_status text default 'Available Today',
 add column if not exists service_area text,
 add column if not exists verified_status text default 'Not Submitted';
 
+update public.workers
+set whatsapp = coalesce(whatsapp, phone, '')
+where whatsapp is null;
+
+alter table if exists public.workers
+alter column whatsapp set default '';
+
 alter table if exists public.workers enable row level security;
 
 drop policy if exists "mistrihub public read workers" on public.workers;
