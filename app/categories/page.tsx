@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { Icon } from "@/components/simple-icons";
 import { categories } from "@/lib/data";
+import { slugify } from "@/lib/seo-pages";
 
 export default function CategoriesPage() {
   return (
@@ -20,7 +21,7 @@ export default function CategoriesPage() {
           {categories.map((category) => (
             <Link
               className="group min-h-[128px] rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-4 text-center shadow-sm transition hover:-translate-y-1 hover:border-brand-200 hover:shadow-card"
-              href={`/workers?service=${encodeURIComponent(category.name)}`}
+              href={`/services/${slugify(category.name)}`}
               key={category.name}
             >
               <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ${category.bg} ${category.tone} transition group-hover:scale-105`}>

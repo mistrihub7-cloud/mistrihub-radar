@@ -8,6 +8,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { SectionTitle } from "@/components/section-title";
 import { LocalWorkerList } from "@/components/local-worker-list";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
+import { slugify } from "@/lib/seo-pages";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -30,7 +31,7 @@ function CategoryGrid() {
       {categories.map((category) => (
         <Link
           className="group min-h-[112px] rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-3 text-center shadow-sm transition hover:-translate-y-1 hover:border-brand-200 hover:shadow-card"
-          href={`/workers?service=${encodeURIComponent(category.name)}`}
+          href={`/services/${slugify(category.name)}`}
           key={category.name}
         >
           <span className={`mx-auto grid h-12 w-12 place-items-center rounded-2xl ${category.bg} ${category.tone} transition group-hover:scale-105`}>
@@ -148,7 +149,7 @@ function StructuredData() {
           "@type": "ListItem",
           position: index + 1,
           name: category.name,
-          url: `${siteUrl}/workers?service=${encodeURIComponent(category.name)}`
+          url: `${siteUrl}/services/${slugify(category.name)}`
         }))
       }
     ]
