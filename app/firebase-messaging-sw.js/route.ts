@@ -21,7 +21,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || payload.data?.title || "MistriHub update";
+  const title = payload.notification?.title || payload.data?.title || "MistriHub.In update";
   const body = payload.notification?.body || payload.data?.body || "New job update received.";
   self.registration.showNotification(title, {
     body,

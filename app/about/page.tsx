@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import { PublicPageShell } from "@/components/public-page-shell";
 
 export const metadata: Metadata = {
-  title: "About MistriHub",
-  description: "Learn how MistriHub helps users find nearby trusted workers with review-before-accept and contact unlock after acceptance."
+  title: "About MistriHub.In",
+  description: "Learn how MistriHub.In helps users find nearby trusted workers with review-before-accept and contact unlock after acceptance."
 };
 
 export default function AboutPage() {
   return (
-    <PublicPageShell eyebrow="About" title="About MistriHub">
+    <PublicPageShell eyebrow="About" title="About MistriHub.In">
       <p>
-        MistriHub is a nearby worker discovery platform for home and local services such as electrician, plumber, mechanic, painter, AC repair, carpenter, driver and helper work.
+        MistriHub.In is a nearby worker discovery platform for home and local services such as electrician, plumber, mechanic, painter, AC repair, carpenter, driver and helper work.
       </p>
       <p>
         The platform is built for a practical Indian service flow. Workers are not shown as taxi-style live radar. Instead, users discover workers by service area, availability, distance, rating, completed jobs and trust score.

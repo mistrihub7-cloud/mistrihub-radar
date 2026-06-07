@@ -242,7 +242,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
           Dear {noticeName}, worker ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple workers aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi worker ko hire karein.
         </p>
         <p className="mt-2">
-          MistriHub sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.
+          MistriHub.In sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.
         </p>
       </div>
 

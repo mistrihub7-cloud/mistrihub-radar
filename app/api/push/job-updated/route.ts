@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   const result = await sendPushToTokens({
     tokens,
-    title: "MistriHub job update",
+    title: "MistriHub.In job update",
     body: `${payload.service || "Your job"} is now ${payload.status}.`,
     url: `/jobs/${payload.jobId}`,
     jobId: payload.jobId

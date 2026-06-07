@@ -15,12 +15,12 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
-            MistriHub helps users find nearby trusted workers. Contact details unlock only after a worker accepts the job request.
+            MistriHub.In helps users find nearby trusted workers. Contact details unlock only after a worker accepts the job request.
           </p>
         </div>
 
         <div>
-          <h2 className="text-sm font-black text-slate-950">MistriHub</h2>
+          <h2 className="text-sm font-black text-slate-950">MistriHub.In</h2>
           <div className="mt-4 grid gap-3 text-sm font-bold text-slate-600">
             {companyLinks.map(([label, href]) => (
               <Link className="hover:text-brand-600" href={href} key={href}>
@@ -32,7 +32,7 @@ export function SiteFooter() {
       </div>
 
       <div className="container-page mt-8 border-t border-slate-100 pt-5 text-xs font-bold text-slate-500">
-        © {new Date().getFullYear()} MistriHub. Nearby worker discovery platform.
+        © {new Date().getFullYear()} MistriHub.In. Nearby worker discovery platform.
       </div>
     </footer>
   );

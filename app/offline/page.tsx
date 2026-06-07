@@ -10,7 +10,7 @@ export default function OfflinePage() {
         </div>
         <h1 className="text-3xl font-black">You are offline</h1>
         <p className="mt-3 text-slate-600">
-          MistriHub app shell is still available. Please reconnect to book or track a live job.
+          MistriHub.In app shell is still available. Please reconnect to book or track a live job.
         </p>
         <Link className="btn-primary mt-6" href="/">
           Go Home

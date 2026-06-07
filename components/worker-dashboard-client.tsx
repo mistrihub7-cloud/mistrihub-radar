@@ -83,7 +83,7 @@ export function WorkerDashboardClient() {
       localStorage.setItem(seenKey, JSON.stringify(Array.from(new Set(Array.from(seen).concat(pendingJobs.map((job) => job.id))))));
       const latestJob = newJobs[0];
       if (getJobAlertsEnabled() && "Notification" in window && Notification.permission === "granted") {
-        showJobNotification("New MistriHub job request", {
+        showJobNotification("New MistriHub.In job request", {
           body: `${cleanCategoryName(latestJob.service)} - ${latestJob.area}`,
           tag: latestJob.id,
           data: { url: "/worker-request" }

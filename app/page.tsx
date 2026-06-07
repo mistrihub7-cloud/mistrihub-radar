@@ -20,7 +20,7 @@ function HeroWorker({ className = "h-auto w-full object-contain" }: { className?
     // Use a direct public image so the hero appears immediately after deploy/cache refresh.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      alt="MistriHub trusted worker"
+      alt="MistriHub.In trusted worker"
       className={className}
       src="/hero-worker.png?v=3"
     />
@@ -129,7 +129,7 @@ function StructuredData() {
     "@graph": [
       {
         "@type": "WebSite",
-        name: "MistriHub",
+        name: "MistriHub.In",
         url: siteUrl,
         potentialAction: {
           "@type": "SearchAction",
@@ -139,14 +139,14 @@ function StructuredData() {
       },
       {
         "@type": "LocalBusiness",
-        name: "MistriHub",
+        name: "MistriHub.In",
         url: siteUrl,
         areaServed: "India",
         description: "Nearby trusted workers for electrician, plumber, mechanic, painter, AC repair, carpenter, driver and helper services."
       },
       {
         "@type": "ItemList",
-        name: "MistriHub service categories",
+        name: "MistriHub.In service categories",
         itemListElement: categories.map((category, index) => ({
           "@type": "ListItem",
           position: index + 1,

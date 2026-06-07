@@ -11,7 +11,7 @@ export default function CategoriesPage() {
       <MobileTopbar back title="All Services" />
       <section className="container-page pb-28 pt-2 md:py-10">
         <div className="mb-5">
-          <p className="text-sm font-black text-brand-600">MistriHub Services</p>
+          <p className="text-sm font-black text-brand-600">MistriHub.In Services</p>
           <h1 className="mt-1 text-3xl font-black text-slate-950">What service do you need?</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
             Choose a category to see nearby workers serving your area.

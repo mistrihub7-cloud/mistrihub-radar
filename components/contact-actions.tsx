@@ -15,7 +15,7 @@ export function ContactActions({ phone, unlocked }: { phone?: string; unlocked: 
           <div>
             <h3 className="font-black text-slate-950">Contact locked</h3>
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              Phone and WhatsApp unlock only after the worker accepts the job inside MistriHub.
+              Phone and WhatsApp unlock only after the worker accepts the job inside MistriHub.In.
             </p>
           </div>
         </div>

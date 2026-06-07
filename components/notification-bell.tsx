@@ -63,7 +63,7 @@ export function NotificationBell({ className = "grid h-10 w-10 place-items-cente
       if (!newAlerts.length || !("Notification" in window) || Notification.permission !== "granted") return;
 
       const job = newAlerts[0];
-      showJobNotification(activeAccount.role === "worker" ? "New MistriHub job request" : "MistriHub job update", {
+      showJobNotification(activeAccount.role === "worker" ? "New MistriHub.In job request" : "MistriHub.In job update", {
         body: `${cleanCategoryName(job.service)} - ${job.status} - ${job.area}`,
         tag: job.id,
         data: { url: activeAccount.role === "worker" ? "/worker-request" : `/jobs/${job.id}` }

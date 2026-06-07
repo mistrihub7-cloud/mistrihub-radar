@@ -95,7 +95,7 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
                 {reviews.map((review) => (
                   <div className="rounded-2xl bg-slate-50 p-4" key={review.id}>
                     <div className="flex items-center justify-between gap-3">
-                      <p className="font-black text-slate-950">{review.customer_name || "MistriHub user"}</p>
+                      <p className="font-black text-slate-950">{review.customer_name || "MistriHub.In user"}</p>
                       <p className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">{review.rating}/5</p>
                     </div>
                     {review.comment ? <p className="mt-2 text-sm leading-6 text-slate-600">{review.comment}</p> : null}

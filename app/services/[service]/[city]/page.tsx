@@ -44,7 +44,7 @@ function StructuredData({ serviceName, cityName, stateName }: { serviceName: str
     name: `${serviceName} in ${cityName}`,
     provider: {
       "@type": "Organization",
-      name: "MistriHub",
+      name: "MistriHub.In",
       url: siteUrl()
     },
     areaServed: {
@@ -82,7 +82,7 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
                 {serviceSearchTitle(service.name)} in {city.name}
               </h1>
               <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
-                Book nearby {serviceLabel.toLowerCase()} workers serving {city.name}. MistriHub keeps contact locked until the worker accepts your job request.
+                Book nearby {serviceLabel.toLowerCase()} workers serving {city.name}. MistriHub.In keeps contact locked until the worker accepts your job request.
               </p>
             </div>
             <span className={`grid h-14 w-14 place-items-center rounded-2xl ${service.bg} ${service.tone}`}>
@@ -111,7 +111,7 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
           </section>
 
           <aside className="card p-5">
-            <h2 className="text-xl font-black">Why MistriHub?</h2>
+            <h2 className="text-xl font-black">Why MistriHub.In?</h2>
             <ul className="mt-4 space-y-3 text-sm font-bold text-slate-700">
               {["Nearby worker discovery", "Review before accepting", "Contact locked before acceptance", "Job tracking and review record"].map((item) => (
                 <li className="flex gap-3" key={item}>

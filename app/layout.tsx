@@ -12,11 +12,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mistrihub-radar.ver
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "MistriHub - Nearby Trusted Workers for Home Services",
-    template: "%s | MistriHub"
+    default: "MistriHub.In - Nearby Trusted Workers for Home Services",
+    template: "%s | MistriHub.In"
   },
   description: "Find nearby trusted electricians, plumbers, mechanics, painters, AC repair workers, carpenters, drivers and helpers. Book local workers with contact unlock after acceptance.",
-  applicationName: "MistriHub",
+  applicationName: "MistriHub.In",
   keywords: [
     "nearby workers",
     "nearby electrician",
@@ -28,22 +28,22 @@ export const metadata: Metadata = {
     "labour helper",
     "driver near me",
     "home service worker",
-    "MistriHub"
+    "MistriHub.In"
   ],
   alternates: {
     canonical: "/"
   },
   openGraph: {
-    title: "MistriHub - Nearby Trusted Workers",
+    title: "MistriHub.In - Nearby Trusted Workers",
     description: "Book local electricians, plumbers, mechanics, painters and repair workers near your area.",
     url: siteUrl,
-    siteName: "MistriHub",
+    siteName: "MistriHub.In",
     locale: "en_IN",
     type: "website"
   },
   twitter: {
     card: "summary_large_image",
-    title: "MistriHub - Nearby Trusted Workers",
+    title: "MistriHub.In - Nearby Trusted Workers",
     description: "Find and book nearby trusted workers for Indian home services."
   },
   robots: {

@@ -32,8 +32,8 @@ export function JobChat({
   const displayName = accountDisplayName(account, workerProfile || undefined);
   const notice =
     account?.role === "worker"
-      ? `Dear ${displayName}, job accept karne se pehle user se price, work details aur timing properly discuss kar lein. Agar sab details clear ho tabhi job accept karein. Accept karne ke baad unnecessary cancel na karein, isse aapka score affect ho sakta hai. MistriHub sirf users aur workers ko connect karta hai. Final deal, payment aur work agreement user aur worker ke beech hoga.`
-      : `Dear ${displayName}, worker ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple workers aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi worker ko hire karein. MistriHub sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.`;
+      ? `Dear ${displayName}, job accept karne se pehle user se price, work details aur timing properly discuss kar lein. Agar sab details clear ho tabhi job accept karein. Accept karne ke baad unnecessary cancel na karein, isse aapka score affect ho sakta hai. MistriHub.In sirf users aur workers ko connect karta hai. Final deal, payment aur work agreement user aur worker ke beech hoga.`
+      : `Dear ${displayName}, worker ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple workers aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi worker ko hire karein. MistriHub.In sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.`;
 
   useEffect(() => {
     let cancelled = false;

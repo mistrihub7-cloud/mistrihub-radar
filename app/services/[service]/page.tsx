@@ -20,7 +20,7 @@ export function generateMetadata({ params }: { params: { service: string } }): M
   if (!service) return {};
   const serviceLabel = cleanCategoryName(service.name);
   const title = `${serviceSearchTitle(service.name)} Near Me - Trusted Local Workers`;
-  const description = `Find nearby ${serviceLabel.toLowerCase()} workers on MistriHub. Send a request, review job details, and unlock contact only after worker acceptance.`;
+  const description = `Find nearby ${serviceLabel.toLowerCase()} workers on MistriHub.In. Send a request, review job details, and unlock contact only after worker acceptance.`;
 
   return {
     title,
@@ -42,12 +42,12 @@ function StructuredData({ serviceName }: { serviceName: string }) {
     name: `${serviceName} near me`,
     provider: {
       "@type": "Organization",
-      name: "MistriHub",
+      name: "MistriHub.In",
       url: siteUrl()
     },
     areaServed: "India",
     serviceType: serviceName,
-    description: `Nearby trusted ${serviceName.toLowerCase()} workers available through MistriHub.`
+    description: `Nearby trusted ${serviceName.toLowerCase()} workers available through MistriHub.In.`
   };
 
   return <script dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} type="application/ld+json" />;
@@ -69,7 +69,7 @@ export default async function ServiceLandingPage({ params }: { params: { service
             <span className={`grid h-14 w-14 place-items-center rounded-2xl ${service.bg} ${service.tone}`}>
               <Icon className="h-7 w-7" name={service.icon} />
             </span>
-            <p className="mt-5 text-sm font-black text-brand-600">MistriHub Service</p>
+            <p className="mt-5 text-sm font-black text-brand-600">MistriHub.In Service</p>
             <h1 className="mt-1 text-3xl font-black leading-tight text-slate-950 md:text-5xl">
               {serviceSearchTitle(service.name)} near you
             </h1>

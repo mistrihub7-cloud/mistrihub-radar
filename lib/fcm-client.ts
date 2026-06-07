@@ -42,7 +42,7 @@ function setupForegroundMessages() {
   foregroundListenerReady = true;
   const messaging = getMessaging(firebaseApp());
   onMessage(messaging, (payload) => {
-    const title = payload.notification?.title || payload.data?.title || "MistriHub update";
+    const title = payload.notification?.title || payload.data?.title || "MistriHub.In update";
     const body = payload.notification?.body || payload.data?.body || "New job update received.";
     showJobNotification(title, {
       body,

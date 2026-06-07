@@ -9,7 +9,7 @@ export function Logo() {
       </span>
       <span>
         <span className="block text-2xl font-black leading-5 text-brand-600">
-          MistriHub
+          MistriHub.In
         </span>
         <span className="text-xs font-semibold text-slate-500">
           Trusted Workers Near You

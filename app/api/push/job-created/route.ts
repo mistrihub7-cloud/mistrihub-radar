@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   const serviceLabel = cleanCategoryName(payload.service);
   const result = await sendPushToTokens({
     tokens: rows.map((row) => row.token),
-    title: "New MistriHub job request",
+    title: "New MistriHub.In job request",
     body: `${serviceLabel} request in ${payload.area || "your area"}. ${payload.problem?.slice(0, 80) || ""}`,
     url: `/jobs/${payload.jobId}`,
     jobId: payload.jobId

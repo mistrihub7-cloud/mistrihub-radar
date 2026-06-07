@@ -3,14 +3,14 @@ import { PublicPageShell } from "@/components/public-page-shell";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",
-  description: "MistriHub terms for users, workers, booking requests, contact unlock, payments, cancellations and platform responsibility."
+  description: "MistriHub.In terms for users, workers, booking requests, contact unlock, payments, cancellations and platform responsibility."
 };
 
 export default function TermsPage() {
   return (
     <PublicPageShell eyebrow="Terms" title="Terms and Conditions">
       <p>
-        MistriHub connects users with nearby workers. MistriHub is not the employer of workers and does not directly provide electrician, plumber, mechanic, repair, driver or labour services.
+        MistriHub.In connects users with nearby workers. MistriHub.In is not the employer of workers and does not directly provide electrician, plumber, mechanic, repair, driver or labour services.
       </p>
       <h2 className="text-xl font-black text-slate-950">User responsibility</h2>
       <p>
@@ -26,7 +26,7 @@ export default function TermsPage() {
       </p>
       <h2 className="text-xl font-black text-slate-950">Payment and disputes</h2>
       <p>
-        MistriHub currently only connects users and workers. Payment, final price, work quality and work agreement are handled directly between user and worker.
+        MistriHub.In currently only connects users and workers. Payment, final price, work quality and work agreement are handled directly between user and worker.
       </p>
       <h2 className="text-xl font-black text-slate-950">Misuse</h2>
       <p>

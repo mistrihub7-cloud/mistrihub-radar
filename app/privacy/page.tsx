@@ -3,14 +3,14 @@ import { PublicPageShell } from "@/components/public-page-shell";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "MistriHub privacy policy for location, contact, booking, photo, chat, notification and worker profile data."
+  description: "MistriHub.In privacy policy for location, contact, booking, photo, chat, notification and worker profile data."
 };
 
 export default function PrivacyPage() {
   return (
     <PublicPageShell eyebrow="Privacy" title="Privacy Policy">
       <p>
-        MistriHub uses only the information needed to run nearby worker discovery, booking requests, job tracking and notifications.
+        MistriHub.In uses only the information needed to run nearby worker discovery, booking requests, job tracking and notifications.
       </p>
       <h2 className="text-xl font-black text-slate-950">Information we may collect</h2>
       <ul className="list-disc space-y-2 pl-5">

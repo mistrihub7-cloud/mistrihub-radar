@@ -12,7 +12,7 @@ export default function LoginPage() {
             <div className="mx-auto max-h-[360px] w-full max-w-sm overflow-hidden rounded-[2rem] bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                alt="Welcome to MistriHub"
+                alt="Welcome to MistriHub.In"
                 className="block h-auto w-full"
                 src="/login-workers.png?v=3"
               />
