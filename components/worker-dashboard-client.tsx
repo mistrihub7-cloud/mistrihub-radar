@@ -15,7 +15,7 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
-import { getJobAlertsEnabled, requestJobAlertPermission, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
+import { getJobAlertsEnabled, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
 import { NotificationBell } from "./notification-bell";
 import { Icon } from "./simple-icons";
@@ -47,9 +47,6 @@ export function WorkerDashboardClient() {
   const [profile, setProfile] = useState<WorkerRegistration | null>(null);
   const [accountName, setAccountName] = useState("Worker");
   const [statusMessage, setStatusMessage] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">("unsupported");
-  const [alertsEnabled, setAlertsEnabled] = useState(false);
   const availabilityOptions = ["Available Today", "Busy", "Not Available"];
 
   useEffect(() => {
@@ -85,7 +82,6 @@ export function WorkerDashboardClient() {
 
       localStorage.setItem(seenKey, JSON.stringify(Array.from(new Set(Array.from(seen).concat(pendingJobs.map((job) => job.id))))));
       const latestJob = newJobs[0];
-      setAlertMessage(`${newJobs.length} new job request${newJobs.length > 1 ? "s" : ""} received.`);
       if (getJobAlertsEnabled() && "Notification" in window && Notification.permission === "granted") {
         showJobNotification("New MistriHub job request", {
           body: `${cleanCategoryName(latestJob.service)} - ${latestJob.area}`,
@@ -96,38 +92,13 @@ export function WorkerDashboardClient() {
     }
 
     loadDashboard();
-    setNotificationPermission("Notification" in window ? Notification.permission : "unsupported");
-    setAlertsEnabled(getJobAlertsEnabled());
+    if ("Notification" in window && Notification.permission === "granted") {
+      saveJobAlertsEnabled(true);
+      import("@/lib/fcm-client").then(({ registerFcmToken }) => registerFcmToken()).catch(() => null);
+    }
     const timer = window.setInterval(() => refreshWorkerJobs(workerProfile, true), 20000);
     return () => window.clearInterval(timer);
   }, []);
-
-  async function enableJobAlerts() {
-    if (!("Notification" in window)) {
-      setNotificationPermission("unsupported");
-      setAlertMessage("Is browser mein notification support nahi hai.");
-      return;
-    }
-
-    const permission = await requestJobAlertPermission();
-    setNotificationPermission(permission);
-    setAlertsEnabled(permission === "granted");
-    saveJobAlertsEnabled(permission === "granted");
-    if (permission !== "granted") {
-      setAlertMessage("Notification allow nahi hua.");
-      return;
-    }
-
-    const { hasFirebaseMessagingConfig, registerFcmToken } = await import("@/lib/fcm-client");
-    const tokenResult = await registerFcmToken();
-    setAlertMessage(
-      tokenResult.ok
-        ? "Job alerts saved. Mobile/PWA push notification active hai."
-        : hasFirebaseMessagingConfig()
-          ? `Browser alert saved. FCM token save nahi hua: ${tokenResult.reason}`
-          : "Browser alert saved. FCM keys add karne ke baad mobile push active hoga."
-    );
-  }
 
   async function saveAvailability(nextAvailability: string) {
     setAvailability(nextAvailability);
@@ -187,26 +158,6 @@ export function WorkerDashboardClient() {
         <button className="btn-outline mt-4 w-full" onClick={switchToUser} type="button">
           Switch to User Mode
         </button>
-      </section>
-
-      <section className="card p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="font-black text-slate-950">Job alerts</h2>
-            <p className="mt-1 text-sm font-bold text-slate-500">
-              {notificationPermission === "granted" && alertsEnabled
-                ? "Job alerts saved. Dashboard/PWA open rahe toh new request alert milega."
-                : "New job ke liye browser/PWA notification allow karo."}
-            </p>
-          </div>
-          {activeRequests ? <span className="grid h-8 min-w-8 place-items-center rounded-full bg-red-500 px-2 text-sm font-black text-white">{activeRequests}</span> : null}
-        </div>
-        {notificationPermission !== "granted" || !alertsEnabled ? (
-          <button className="btn-primary mt-4 w-full" onClick={enableJobAlerts} type="button">
-            Allow Job Alerts
-          </button>
-        ) : null}
-        {alertMessage ? <p className="mt-3 rounded-2xl bg-brand-50 p-3 text-xs font-black text-brand-700">{alertMessage}</p> : null}
       </section>
 
       <section className="card p-4">
