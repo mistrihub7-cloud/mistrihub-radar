@@ -1,4 +1,5 @@
 import { categories } from "./data";
+import { cleanCategoryName } from "./category-display";
 
 export const seoCities = [
   { name: "Ranchi", state: "Jharkhand", slug: "ranchi" },
@@ -41,5 +42,5 @@ export function serviceSearchTitle(serviceName: string) {
   if (lower.includes("labour")) return "Labour helper";
   if (lower.includes("ac")) return "AC repair";
   if (lower.includes("ro")) return "RO service";
-  return serviceName;
+  return cleanCategoryName(serviceName);
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cleanCategoryName } from "@/lib/category-display";
 import { normalizePhone, sendPushToTokens, type PushTokenRow } from "@/lib/push-server";
 import { supabaseServer } from "@/lib/supabase-server";
 
@@ -28,10 +29,11 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
 
   const rows = (data || []) as PushTokenRow[];
+  const serviceLabel = cleanCategoryName(payload.service);
   const result = await sendPushToTokens({
     tokens: rows.map((row) => row.token),
     title: "New MistriHub job request",
-    body: `${payload.service} request in ${payload.area || "your area"}. ${payload.problem?.slice(0, 80) || ""}`,
+    body: `${serviceLabel} request in ${payload.area || "your area"}. ${payload.problem?.slice(0, 80) || ""}`,
     url: `/jobs/${payload.jobId}`,
     jobId: payload.jobId
   });

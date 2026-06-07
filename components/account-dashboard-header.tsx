@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cleanCategoryName } from "@/lib/category-display";
 import { getMockAccount, getWorkerRegistration } from "@/lib/mock-store";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
 import { NotificationBell } from "./notification-bell";
@@ -16,7 +17,7 @@ export function AccountDashboardHeader({ type }: { type: "user" | "worker" }) {
       const account = getMockAccount();
       const workerProfile = getWorkerRegistration();
       setName(workerProfile?.name || account?.name || "User");
-      setSubtitle(type === "worker" ? workerProfile?.skill || "Worker profile" : savedLocation);
+      setSubtitle(type === "worker" ? cleanCategoryName(workerProfile?.skill || "Worker profile") : savedLocation);
       setPhoto(workerProfile?.profilePhoto || null);
     }
 

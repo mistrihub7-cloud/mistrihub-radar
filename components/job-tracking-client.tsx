@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { markJobAlertsRead } from "@/lib/alert-state";
+import { cleanCategoryName } from "@/lib/category-display";
 import { getMockAccount, getWorkerRegistration, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
 import { loadJobFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { ContactActions } from "./contact-actions";
@@ -37,7 +39,10 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
       setLoading(true);
       setIsWorkerMode(getMockAccount()?.role === "worker");
       const nextJob = await loadJobFromSupabase(jobId);
-      if (!cancelled) setJob(nextJob);
+      if (!cancelled) {
+        setJob(nextJob);
+        if (nextJob) markJobAlertsRead(getMockAccount(), [nextJob], getWorkerRegistration());
+      }
       setLoading(false);
     }
 
@@ -67,6 +72,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   }
 
   const timelineStatus = normalizeTimelineStatus(job.status);
+  const serviceLabel = cleanCategoryName(job.service);
   const contactStatusUnlocked = ["Accepted", "Quote Accepted", "On The Way", "In Progress"].includes(job.status);
   const currentWorkerProfile = isWorkerMode ? getWorkerRegistration() : null;
   const acceptedByAnotherWorker = Boolean(isWorkerMode && job.workerId && currentWorkerProfile?.id && job.workerId !== currentWorkerProfile.id);
@@ -112,7 +118,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-black text-brand-600">Job ID: {job.id}</p>
-              <h1 className="mt-1 text-2xl font-black">{job.service}</h1>
+              <h1 className="mt-1 text-2xl font-black">{serviceLabel}</h1>
               <p className="mt-1 text-sm text-slate-500">{job.workerName}</p>
             </div>
             <span className="status-pill bg-blue-50 text-brand-600">{job.status}</span>
@@ -175,7 +181,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
           <div className="card p-4">
             <h2 className="font-black">Request sent</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Ye booking matching {job.service} workers ke New Job Requests mein jayegi. First worker jo accept karega, uske baad contact unlock hoga.
+              Ye booking matching {serviceLabel} workers ke New Job Requests mein jayegi. First worker jo accept karega, uske baad contact unlock hoga.
             </p>
             <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-xs font-black leading-5 text-amber-800">
               WhatsApp auto-send ke liye WhatsApp Cloud API connect karna hoga. Abhi website request flow active hai.

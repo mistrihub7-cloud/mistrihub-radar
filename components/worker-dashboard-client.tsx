@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { cleanCategoryName } from "@/lib/category-display";
 import { accountDisplayName } from "@/lib/display-name";
 import {
   clearMistriHubSession,
@@ -87,7 +88,7 @@ export function WorkerDashboardClient() {
       setAlertMessage(`${newJobs.length} new job request${newJobs.length > 1 ? "s" : ""} received.`);
       if (getJobAlertsEnabled() && "Notification" in window && Notification.permission === "granted") {
         showJobNotification("New MistriHub job request", {
-          body: `${latestJob.service} - ${latestJob.area}`,
+          body: `${cleanCategoryName(latestJob.service)} - ${latestJob.area}`,
           tag: latestJob.id,
           data: { url: "/worker-request" }
         }).catch(() => undefined);
@@ -174,7 +175,7 @@ export function WorkerDashboardClient() {
           )}
           <div>
             <h1 className="text-2xl font-black leading-tight text-slate-950 md:text-3xl">Hello, {accountName}</h1>
-            <p className="text-base font-bold text-slate-500">{profile?.skill || "Worker profile"}</p>
+            <p className="text-base font-bold text-slate-500">{cleanCategoryName(profile?.skill || "Worker profile")}</p>
           </div>
         </div>
         <NotificationBell className="grid h-12 w-12 place-items-center rounded-full text-slate-900" />

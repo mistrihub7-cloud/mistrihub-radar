@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cleanCategoryName } from "@/lib/category-display";
 import { categories } from "@/lib/data";
 import { slugify } from "@/lib/seo-pages";
 import { Logo } from "./logo";
@@ -28,7 +29,7 @@ export function SiteFooter() {
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm font-bold text-slate-600">
             {topServices.map((category) => (
               <Link className="hover:text-brand-600" href={`/services/${slugify(category.name)}`} key={category.name}>
-                {category.name}
+                {cleanCategoryName(category.name)}
               </Link>
             ))}
           </div>

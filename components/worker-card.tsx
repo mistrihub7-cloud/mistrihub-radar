@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cleanCategoryName } from "@/lib/category-display";
 import { Worker } from "@/lib/data";
 import { Icon } from "./simple-icons";
 import { WorkerDistance } from "./worker-distance";
@@ -34,7 +35,7 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
         <div className="min-w-0 flex-1">
           <div className="min-w-0">
             <h3 className="break-words text-lg font-black leading-5 text-slate-950">{worker.name}</h3>
-            <p className="mt-1 text-sm font-black text-slate-700">{worker.skill}</p>
+            <p className="mt-1 text-sm font-black text-slate-700">{cleanCategoryName(worker.skill)}</p>
             {worker.city ? <p className="text-sm font-semibold text-slate-600">{worker.city}</p> : null}
             <p className="text-sm leading-5 text-slate-500">Serving your area</p>
           </div>

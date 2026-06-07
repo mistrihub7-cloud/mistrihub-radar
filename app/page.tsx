@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CategoryName } from "@/components/category-name";
 import { categories } from "@/lib/data";
 import { Icon } from "@/components/simple-icons";
 import { LocationLabel } from "@/components/location-label";
@@ -7,6 +8,7 @@ import { NearbyWorkerList } from "@/components/nearby-worker-list";
 import { NotificationBell } from "@/components/notification-bell";
 import { SectionTitle } from "@/components/section-title";
 import { LocalWorkerList } from "@/components/local-worker-list";
+import { cleanCategoryName } from "@/lib/category-display";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 import { slugify } from "@/lib/seo-pages";
 
@@ -37,7 +39,7 @@ function CategoryGrid() {
           <span className={`mx-auto grid h-12 w-12 place-items-center rounded-2xl ${category.bg} ${category.tone} transition group-hover:scale-105`}>
             <Icon className="h-6 w-6" name={category.icon} />
           </span>
-          <span className="mt-2 block text-[11px] font-black leading-4 text-slate-950 sm:text-xs">{category.name}</span>
+          <CategoryName className="mt-2 block text-[11px] font-black leading-4 text-slate-950 sm:text-xs" name={category.name} />
         </Link>
       ))}
     </div>
@@ -148,7 +150,7 @@ function StructuredData() {
         itemListElement: categories.map((category, index) => ({
           "@type": "ListItem",
           position: index + 1,
-          name: category.name,
+          name: cleanCategoryName(category.name),
           url: `${siteUrl}/services/${slugify(category.name)}`
         }))
       }
@@ -264,7 +266,7 @@ export default async function HomePage() {
                   <div className="worker-avatar !h-12 !w-12 !rounded-xl" />
                   <div>
                     <p className="font-black">{worker.name}</p>
-                    <p className="text-xs text-slate-500">{worker.skill}</p>
+                    <p className="text-xs text-slate-500">{cleanCategoryName(worker.skill)}</p>
                     <p className="text-xs font-bold text-slate-700">
                       {worker.rating} ({worker.reviews}) Trust {worker.trust}
                     </p>

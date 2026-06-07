@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { cleanCategoryName } from "@/lib/category-display";
 import { categories } from "@/lib/data";
 import { clearMistriHubSession, findSavedAccount, findSavedWorkerRegistration, saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
 import { findUserAccountByLogin, findWorkerRegistrationByLogin, saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
@@ -184,7 +185,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
             <span className="mb-2 block text-sm font-bold">Skill / category</span>
             <select className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setSkill(event.target.value)} value={skill}>
               {categories.map((category) => (
-                <option key={category.name} value={category.name}>{category.name}</option>
+                <option key={category.name} value={category.name}>{cleanCategoryName(category.name)}</option>
               ))}
             </select>
           </label>

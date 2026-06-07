@@ -906,6 +906,20 @@ export async function loadReviewForJob(jobId: string) {
   return data as WorkerReviewRow;
 }
 
+export async function loadWorkerReviews(workerId: string) {
+  if (!hasSupabaseConfig || !supabase) return [] as WorkerReviewRow[];
+
+  const { data, error } = await supabase
+    .from("worker_reviews")
+    .select("id,job_id,worker_id,customer_name,rating,comment,created_at")
+    .eq("worker_id", workerId)
+    .order("created_at", { ascending: false })
+    .range(0, 20);
+
+  if (error) return [] as WorkerReviewRow[];
+  return (data || []) as WorkerReviewRow[];
+}
+
 export async function saveWorkerReview(input: {
   jobId: string;
   workerId: string;

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { cleanCategoryName } from "@/lib/category-display";
 import {
   getWorkerDeclinedJobs,
   getWorkerRegistration,
@@ -9,6 +10,7 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
+import { jobAlertKey, markJobAlertKeysRead, unreadJobAlerts } from "@/lib/alert-state";
 import { getJobAlertsEnabled, requestJobAlertPermission, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
 import { loadJobsFromSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
@@ -32,6 +34,7 @@ function alertJobsFor(account: MockAccount | null, jobs: MockJobRequest[], profi
 export function NotificationBell({ className = "grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-900" }: { className?: string }) {
   const { account, ready } = useAccountState();
   const [count, setCount] = useState(0);
+  const [unreadKeys, setUnreadKeys] = useState<string[]>([]);
   const href = useMemo(() => (account?.role === "worker" ? "/worker-request" : account ? "/jobs" : "/login"), [account]);
 
   useEffect(() => {
@@ -49,17 +52,19 @@ export function NotificationBell({ className = "grid h-10 w-10 place-items-cente
       const jobs = await loadJobsFromSupabase(activeAccount.role === "worker" ? "worker" : "user");
       if (cancelled) return;
       const alerts = alertJobsFor(activeAccount, jobs, profile);
-      setCount(alerts.length);
+      const unreadAlerts = unreadJobAlerts(activeAccount, alerts, profile);
+      setUnreadKeys(unreadAlerts.map(jobAlertKey));
+      setCount(unreadAlerts.length);
 
-      if (!notify || typeof window === "undefined" || !alerts.length || !getJobAlertsEnabled()) return;
+      if (!notify || typeof window === "undefined" || !unreadAlerts.length || !getJobAlertsEnabled()) return;
       const seen = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]") as string[]);
-      const newAlerts = alerts.filter((job) => !seen.has(job.id));
-      localStorage.setItem(seenKey, JSON.stringify(Array.from(new Set([...Array.from(seen), ...alerts.map((job) => job.id)]))));
+      const newAlerts = unreadAlerts.filter((job) => !seen.has(jobAlertKey(job)));
+      localStorage.setItem(seenKey, JSON.stringify(Array.from(new Set([...Array.from(seen), ...unreadAlerts.map(jobAlertKey)]))));
       if (!newAlerts.length || !("Notification" in window) || Notification.permission !== "granted") return;
 
       const job = newAlerts[0];
       showJobNotification(activeAccount.role === "worker" ? "New MistriHub job request" : "MistriHub job update", {
-        body: `${job.service} - ${job.status} - ${job.area}`,
+        body: `${cleanCategoryName(job.service)} - ${job.status} - ${job.area}`,
         tag: job.id,
         data: { url: activeAccount.role === "worker" ? "/worker-request" : `/jobs/${job.id}` }
       }).catch(() => undefined);
@@ -67,8 +72,11 @@ export function NotificationBell({ className = "grid h-10 w-10 place-items-cente
 
     loadAlerts(false);
     const timer = window.setInterval(() => loadAlerts(true), 5000);
+    const onRead = () => loadAlerts(false);
+    window.addEventListener("mistrihub-job-alerts-read", onRead);
     return () => {
       cancelled = true;
+      window.removeEventListener("mistrihub-job-alerts-read", onRead);
       window.clearInterval(timer);
     };
   }, [account, ready]);
@@ -79,6 +87,11 @@ export function NotificationBell({ className = "grid h-10 w-10 place-items-cente
       className={`${className} relative`}
       href={href}
       onClick={() => {
+        if (account && unreadKeys.length) {
+          markJobAlertKeysRead(account, unreadKeys, getWorkerRegistration());
+          setCount(0);
+          setUnreadKeys([]);
+        }
         if ("Notification" in window && Notification.permission === "granted") {
           saveJobAlertsEnabled(true);
           import("@/lib/fcm-client").then(({ registerFcmToken }) => registerFcmToken()).catch(() => null);

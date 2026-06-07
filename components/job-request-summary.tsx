@@ -1,10 +1,12 @@
 import { JobRequest } from "@/lib/data";
+import { cleanCategoryName } from "@/lib/category-display";
 import { Icon } from "./simple-icons";
 
 export function JobRequestSummary({ request }: { request: JobRequest }) {
+  const serviceLabel = cleanCategoryName(request.service);
   const items = [
     ["Job ID", request.id],
-    ["Service type", request.service],
+    ["Service type", serviceLabel],
     ["Distance", request.distance],
     ["Area", request.area],
     ["Urgency", request.urgency],
@@ -16,7 +18,7 @@ export function JobRequestSummary({ request }: { request: JobRequest }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-black text-brand-600">Review Before Accept</p>
-          <h1 className="mt-1 text-2xl font-black text-slate-950 md:text-3xl">New {request.service} job request</h1>
+          <h1 className="mt-1 text-2xl font-black text-slate-950 md:text-3xl">New {serviceLabel} job request</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">{request.summary}</p>
         </div>
         <span className={request.urgency === "Urgent" ? "status-pill bg-red-50 text-red-600" : "status-pill bg-blue-50 text-brand-600"}>

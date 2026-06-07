@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CategoryName } from "@/components/category-name";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { Icon } from "@/components/simple-icons";
 import { categories } from "@/lib/data";
@@ -27,7 +28,7 @@ export default function CategoriesPage() {
               <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ${category.bg} ${category.tone} transition group-hover:scale-105`}>
                 <Icon className="h-7 w-7" name={category.icon} />
               </span>
-              <span className="mt-3 block text-sm font-black leading-5 text-slate-950">{category.name}</span>
+              <CategoryName className="mt-3 block text-sm font-black leading-5 text-slate-950" name={category.name} />
             </Link>
           ))}
         </div>

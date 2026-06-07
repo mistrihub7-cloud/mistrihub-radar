@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { NearbyWorkerList } from "@/components/nearby-worker-list";
 import { Icon } from "@/components/simple-icons";
+import { cleanCategoryName } from "@/lib/category-display";
 import { cityBySlug, seoCities, seoServices, serviceBySlug, serviceSearchTitle, siteUrl } from "@/lib/seo-pages";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
@@ -19,8 +20,9 @@ export function generateMetadata({ params }: { params: { service: string; city: 
   const city = cityBySlug(params.city);
   if (!service || !city) return {};
 
+  const serviceLabel = cleanCategoryName(service.name);
   const title = `${serviceSearchTitle(service.name)} in ${city.name} - Nearby Trusted Workers`;
-  const description = `Find trusted ${service.name.toLowerCase()} workers in ${city.name}, ${city.state}. Send a job request and unlock contact after worker acceptance.`;
+  const description = `Find trusted ${serviceLabel.toLowerCase()} workers in ${city.name}, ${city.state}. Send a job request and unlock contact after worker acceptance.`;
 
   return {
     title,
@@ -60,6 +62,7 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
   const service = serviceBySlug(params.service);
   const city = cityBySlug(params.city);
   if (!service || !city) notFound();
+  const serviceLabel = cleanCategoryName(service.name);
 
   const workers = (await loadWorkersFromSupabase()).filter((worker) => {
     const workerCity = worker.city.toLowerCase();
@@ -68,8 +71,8 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
 
   return (
     <main className="mobile-shell min-h-screen">
-      <StructuredData cityName={city.name} serviceName={service.name} stateName={city.state} />
-      <MobileTopbar back title={`${service.name} in ${city.name}`} />
+      <StructuredData cityName={city.name} serviceName={serviceLabel} stateName={city.state} />
+      <MobileTopbar back title={`${serviceLabel} in ${city.name}`} />
       <section className="container-page pb-28 pt-2 md:py-10">
         <div className="card p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -79,7 +82,7 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
                 {serviceSearchTitle(service.name)} in {city.name}
               </h1>
               <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
-                Book nearby {service.name.toLowerCase()} workers serving {city.name}. MistriHub keeps contact locked until the worker accepts your job request.
+                Book nearby {serviceLabel.toLowerCase()} workers serving {city.name}. MistriHub keeps contact locked until the worker accepts your job request.
               </p>
             </div>
             <span className={`grid h-14 w-14 place-items-center rounded-2xl ${service.bg} ${service.tone}`}>
@@ -88,10 +91,10 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 md:max-w-xl">
             <Link className="btn-primary" href={`/book?service=${encodeURIComponent(service.name)}`}>
-              Send {service.name} Request
+              Send {serviceLabel} Request
             </Link>
             <Link className="btn-outline" href={`/services/${service.slug}`}>
-              View All {service.name} Workers
+              View All {serviceLabel} Workers
             </Link>
           </div>
         </div>
@@ -103,7 +106,7 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
               Agar city-specific worker nahi dikhe, request nearby service area workers tak dispatch ho sakti hai after location save.
             </p>
             <div className="mt-4">
-              <NearbyWorkerList emptyMessage={`No ${service.name.toLowerCase()} workers registered in ${city.name} yet.`} layout="grid" workers={workers} />
+              <NearbyWorkerList emptyMessage={`No ${serviceLabel.toLowerCase()} workers registered in ${city.name} yet.`} layout="grid" workers={workers} />
             </div>
           </section>
 

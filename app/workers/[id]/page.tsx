@@ -4,7 +4,8 @@ import { ContactActions } from "@/components/contact-actions";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { Icon } from "@/components/simple-icons";
 import { WorkerDistance } from "@/components/worker-distance";
-import { loadWorkerFromSupabase } from "@/lib/supabase-flow";
+import { cleanCategoryName } from "@/lib/category-display";
+import { loadWorkerFromSupabase, loadWorkerReviews } from "@/lib/supabase-flow";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -12,6 +13,8 @@ export const revalidate = 0;
 export default async function WorkerProfilePage({ params }: { params: { id: string } }) {
   const worker = await loadWorkerFromSupabase(params.id);
   if (!worker) notFound();
+  const reviews = await loadWorkerReviews(worker.id);
+  const skillLabel = cleanCategoryName(worker.skill);
   const hasReviews = worker.reviews > 0 && Number(worker.rating) > 0;
   const statusClass =
     worker.status === "Available Today"
@@ -21,8 +24,8 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
         : "status-offline";
 
   const services = [
-    `${worker.skill} inspection`,
-    `${worker.skill} repair / service`,
+    `${skillLabel} inspection`,
+    `${skillLabel} repair service`,
     "Home visit after request acceptance",
     "Problem review before contact unlock"
   ];
@@ -43,13 +46,17 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
               <div className="min-w-0 flex-1">
                 <span className={`status-pill ${statusClass}`}>{worker.status}</span>
                 <h1 className="mt-3 text-3xl font-black">{worker.name}</h1>
-                <p className="text-sm font-bold text-slate-600">{worker.skill}</p>
+                <p className="text-sm font-bold text-slate-600">{skillLabel}</p>
                 <p className="mt-1 text-sm text-slate-500">{worker.city || "City not saved"}</p>
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Link className="rounded-2xl bg-slate-50 p-3 text-center transition hover:bg-brand-50" href="#reviews">
+                <p className="text-xs font-bold text-slate-500">Reviews</p>
+                <p className="mt-1 font-black">{hasReviews ? `${worker.rating} (${worker.reviews})` : "New worker"}</p>
+                <p className="mt-1 text-[11px] font-black text-brand-600">View</p>
+              </Link>
               {[
-                { label: "Reviews", value: hasReviews ? `${worker.rating} (${worker.reviews})` : "New worker" },
                 { label: "Trust Score", value: worker.trust.toString() },
                 { label: "Distance", value: <WorkerDistance workerLatitude={worker.latitude} workerLongitude={worker.longitude} /> },
                 { label: "Service Radius", value: `${worker.serviceRadius} km` }
@@ -65,7 +72,7 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
           <div className="card p-5">
             <h2 className="text-xl font-black">About worker</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              {worker.name} provides {worker.skill.toLowerCase()} services in {worker.city || "saved service city"}. Contact details stay locked until a job is accepted.
+              {worker.name} provides {skillLabel.toLowerCase()} services in {worker.city || "saved service city"}. Contact details stay locked until a job is accepted.
             </p>
           </div>
 
@@ -81,9 +88,23 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
             </div>
           </div>
 
-          <div className="card p-5">
+          <div className="card p-5" id="reviews">
             <h2 className="text-xl font-black">Reviews</h2>
-            <p className="mt-2 text-sm font-bold text-slate-600">{worker.reviews ? `${worker.reviews} review(s) available` : "No reviews yet."}</p>
+            {reviews.length ? (
+              <div className="mt-4 grid gap-3">
+                {reviews.map((review) => (
+                  <div className="rounded-2xl bg-slate-50 p-4" key={review.id}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-black text-slate-950">{review.customer_name || "MistriHub user"}</p>
+                      <p className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">{review.rating}/5</p>
+                    </div>
+                    {review.comment ? <p className="mt-2 text-sm leading-6 text-slate-600">{review.comment}</p> : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm font-bold text-slate-600">No reviews yet. Job complete hone ke baad user review de sakta hai.</p>
+            )}
           </div>
         </div>
 

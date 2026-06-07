@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { NearbyWorkerList } from "@/components/nearby-worker-list";
 import { Icon } from "@/components/simple-icons";
+import { cleanCategoryName } from "@/lib/category-display";
 import { seoCities, seoServices, serviceBySlug, serviceSearchTitle, siteUrl } from "@/lib/seo-pages";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
@@ -17,8 +18,9 @@ export function generateStaticParams() {
 export function generateMetadata({ params }: { params: { service: string } }): Metadata {
   const service = serviceBySlug(params.service);
   if (!service) return {};
+  const serviceLabel = cleanCategoryName(service.name);
   const title = `${serviceSearchTitle(service.name)} Near Me - Trusted Local Workers`;
-  const description = `Find nearby ${service.name.toLowerCase()} workers on MistriHub. Send a request, review job details, and unlock contact only after worker acceptance.`;
+  const description = `Find nearby ${serviceLabel.toLowerCase()} workers on MistriHub. Send a request, review job details, and unlock contact only after worker acceptance.`;
 
   return {
     title,
@@ -54,12 +56,13 @@ function StructuredData({ serviceName }: { serviceName: string }) {
 export default async function ServiceLandingPage({ params }: { params: { service: string } }) {
   const service = serviceBySlug(params.service);
   if (!service) notFound();
+  const serviceLabel = cleanCategoryName(service.name);
   const workers = (await loadWorkersFromSupabase()).filter((worker) => worker.skill === service.name);
 
   return (
     <main className="mobile-shell min-h-screen">
-      <StructuredData serviceName={service.name} />
-      <MobileTopbar back title={service.name} />
+      <StructuredData serviceName={serviceLabel} />
+      <MobileTopbar back title={serviceLabel} />
       <section className="container-page pb-28 pt-2 md:py-10">
         <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <aside className="card p-5">
@@ -71,7 +74,7 @@ export default async function ServiceLandingPage({ params }: { params: { service
               {serviceSearchTitle(service.name)} near you
             </h1>
             <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
-              Nearby trusted {service.name.toLowerCase()} workers can review your request first. Contact stays locked until a worker accepts the job.
+              Nearby trusted {serviceLabel.toLowerCase()} workers can review your request first. Contact stays locked until a worker accepts the job.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Link className="btn-primary" href={`/workers?service=${encodeURIComponent(service.name)}`}>
@@ -85,21 +88,21 @@ export default async function ServiceLandingPage({ params }: { params: { service
 
           <section className="space-y-5">
             <div className="card p-5">
-              <h2 className="text-xl font-black">Available {service.name} workers</h2>
+              <h2 className="text-xl font-black">Available {serviceLabel} workers</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Workers are sorted by availability, distance after location save, trust score and response quality.
               </p>
               <div className="mt-4">
-                <NearbyWorkerList emptyMessage={`No ${service.name.toLowerCase()} workers registered yet.`} layout="grid" workers={workers} />
+                <NearbyWorkerList emptyMessage={`No ${serviceLabel.toLowerCase()} workers registered yet.`} layout="grid" workers={workers} />
               </div>
             </div>
 
             <div className="card p-5">
-              <h2 className="text-xl font-black">{service.name} by city</h2>
+              <h2 className="text-xl font-black">{serviceLabel} by city</h2>
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {seoCities.map((city) => (
                   <Link className="rounded-2xl border border-slate-200 p-3 text-sm font-black text-slate-800 hover:border-brand-300 hover:text-brand-600" href={`/services/${service.slug}/${city.slug}`} key={city.slug}>
-                    {service.name} in {city.name}
+                    {serviceLabel} in {city.name}
                   </Link>
                 ))}
               </div>

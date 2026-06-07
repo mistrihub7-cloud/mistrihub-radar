@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { cleanCategoryName } from "@/lib/category-display";
 import { categories, workers, type Worker } from "@/lib/data";
 import { createMockJob, getMockAccount, saveMockAccount } from "@/lib/mock-store";
 import { hasSupabaseConfig } from "@/lib/supabase-client";
@@ -140,7 +141,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
             )}
             <div>
               <h2 className="font-black">{matchedWorker.name}</h2>
-              <p className="text-sm text-slate-500">{matchedWorker.skill} - {matchedWorker.city || "City not saved"}</p>
+              <p className="text-sm text-slate-500">{cleanCategoryName(matchedWorker.skill)} - {matchedWorker.city || "City not saved"}</p>
             </div>
           </div>
         </div>
@@ -180,7 +181,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         <select className="h-13 w-full rounded-2xl border border-slate-200 bg-white px-4 font-bold" onChange={(event) => setService(event.target.value)} value={service}>
           {categories.map((category) => (
             <option key={category.name} value={category.name}>
-              {category.name}
+              {cleanCategoryName(category.name)}
             </option>
           ))}
         </select>

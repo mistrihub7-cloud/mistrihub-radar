@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { cleanCategoryName } from "@/lib/category-display";
 import {
+  getMockAccount,
   getWorkerDeclinedJobs,
   getWorkerRegistration,
   markWorkerDeclinedJob,
@@ -11,6 +13,7 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
+import { markJobAlertsRead } from "@/lib/alert-state";
 import { loadJobsFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
@@ -33,10 +36,13 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
       if (owner === "worker") {
         const profile = getWorkerRegistration();
         const declinedJobs = getWorkerDeclinedJobs();
+        const visibleJobs = nextJobs.filter((job) => isVisibleForWorker(job, profile, declinedJobs));
         setWorkerProfile(profile);
-        setJobs(nextJobs.filter((job) => isVisibleForWorker(job, profile, declinedJobs)));
+        setJobs(visibleJobs);
+        markJobAlertsRead(getMockAccount(), visibleJobs, profile);
       } else {
         setJobs(nextJobs);
+        markJobAlertsRead(getMockAccount(), nextJobs);
       }
       setLoading(false);
     }
@@ -120,7 +126,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-sm font-black text-brand-600">Job ID: {job.id}</p>
-              <h2 className="mt-1 text-xl font-black">{job.service}</h2>
+              <h2 className="mt-1 text-xl font-black">{cleanCategoryName(job.service)}</h2>
               <p className="mt-1 text-sm text-slate-600">{job.workerName} - {job.area}</p>
             </div>
             <span className="status-pill bg-blue-50 text-brand-600">{job.status === "Need More Details" ? "Requested" : job.status}</span>
