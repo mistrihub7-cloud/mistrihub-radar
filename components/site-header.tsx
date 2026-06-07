@@ -13,6 +13,7 @@ const links = [
   ["Home", "/"],
   ["Workers", "/workers"],
   ["Services", "/categories"],
+  ["Featured", "/#featured"],
   ["Book Worker", "/book"],
   ["Jobs", "/jobs"],
   ["How It Works", "/#how-it-works"]
