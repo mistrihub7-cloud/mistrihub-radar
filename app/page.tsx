@@ -226,7 +226,7 @@ export default async function HomePage() {
           <CategoryGrid />
         </div>
         <div className="card p-4 md:p-5">
-          <SectionTitle action="View all" actionHref="/book?urgency=urgent" title="Need Help Now? (Emergency)" />
+          <SectionTitle title="Need Help Now? (Emergency)" />
           <EmergencyBox />
         </div>
       </section>
