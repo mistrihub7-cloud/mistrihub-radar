@@ -11,24 +11,15 @@ const companyLinks = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-slate-200 bg-white pb-24 pt-8 md:pb-8">
-      <div className="container-page grid gap-8 md:grid-cols-[1.2fr_0.8fr]">
-        <div>
-          <Logo />
-          <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
-            MistriHub.In helps users find nearby trusted workers. Contact details unlock only after a worker accepts the job request.
-          </p>
-        </div>
-
-        <div>
-          <h2 className="text-sm font-black text-slate-950">MistriHub.In</h2>
-          <div className="mt-4 grid gap-3 text-sm font-bold text-slate-600">
-            {companyLinks.map(([label, href]) => (
-              <Link className="hover:text-brand-600" href={href} key={href}>
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
+      <div className="container-page flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <Logo />
+        <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-bold text-slate-600">
+          {companyLinks.map(([label, href]) => (
+            <Link className="hover:text-brand-600" href={href} key={href}>
+              {label}
+            </Link>
+          ))}
+        </nav>
       </div>
 
       <div className="container-page mt-8 border-t border-slate-100 pt-5 text-xs font-bold text-slate-500">
