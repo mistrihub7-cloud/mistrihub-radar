@@ -22,9 +22,6 @@ export function SiteFooter() {
         <div>
           <h2 className="text-sm font-black text-slate-950">MistriHub</h2>
           <div className="mt-4 grid gap-3 text-sm font-bold text-slate-600">
-            <Link className="hover:text-brand-600" href="/categories">Categories</Link>
-            <Link className="hover:text-brand-600" href="/#featured">Featured</Link>
-            <Link className="hover:text-brand-600" href="/workers">Nearby Workers</Link>
             {companyLinks.map(([label, href]) => (
               <Link className="hover:text-brand-600" href={href} key={href}>
                 {label}
