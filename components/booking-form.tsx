@@ -9,6 +9,7 @@ import { hasSupabaseConfig } from "@/lib/supabase-client";
 import { createJobInSupabase, saveProfileToSupabase } from "@/lib/supabase-flow";
 import { DEFAULT_LOCATION, LOCATION_KEY, LOCATION_LAT_KEY, LOCATION_LNG_KEY } from "./location-label";
 import { FilePreviewInput } from "./file-preview-input";
+import { ImportantNotice } from "./important-notice";
 import { Icon } from "./simple-icons";
 
 type BookingFormProps = {
@@ -37,6 +38,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const noticeName = loggedInAccount?.name || customerName.trim() || "User";
+  const bookingNotice = `Dear ${noticeName}, worker ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple workers aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi worker ko hire karein. MistriHub.In sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.`;
 
   function switchToUserMode() {
     if (!loggedInAccount) return;
@@ -236,15 +238,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         <FilePreviewInput label="Problem photo 2 (optional)" onPreview={(preview) => setPhotoPreview2(preview)} />
       </div>
 
-      <div className="rounded-2xl bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-900">
-        <p className="font-black">⚠ Important Notice</p>
-        <p className="mt-1">
-          Dear {noticeName}, worker ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple workers aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi worker ko hire karein.
-        </p>
-        <p className="mt-2">
-          MistriHub.In sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.
-        </p>
-      </div>
+      <ImportantNotice message={bookingNotice} />
 
       {error ? <p className="rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600">{error}</p> : null}
       <button className="btn-primary w-full" disabled={submitting} onClick={submitRequest} type="button">

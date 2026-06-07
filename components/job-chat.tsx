@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { accountDisplayName } from "@/lib/display-name";
 import { getMockAccount, getWorkerRegistration, type MockRequestMessage } from "@/lib/mock-store";
 import { loadRequestMessages, sendRequestMessage } from "@/lib/supabase-flow";
+import { ImportantNotice } from "./important-notice";
 
 type ChatWorker = {
   id?: string;
@@ -137,9 +138,8 @@ export function JobChat({
         </div>
         <span className="status-pill bg-brand-50 text-brand-600">{messages.length}</span>
       </div>
-      <div className="mt-4 rounded-2xl bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-900">
-        <p className="font-black">⚠ Important Notice</p>
-        <p className="mt-1">{notice}</p>
+      <div className="mt-4">
+        <ImportantNotice message={notice} />
       </div>
       {account?.role !== "worker" && conversations.length > 1 ? (
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
