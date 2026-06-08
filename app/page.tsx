@@ -6,7 +6,7 @@ import { LocationLabel } from "@/components/location-label";
 import { Logo } from "@/components/logo";
 import { NearbyWorkerList } from "@/components/nearby-worker-list";
 import { NotificationBell } from "@/components/notification-bell";
-import { SectionTitle } from "@/components/section-title";
+import { SectionTitle, ViewAllLink } from "@/components/section-title";
 import { LocalWorkerList } from "@/components/local-worker-list";
 import { cleanCategoryName } from "@/lib/category-display";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
@@ -30,9 +30,11 @@ function HeroWorker({ className = "h-auto w-full object-contain" }: { className?
 function CategoryGrid() {
   return (
     <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-8">
-      {categories.map((category) => (
+      {categories.map((category, index) => (
         <Link
-          className="group min-h-[112px] rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-3 text-center shadow-sm transition hover:-translate-y-1 hover:border-brand-200 hover:shadow-card"
+          className={`group min-h-[112px] rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-3 text-center shadow-sm transition hover:-translate-y-1 hover:border-brand-200 hover:shadow-card ${
+            index === 8 ? "md:hidden" : index > 8 ? "hidden" : ""
+          }`}
           href={`/services/${slugify(category.name)}`}
           key={category.name}
         >
@@ -74,11 +76,14 @@ function NearbyWorkersPanel({ workers }: { workers: Awaited<ReturnType<typeof lo
   return (
     <aside className="hidden space-y-4 xl:block">
       <div className="card p-5">
-        <SectionTitle action="View all" actionHref="/workers" title="Nearby Workers" />
+        <SectionTitle title="Nearby Workers" />
         <p className="mb-4 rounded-2xl bg-brand-50 p-3 text-sm font-bold text-brand-700">
           Nearby workers serving your area. Km updates after user location is allowed.
         </p>
         <NearbyWorkerList compact emptyMessage="No workers registered yet." limit={3} workers={workers} />
+        <div className="mt-4 flex justify-end">
+          <ViewAllLink action="View Nearby Workers" actionHref="/workers" />
+        </div>
       </div>
     </aside>
   );
@@ -222,8 +227,11 @@ export default async function HomePage() {
 
       <section className="container-page grid gap-5 md:grid-cols-[1.55fr_0.75fr]">
         <div className="card p-4 md:p-5">
-          <SectionTitle action="View all" actionHref="/categories" title="What service do you need?" />
+          <SectionTitle title="What service do you need?" />
           <CategoryGrid />
+          <div className="mt-4 flex justify-end">
+            <ViewAllLink action="View all" actionHref="/categories" />
+          </div>
         </div>
         <div className="card p-4 md:p-5">
           <SectionTitle title="Need Help Now? (Emergency)" />
@@ -233,10 +241,13 @@ export default async function HomePage() {
 
       <section className="container-page mt-5">
         <div className="card p-4 md:p-5">
-          <SectionTitle action="View all" actionHref="/workers" title="Nearby Workers" />
+          <SectionTitle title="Nearby Workers" />
           <NearbyWorkerList layout="grid" limit={4} workers={workers} />
           <div className="mt-4">
             <LocalWorkerList />
+          </div>
+          <div className="mt-4 flex justify-end">
+            <ViewAllLink action="View all" actionHref="/workers" />
           </div>
         </div>
       </section>
@@ -245,7 +256,7 @@ export default async function HomePage() {
 
       <section className="container-page mt-5 grid gap-5 pb-8 md:grid-cols-[0.85fr_1.15fr]" id="how-it-works">
         <div className="card p-5">
-          <SectionTitle action="Book now" actionHref="/workers" title="How It Works" />
+          <SectionTitle title="How It Works" />
           <div className="grid grid-cols-4 gap-2 text-center">
             {["Choose Service", "Send Request", "Worker Accepts", "Track & Review"].map((step, index) => (
               <div key={step}>
@@ -256,14 +267,26 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+          <div className="mt-4 flex justify-end">
+            <ViewAllLink action="Book now" actionHref="/workers" />
+          </div>
         </div>
         <div className="card p-5" id="featured">
-          <SectionTitle action="View all" actionHref="/workers" title="Featured Workers" />
+          <SectionTitle title="Featured Workers" />
           {topWorkers.length ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {topWorkers.map((worker) => (
                 <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3" key={worker.id}>
-                  <div className="worker-avatar !h-12 !w-12 !rounded-xl" />
+                  {worker.profilePhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      alt={worker.name}
+                      className="h-14 w-14 shrink-0 rounded-2xl border border-slate-200 object-cover object-top"
+                      src={worker.profilePhoto}
+                    />
+                  ) : (
+                    <div className="worker-avatar !h-14 !w-14 !rounded-2xl" />
+                  )}
                   <div>
                     <p className="font-black">{worker.name}</p>
                     <p className="text-xs text-slate-500">{cleanCategoryName(worker.skill)}</p>
@@ -279,6 +302,9 @@ export default async function HomePage() {
               Top rated workers will appear after worker registrations and reviews.
             </div>
           )}
+          <div className="mt-4 flex justify-end">
+            <ViewAllLink action="View all" actionHref="/workers" />
+          </div>
         </div>
       </section>
     </main>

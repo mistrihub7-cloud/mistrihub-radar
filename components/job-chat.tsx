@@ -58,11 +58,6 @@ export function JobChat({
         behavior: "smooth",
         top: messagesListRef.current.scrollHeight
       });
-      const page = document.scrollingElement ?? document.documentElement;
-      const bottom = page.scrollHeight - window.innerHeight;
-      if (bottom > page.scrollTop) {
-        page.scrollTo({ behavior: "smooth", top: bottom });
-      }
     };
 
     window.requestAnimationFrame(scrollToLatestMessage);

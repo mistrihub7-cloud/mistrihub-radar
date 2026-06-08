@@ -40,7 +40,7 @@ export function LocationPopup() {
     }
 
     if (!alreadyLocked && !alreadySkipped) {
-      const timer = window.setTimeout(() => setVisible(true), 700);
+      const timer = window.setTimeout(() => setVisible(true), 10000);
       return () => {
         window.clearTimeout(timer);
         window.removeEventListener(OPEN_LOCATION_EVENT, openPopup);
@@ -121,7 +121,12 @@ export function LocationPopup() {
         setState("saved");
         closeAndReload();
       },
-      () => setState("denied"),
+      (error) => {
+        if (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT) {
+          setArea("");
+        }
+        setState("denied");
+      },
       { enableHighAccuracy: true, maximumAge: 300000, timeout: 12000 }
     );
   };
@@ -132,7 +137,7 @@ export function LocationPopup() {
 
   const helperText =
     state === "denied"
-      ? "Location permission blocked. Area manually save kar sakte ho."
+      ? "Location nahi mila. Mobile ka location/GPS on karke Allow dabao, ya Area manually save karo."
       : state === "unsupported"
         ? "Is browser mein auto location support nahi hai. Area manually save karo."
         : "Ek baar save hone ke baad location is device par lock rahegi.";

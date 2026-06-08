@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cleanCategoryName } from "@/lib/category-display";
 import { categories } from "@/lib/data";
 import { clearMistriHubSession, findSavedAccount, findSavedWorkerRegistration, saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
 import { findUserAccountByLogin, findWorkerRegistrationByLogin, saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
+import { searchAreaSuggestions, type LocationSuggestion } from "./location-geocode";
 import { SuccessPopup } from "./success-popup";
 
 export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole }) {
@@ -22,6 +23,9 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
   const [locationStatus, setLocationStatus] = useState("");
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
+  const [locationSuggestionLoading, setLocationSuggestionLoading] = useState(false);
+  const [selectedLocationSuggestion, setSelectedLocationSuggestion] = useState<LocationSuggestion | null>(null);
   const [serviceRadius, setServiceRadius] = useState("10 km");
   const [availability, setAvailability] = useState<"Available Today" | "Busy" | "Not Available">("Available Today");
   const [profilePhoto, setProfilePhoto] = useState("");
@@ -29,6 +33,28 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    if (role !== "worker" || city.trim().length < 2 || selectedLocationSuggestion?.label === city.trim()) {
+      setLocationSuggestions([]);
+      setLocationSuggestionLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLocationSuggestionLoading(true);
+    const timer = window.setTimeout(async () => {
+      const suggestions = await searchAreaSuggestions(city);
+      if (cancelled) return;
+      setLocationSuggestions(suggestions);
+      setLocationSuggestionLoading(false);
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [city, role, selectedLocationSuggestion?.label]);
 
   async function submit() {
     if (submitting) return;
@@ -38,6 +64,10 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     }
     if (role === "worker" && (!experience.trim() || !city.trim())) {
       setMessage("Worker ke liye experience aur city zaroori hai.");
+      return;
+    }
+    if (role === "worker" && (latitude == null || longitude == null)) {
+      setMessage("Worker location zaroori hai. Current location save karo ya manual city list se select karo.");
       return;
     }
 
@@ -140,12 +170,22 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
         const nextLongitude = Number(position.coords.longitude.toFixed(6));
         setLatitude(nextLatitude);
         setLongitude(nextLongitude);
-        setLocation(`GPS: ${nextLatitude}, ${nextLongitude}`);
+        setLocation("Worker location saved");
         setLocationStatus("Location saved.");
       },
-      () => setLocationStatus("Location permission nahi mila. Browser se allow karke dobara try karo."),
+      () => setLocationStatus("Location nahi mila. Mobile ka location/GPS on karke Allow dabao, ya city list se manual location select karo."),
       { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 }
     );
+  }
+
+  function selectWorkerLocation(suggestion: LocationSuggestion) {
+    setCity(suggestion.label);
+    setLocation(suggestion.label);
+    setLatitude(suggestion.latitude);
+    setLongitude(suggestion.longitude);
+    setSelectedLocationSuggestion(suggestion);
+    setLocationSuggestions([]);
+    setLocationStatus("Manual location saved.");
   }
 
   return (
@@ -195,7 +235,32 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
           </label>
           <label className="block">
             <span className="mb-2 block text-sm font-bold">City</span>
-            <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setCity(event.target.value)} value={city} />
+            <input
+              className="h-12 w-full rounded-xl border border-slate-200 px-4"
+              onChange={(event) => {
+                setCity(event.target.value);
+                setSelectedLocationSuggestion(null);
+              }}
+              placeholder="Type area/city and select"
+              value={city}
+            />
+            {locationSuggestionLoading || locationSuggestions.length ? (
+              <div className="mt-2 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                {locationSuggestionLoading ? <p className="px-4 py-3 text-sm font-bold text-slate-500">Searching city...</p> : null}
+                {locationSuggestions.map((suggestion) => (
+                  <button
+                    className="flex w-full items-start gap-3 border-t border-slate-100 px-4 py-3 text-left first:border-t-0 hover:bg-brand-50"
+                    key={`${suggestion.label}-${suggestion.latitude}-${suggestion.longitude}`}
+                    onClick={() => selectWorkerLocation(suggestion)}
+                    type="button"
+                  >
+                    <span className="text-sm font-bold leading-5 text-slate-800">{suggestion.label}</span>
+                  </button>
+                ))}
+              </div>
+            ) : city.trim().length >= 2 && latitude == null ? (
+              <p className="mt-2 text-xs font-bold text-slate-500">Manual location ke liye list se area select karo.</p>
+            ) : null}
           </label>
           <div className="rounded-xl border border-slate-200 p-4">
             <span className="mb-2 block text-sm font-bold">Worker location</span>
