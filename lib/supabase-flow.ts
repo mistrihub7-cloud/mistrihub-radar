@@ -650,23 +650,28 @@ export async function createJobInSupabase(input: CreateJobInput) {
     const userId = await getSessionUserId();
     const id = `MH${Date.now().toString().slice(-6)}`;
 
-    const { data, error } = await supabase
-      .from("job_requests")
-      .insert({
-        id,
-        user_id: userId,
-        worker_id: input.workerId || null,
-        service: input.service,
-        problem_description: input.problem,
-        urgency: input.urgency,
-        preferred_date: input.preferredDate || null,
-        preferred_time: input.preferredTime || null,
-        area: input.area,
-        photo_url: input.photoPreview || null,
-        status: "Requested"
-      })
-      .select(JOB_SELECT_BASE)
-      .single();
+    const insertResult = await withTimeout(
+      supabase
+        .from("job_requests")
+        .insert({
+          id,
+          user_id: userId,
+          worker_id: input.workerId || null,
+          service: input.service,
+          problem_description: input.problem,
+          urgency: input.urgency,
+          preferred_date: input.preferredDate || null,
+          preferred_time: input.preferredTime || null,
+          area: input.area,
+          photo_url: input.photoPreview || null,
+          status: "Requested"
+        })
+        .select(JOB_SELECT_BASE)
+        .single(),
+      8000,
+      "Supabase job request save timeout."
+    );
+    const { data, error } = insertResult as { data?: JobRequestRow | null; error?: { message?: string } | null };
 
     if (error || !data) return null;
 
@@ -694,8 +699,10 @@ export async function createJobInSupabase(input: CreateJobInput) {
     } catch {
       // History is helpful, but the job request itself is the important record.
     }
-    await notifyMatchingWorkers(id, input);
-    await sendFcmJobCreated(id, input);
+    await Promise.allSettled([
+      withTimeout(notifyMatchingWorkers(id, input), 5000, "Website notification timeout."),
+      withTimeout(sendFcmJobCreated(id, input), 5000, "Push notification timeout.")
+    ]);
 
     return { ...mapJob(data as JobRequestRow), photoPreview2: input.photoPreview2 || "" };
   } catch {
@@ -1082,17 +1089,28 @@ export async function loadWorkersFromSupabase() {
 export async function loadWorkerFromSupabase(workerId: string) {
   if (!hasSupabaseConfig || !supabase) return workers.find((worker) => worker.id === workerId) || null;
 
-  const { data, error } = await supabase.from("workers").select("*").eq("id", workerId).maybeSingle();
-  if (error || !data) return workers.find((worker) => worker.id === workerId) || null;
+  try {
+    const result = await withTimeout(
+      supabase.from("workers").select("*").eq("id", workerId).maybeSingle(),
+      8000,
+      "Supabase worker profile load timeout."
+    );
+    const { data, error } = result as { data?: WorkerRow | null; error?: { message?: string } | null };
+    if (error || !data) return workers.find((worker) => worker.id === workerId) || null;
 
-  const completedJobCounts = await loadCompletedJobCountsByWorker();
-  const reviewStats = await loadReviewStatsByWorker();
-  const row = data as WorkerRow;
-  const stats = reviewStats.get(row.id);
-  return mapWorker({
-    ...row,
-    rating: stats?.rating ?? row.rating,
-    review_count: stats?.reviews ?? row.review_count,
-    jobs_completed: Math.max(Number(row.jobs_completed ?? row.jobs ?? 0), completedJobCounts.get(row.id) || 0)
-  });
+    const [completedJobCounts, reviewStats] = await Promise.all([
+      withTimeout(loadCompletedJobCountsByWorker(), 4000, "Completed job count timeout.").catch(() => new Map<string, number>()),
+      withTimeout(loadReviewStatsByWorker(), 4000, "Review stats timeout.").catch(() => new Map<string, { rating: number; reviews: number }>())
+    ]);
+    const row = data as WorkerRow;
+    const stats = reviewStats.get(row.id);
+    return mapWorker({
+      ...row,
+      rating: stats?.rating ?? row.rating,
+      review_count: stats?.reviews ?? row.review_count,
+      jobs_completed: Math.max(Number(row.jobs_completed ?? row.jobs ?? 0), completedJobCounts.get(row.id) || 0)
+    });
+  } catch {
+    return workers.find((worker) => worker.id === workerId) || null;
+  }
 }

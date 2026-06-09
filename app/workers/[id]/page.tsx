@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BookWorkerLink } from "@/components/book-worker-link";
 import { ContactActions } from "@/components/contact-actions";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { Icon } from "@/components/simple-icons";
@@ -109,12 +110,12 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
         </div>
 
         <aside className="mt-5 space-y-4 md:mt-0">
-          <Link className="btn-primary w-full" href={`/book/${worker.id}`}>
+          <BookWorkerLink className="btn-primary w-full" workerId={worker.id}>
             Send Request
-          </Link>
-          <Link className="btn-outline w-full" href={`/book/${worker.id}`}>
+          </BookWorkerLink>
+          <BookWorkerLink className="btn-outline w-full" workerId={worker.id}>
             Book Now
-          </Link>
+          </BookWorkerLink>
           <ContactActions unlocked={false} />
         </aside>
       </section>

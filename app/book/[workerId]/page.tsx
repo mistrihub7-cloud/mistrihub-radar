@@ -3,9 +3,8 @@ import { BookingForm } from "@/components/booking-form";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { loadWorkerFromSupabase } from "@/lib/supabase-flow";
 
-export function generateStaticParams() {
-  return [];
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function WorkerBookingPage({ params }: { params: { workerId: string } }) {
   const worker = await loadWorkerFromSupabase(params.workerId);

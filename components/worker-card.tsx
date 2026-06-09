@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cleanCategoryName } from "@/lib/category-display";
 import { Worker } from "@/lib/data";
+import { BookWorkerLink } from "./book-worker-link";
 import { Icon } from "./simple-icons";
 import { WorkerDistance } from "./worker-distance";
 
@@ -70,9 +71,9 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
             </span>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <Link className="btn-primary h-10 text-sm" href={`/book/${worker.id}`}>
+            <BookWorkerLink className="btn-primary h-10 text-sm" workerId={worker.id}>
               Send Request
-            </Link>
+            </BookWorkerLink>
             <Link className="btn-outline h-10 text-sm" href={`/workers/${worker.id}`}>
               View Details
             </Link>
