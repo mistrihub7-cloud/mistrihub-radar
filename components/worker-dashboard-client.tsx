@@ -45,6 +45,8 @@ export function WorkerDashboardClient() {
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
   const [availability, setAvailability] = useState("Available Today");
   const [serviceRadius, setServiceRadius] = useState("10 km");
+  const [whatsappNotifications, setWhatsappNotifications] = useState(true);
+  const [browserNotifications, setBrowserNotifications] = useState(true);
   const [profile, setProfile] = useState<WorkerRegistration | null>(null);
   const [accountName, setAccountName] = useState("Worker");
   const [statusMessage, setStatusMessage] = useState("");
@@ -63,6 +65,8 @@ export function WorkerDashboardClient() {
       const settings = getWorkerSettings();
       setAvailability(settings.availability);
       setServiceRadius(settings.serviceRadius);
+      setWhatsappNotifications(settings.whatsappNotifications !== false);
+      setBrowserNotifications(settings.browserNotifications !== false);
       setProfile(workerProfile);
       setAccountName(accountDisplayName(account, workerProfile));
       await refreshWorkerJobs(workerProfile, false);
@@ -103,14 +107,28 @@ export function WorkerDashboardClient() {
 
   async function saveAvailability(nextAvailability: string) {
     setAvailability(nextAvailability);
-    saveWorkerSettings({ availability: nextAvailability, serviceRadius });
+    saveWorkerSettings({ availability: nextAvailability, serviceRadius, whatsappNotifications, browserNotifications });
     if (profile) {
       const nextProfile = { ...profile, availability: nextAvailability as WorkerRegistration["availability"], serviceRadius };
       saveWorkerRegistration(nextProfile);
       setProfile(nextProfile);
     }
-    const result = await saveWorkerSettingsToSupabase({ availability: nextAvailability, serviceRadius });
+    const result = await saveWorkerSettingsToSupabase({ availability: nextAvailability, serviceRadius, whatsappNotifications, browserNotifications });
     setStatusMessage(result.ok ? "Status saved. Site par update ho gaya." : "Status local save hua. Supabase row/policy check karo.");
+  }
+
+  async function saveNotificationPreference(type: "whatsapp" | "browser", enabled: boolean) {
+    const nextSettings = {
+      availability,
+      serviceRadius,
+      whatsappNotifications: type === "whatsapp" ? enabled : whatsappNotifications,
+      browserNotifications: type === "browser" ? enabled : browserNotifications
+    };
+    setWhatsappNotifications(nextSettings.whatsappNotifications);
+    setBrowserNotifications(nextSettings.browserNotifications);
+    saveWorkerSettings(nextSettings);
+    const result = await saveWorkerSettingsToSupabase(nextSettings);
+    setStatusMessage(result.ok ? "Notification setting saved." : "Notification setting local save hua.");
   }
 
   function logout() {
@@ -192,6 +210,33 @@ export function WorkerDashboardClient() {
         </div>
         <p className="mt-3 text-xs font-bold text-slate-500">Current: {availability === "Available Today" ? "Available" : availability}</p>
         {statusMessage ? <p className="mt-2 text-xs font-black text-brand-600">{statusMessage}</p> : null}
+      </section>
+
+      <section className="card p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <Icon className="h-5 w-5 text-brand-600" name="bell" />
+          <h2 className="font-black text-slate-950">Job alert settings</h2>
+        </div>
+        <p className="text-xs font-bold leading-5 text-slate-500">
+          Matching-category nearby requests ke alerts yahan control karo. Default ON hai taaki fast response mile.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {[
+            ["WhatsApp alerts", whatsappNotifications, "whatsapp"],
+            ["Browser/PWA alerts", browserNotifications, "browser"]
+          ].map(([label, enabled, type]) => (
+            <button
+              className={`min-h-12 rounded-2xl border px-4 text-left text-sm font-black ${
+                enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-500"
+              }`}
+              key={String(type)}
+              onClick={() => saveNotificationPreference(type as "whatsapp" | "browser", !enabled)}
+              type="button"
+            >
+              {label}: {enabled ? "ON" : "OFF"}
+            </button>
+          ))}
+        </div>
       </section>
 
       <div className="grid grid-cols-3 gap-4">

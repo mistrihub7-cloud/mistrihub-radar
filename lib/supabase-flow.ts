@@ -624,22 +624,26 @@ async function notifyMatchingWorkers(jobId: string, input: CreateJobInput) {
   }
 }
 
-async function sendFcmJobCreated(jobId: string, input: CreateJobInput) {
+async function sendSmartBookingAlerts(jobId: string, input: CreateJobInput) {
   if (typeof window === "undefined") return;
 
   try {
-    await fetch("/api/push/job-created", {
+    await fetch("/api/notifications/booking-alert", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jobId,
+        workerId: input.workerId || undefined,
         service: input.service,
         area: input.area,
-        problem: input.problem
+        problem: input.problem,
+        urgency: input.urgency,
+        userLatitude: input.userLatitude,
+        userLongitude: input.userLongitude
       })
     });
   } catch {
-    // Push is a bonus channel; booking should continue even if push fails.
+    // Notifications are a bonus channel; booking should continue even if alerts fail.
   }
 }
 
@@ -722,8 +726,7 @@ export async function createJobInSupabase(input: CreateJobInput) {
       // History is helpful, but the job request itself is the important record.
     }
     await Promise.allSettled([
-      withTimeout(notifyMatchingWorkers(id, input), 5000, "Website notification timeout."),
-      withTimeout(sendFcmJobCreated(id, input), 5000, "Push notification timeout.")
+      withTimeout(sendSmartBookingAlerts(id, input), 8000, "Smart booking alert timeout.")
     ]);
 
     return { ...mapJob(data as JobRequestRow), photoPreview2: input.photoPreview2 || "" };
@@ -990,7 +993,7 @@ export async function saveWorkerReview(input: {
   return { ok: true, review: (data as WorkerReviewRow | null) || review };
 }
 
-export async function saveWorkerSettingsToSupabase(settings: { availability: string; serviceRadius: string }) {
+export async function saveWorkerSettingsToSupabase(settings: { availability: string; serviceRadius: string; whatsappNotifications?: boolean; browserNotifications?: boolean }) {
   if (!hasSupabaseConfig || !supabase) return { ok: true, fallback: true };
 
   const userId = await getSessionUserId();
@@ -1000,15 +1003,26 @@ export async function saveWorkerSettingsToSupabase(settings: { availability: str
     available_today: settings.availability === "Available Today",
     service_radius: Number.parseInt(settings.serviceRadius, 10) || 10
   };
+  const notificationUpdate = {
+    whatsapp_notifications: settings.whatsappNotifications !== false,
+    browser_notifications: settings.browserNotifications !== false
+  };
+
+  async function saveOptionalNotificationSettings(column: "user_id" | "id", value: string) {
+    if (!supabase) return;
+    await supabase.from("workers").update(notificationUpdate).eq(column, value);
+  }
 
   if (userId) {
     const { data, error } = await supabase.from("workers").update(update).eq("user_id", userId).select("id").maybeSingle();
+    if (!error && data) await saveOptionalNotificationSettings("user_id", userId);
     return { ok: !error && Boolean(data), error: error?.message || (!data ? "Worker row not found." : undefined) };
   }
 
   if (!workerProfile?.id) return { ok: true, fallback: true };
 
   const { data, error } = await supabase.from("workers").update(update).eq("id", workerProfile.id).select("id").maybeSingle();
+  if (!error && data) await saveOptionalNotificationSettings("id", workerProfile.id);
   return { ok: !error && Boolean(data), error: error?.message || (!data ? "Worker row not found." : undefined) };
 }
 

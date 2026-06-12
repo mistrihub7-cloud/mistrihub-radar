@@ -265,11 +265,13 @@ export function markWorkerDeclinedJob(jobId: string) {
 export function getWorkerSettings() {
   return readJson(WORKER_SETTINGS_KEY, {
     availability: "Available Today",
-    serviceRadius: "10 km"
+    serviceRadius: "10 km",
+    whatsappNotifications: true,
+    browserNotifications: true
   });
 }
 
-export function saveWorkerSettings(settings: { availability: string; serviceRadius: string }) {
+export function saveWorkerSettings(settings: { availability: string; serviceRadius: string; whatsappNotifications?: boolean; browserNotifications?: boolean }) {
   writeJson(WORKER_SETTINGS_KEY, settings);
 }
 

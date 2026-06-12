@@ -22,6 +22,8 @@ add column if not exists bio text,
 add column if not exists service_details text[] default '{}',
 add column if not exists available_today boolean default true,
 add column if not exists service_radius integer default 10,
+add column if not exists whatsapp_notifications boolean default true,
+add column if not exists browser_notifications boolean default true,
 add column if not exists availability_status text default 'Available Today',
 add column if not exists service_area text,
 add column if not exists verified_status text default 'Not Submitted';

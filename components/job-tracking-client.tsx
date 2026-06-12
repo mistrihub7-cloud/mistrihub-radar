@@ -184,12 +184,12 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
           </div>
         ) : (
           <div className="card p-4">
-            <h2 className="font-black">Request sent</h2>
+            <h2 className="font-black">Nearby workers notified successfully</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Ye booking matching {serviceLabel} professionals ke New Job Requests mein jayegi. First expert jo accept karega, uske baad contact unlock hoga.
+              Searching nearby matching {serviceLabel} professionals. Active professionals ko category aur distance ke hisab se alert bheja gaya hai.
             </p>
-            <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-xs font-black leading-5 text-amber-800">
-              WhatsApp auto-send ke liye WhatsApp Cloud API connect karna hoga. Abhi website request flow active hai.
+            <p className="mt-3 rounded-2xl bg-blue-50 p-3 text-xs font-black leading-5 text-brand-700">
+              Waiting for response. Agar 5 minutes mein response nahi milta, MistriHub.In additional nearby professionals ko retry alert bhejega.
             </p>
           </div>
         )}
