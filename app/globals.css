@@ -425,13 +425,124 @@ textarea {
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #020617;
+    --line: #1e293b;
+    --ink: #f8fafc;
+  }
+
+  html {
+    background: #020617;
   }
 
   body {
-    background: #020617;
+    color: #f8fafc;
+    background:
+      radial-gradient(circle at top left, rgba(15, 92, 255, 0.12), transparent 30rem),
+      #020617;
   }
 
   .mobile-shell {
     background: #020617;
+  }
+
+  .card,
+  [class*="bg-white"],
+  [class*="from-white"],
+  [class*="to-slate-50"] {
+    border-color: #1e293b !important;
+    background-color: #0f172a !important;
+    background-image: none !important;
+    color: #f8fafc !important;
+  }
+
+  .btn-outline {
+    border-color: #3b82f6;
+    background: #0f172a;
+    color: #93c5fd;
+  }
+
+  input,
+  select,
+  textarea {
+    border-color: #334155 !important;
+    background: #020617 !important;
+    color: #f8fafc !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8;
+  }
+
+  header,
+  footer,
+  nav,
+  .mobile-shell,
+  .map-panel {
+    border-color: #1e293b !important;
+    background-color: #020617 !important;
+    color: #f8fafc !important;
+  }
+
+  [class*="border-slate"],
+  [class*="border-blue"],
+  [class*="border-emerald"],
+  [class*="border-red"] {
+    border-color: #1e293b !important;
+  }
+
+  [class*="text-slate-950"],
+  [class*="text-slate-900"],
+  [class*="text-slate-800"],
+  [class*="text-slate-700"] {
+    color: #f8fafc !important;
+  }
+
+  [class*="text-slate-600"],
+  [class*="text-slate-500"],
+  [class*="text-slate-400"] {
+    color: #cbd5e1 !important;
+  }
+
+  [class*="bg-slate-50"],
+  [class*="bg-slate-100"],
+  [class*="bg-blue-50"],
+  [class*="bg-brand-50"] {
+    background-color: #111827 !important;
+    color: #e0f2fe !important;
+  }
+
+  [class*="bg-emerald-50"] {
+    background-color: rgba(6, 78, 59, 0.45) !important;
+    color: #bbf7d0 !important;
+  }
+
+  [class*="bg-orange-50"],
+  [class*="bg-amber-50"] {
+    background-color: rgba(124, 45, 18, 0.45) !important;
+    color: #fed7aa !important;
+  }
+
+  [class*="bg-red-50"] {
+    background-color: rgba(127, 29, 29, 0.45) !important;
+    color: #fecaca !important;
+  }
+
+  [class*="shadow-card"],
+  [class*="shadow-sm"],
+  [class*="shadow-md"],
+  [class*="shadow-lg"] {
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  .hero-worker {
+    background:
+      radial-gradient(circle at 48% 38%, rgba(30, 41, 59, 0.9) 0 12rem, transparent 12.2rem),
+      linear-gradient(180deg, #0f172a 0%, #020617 100%);
+  }
+
+  .worker-avatar,
+  .radar-pin {
+    border-color: #334155;
+    background-color: #0f172a;
   }
 }
