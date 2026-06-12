@@ -16,6 +16,17 @@ function minutesSince(value?: string | null) {
   return Math.floor((Date.now() - new Date(value).getTime()) / 60000);
 }
 
+async function hasWorkerResponse(jobId: string) {
+  if (!supabaseServer) return false;
+  const { data } = await supabaseServer
+    .from("request_messages")
+    .select("id")
+    .eq("job_id", jobId)
+    .eq("sender_role", "worker")
+    .limit(1);
+  return Boolean(data?.length);
+}
+
 export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
   if (!supabaseServer) return NextResponse.json({ ok: false, error: "Supabase server config missing." }, { status: 500 });
@@ -32,6 +43,11 @@ export async function GET(request: Request) {
   const results = [];
   for (const job of data || []) {
     const age = minutesSince(job.created_at);
+    if (await hasWorkerResponse(job.id)) {
+      results.push({ ok: true, skipped: true, jobId: job.id, reason: "Worker chat response already received." });
+      continue;
+    }
+
     const input: BookingAlertInput = {
       jobId: job.id,
       service: job.service || "",
@@ -41,6 +57,15 @@ export async function GET(request: Request) {
       userLatitude: job.user_latitude ?? null,
       userLongitude: job.user_longitude ?? null
     };
+
+    if (job.urgency === "Emergency" && age >= 2) {
+      results.push(await sendBookingAlerts(input, { radiusKm: 20, maxWorkers: 25, waveKey: "Emergency 20km admin alert", excludeAlreadyNotified: true, adminAlert: true }));
+      continue;
+    }
+
+    if (job.worker_id && age >= 2) {
+      results.push(await sendBookingAlerts(input, { radiusKm: 5, maxWorkers: 10, waveKey: "Direct fallback 5km alert", excludeAlreadyNotified: true }));
+    }
 
     if (age >= 15) {
       results.push(await sendBookingAlerts(input, { radiusKm: 20, maxWorkers: 20, waveKey: "Retry 20km alert", excludeAlreadyNotified: true, adminAlert: true }));

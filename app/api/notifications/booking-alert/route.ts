@@ -32,9 +32,9 @@ export async function POST(request: Request) {
   };
 
   const result = await sendBookingAlerts(input, {
-    radiusKm: input.workerId ? 15 : input.urgency === "Emergency" ? 15 : 15,
-    maxWorkers: input.workerId ? 1 : 10,
-    waveKey: input.workerId ? "Direct profile alert" : input.urgency === "Emergency" ? "Emergency 15km alert" : "Initial 15km alert",
+    radiusKm: input.workerId ? 15 : input.urgency === "Emergency" ? 15 : 5,
+    maxWorkers: input.workerId ? 1 : input.urgency === "Emergency" ? 15 : 10,
+    waveKey: input.workerId ? "Direct profile alert" : input.urgency === "Emergency" ? "Emergency 15km alert" : "Initial 5km alert",
     excludeAlreadyNotified: false,
     adminAlert: input.urgency === "Emergency"
   });
