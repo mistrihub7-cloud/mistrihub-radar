@@ -291,9 +291,9 @@ export default async function HomePage() {
                   <div>
                     <p className="font-black">{worker.name}</p>
                     <p className="text-xs text-slate-500">{cleanCategoryName(worker.skill)}</p>
-                    <p className="text-xs font-bold text-slate-700">
+                    <Link className="text-xs font-bold text-slate-700 transition hover:text-brand-600" href={`/workers/${worker.id}#reviews`}>
                       {worker.rating} ({worker.reviews}) Trust {worker.trust}
-                    </p>
+                    </Link>
                   </div>
                 </div>
               ))}

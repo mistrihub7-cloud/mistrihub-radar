@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookWorkerLink } from "@/components/book-worker-link";
 import { ContactActions } from "@/components/contact-actions";
+import { HashScroll } from "@/components/hash-scroll";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { ProfessionalAvatar } from "@/components/professional-avatar";
 import { ShareProfileButton } from "@/components/share-profile-button";
@@ -46,6 +47,7 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
 
   return (
     <main className="mobile-shell min-h-screen">
+      <HashScroll />
       <MobileTopbar back title="Professional Profile" />
       <section className="container-page pb-8 pt-2 md:grid md:grid-cols-[1fr_0.75fr] md:gap-6 md:py-10">
         <div className="space-y-5">
@@ -110,7 +112,7 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
             </div>
           </div>
 
-          <div className="card p-5" id="reviews">
+          <div className="card scroll-mt-24 p-5" id="reviews">
             <h2 className="text-xl font-black">Reviews</h2>
             {reviews.length ? (
               <div className="mt-4 grid gap-3">
