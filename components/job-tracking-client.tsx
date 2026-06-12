@@ -19,9 +19,17 @@ function normalizeTimelineStatus(status: MockJobRequest["status"]) {
   return status;
 }
 
+function displayStatus(status: MockJobRequest["status"]) {
+  if (status === "Accepted") return "Accepted - Waiting User";
+  if (status === "Quote Accepted") return "User Confirmed";
+  if (status === "Quote Rejected") return "Declined";
+  if (status === "Quote Sent") return "Accepted";
+  return status;
+}
+
 function nextWorkerStatus(status: MockJobRequest["status"]): MockJobRequest["status"] | null {
   if (status === "Requested" || status === "Need More Details") return "Accepted";
-  if (status === "Accepted" || status === "Quote Sent" || status === "Quote Accepted") return "On The Way";
+  if (status === "Quote Accepted") return "On The Way";
   if (status === "On The Way") return "In Progress";
   if (status === "In Progress") return "Completed";
   return null;
@@ -73,7 +81,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
 
   const timelineStatus = normalizeTimelineStatus(job.status);
   const serviceLabel = cleanCategoryName(job.service);
-  const contactStatusUnlocked = ["Accepted", "Quote Accepted", "On The Way", "In Progress"].includes(job.status);
+  const contactStatusUnlocked = ["Quote Accepted", "On The Way", "In Progress"].includes(job.status);
   const currentWorkerProfile = isWorkerMode ? getWorkerRegistration() : null;
   const acceptedByAnotherWorker = Boolean(isWorkerMode && job.workerId && currentWorkerProfile?.id && job.workerId !== currentWorkerProfile.id);
   const acceptedByThisWorker = Boolean(isWorkerMode && currentWorkerProfile?.id && job.workerId === currentWorkerProfile.id);
@@ -82,7 +90,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   const contactUnlocked = contactStatusUnlocked && (isWorkerMode ? acceptedByThisWorker : Boolean(job.workerId));
   const contactPhone = contactUnlocked ? (isWorkerMode ? job.customerPhone : job.workerPhone) : undefined;
   const nextStatus = nextWorkerStatus(job.status);
-  const lockedWorkerId = contactStatusUnlocked && job.workerId ? job.workerId : undefined;
+  const lockedWorkerId = job.workerId || undefined;
   const chatDisabledReason =
     job.status === "Completed"
       ? "Job completed ho chuka hai. Chat aur contact ab locked hai."
@@ -91,7 +99,9 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
         : job.status === "Declined" || job.status === "Quote Rejected"
           ? "Job declined ho chuka hai. Chat aur contact ab locked hai."
           : acceptedByAnotherWorker
-            ? "User ne is job ke liye dusre professional ko hire kar liya hai. Is job par ab chat/status action band hai."
+            ? contactStatusUnlocked
+              ? "User ne is job ke liye dusre professional ko hire kar liya hai. Is job par ab chat/status action band hai."
+              : "Dusre professional ne request accept kiya hai. User confirmation pending hai, isliye aapka action abhi locked hai."
             : undefined;
 
   async function setStatus(status: MockJobRequest["status"]) {
@@ -126,7 +136,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
               <h1 className="mt-1 text-2xl font-black">{serviceLabel} Request</h1>
               <p className="mt-1 text-sm text-slate-500">{job.workerName}</p>
             </div>
-            <span className="status-pill bg-blue-50 text-brand-600">{job.status}</span>
+            <span className="status-pill bg-blue-50 text-brand-600">{displayStatus(job.status)}</span>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {[
@@ -161,9 +171,11 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
         <ContactActions phone={contactPhone} unlocked={contactUnlocked} />
         {isWorkerMode && acceptedByAnotherWorker ? (
           <div className="card p-4">
-            <h2 className="font-black">Job already hired</h2>
+            <h2 className="font-black">{contactStatusUnlocked ? "Job already hired" : "User confirmation pending"}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              User ne is job ke liye dusre professional ko hire kar liya hai. Aapka contact locked rahega aur status control yahan nahi dikhega.
+              {contactStatusUnlocked
+                ? "User ne is job ke liye dusre professional ko hire kar liya hai. Aapka contact locked rahega aur status control yahan nahi dikhega."
+                : "Ek professional ne request accept kiya hai. User confirm karega tabhi booking final hogi."}
             </p>
           </div>
         ) : isWorkerMode ? (
@@ -177,20 +189,53 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
                 </button>
               ) : (
                 <p className="rounded-2xl bg-slate-50 p-3 text-sm font-bold text-slate-600">
-                  {job.status === "Completed" ? "Job completed. No more status action needed." : "No next action available."}
+                  {job.status === "Completed"
+                    ? "Job completed. No more status action needed."
+                    : job.status === "Accepted"
+                      ? "Aapne job accept kar liya hai. User confirmation ke baad contact unlock hoga aur next step active hoga."
+                      : "No next action available."}
                 </p>
               )}
             </div>
           </div>
         ) : (
           <div className="card p-4">
-            <h2 className="font-black">Nearby workers notified successfully</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Searching nearby matching {serviceLabel} professionals. Active professionals ko category aur distance ke hisab se alert bheja gaya hai.
-            </p>
-            <p className="mt-3 rounded-2xl bg-blue-50 p-3 text-xs font-black leading-5 text-brand-700">
-              Waiting for response. Agar 5 minutes mein response nahi milta, MistriHub.In additional nearby professionals ko retry alert bhejega.
-            </p>
+            {job.status === "Accepted" && job.workerId ? (
+              <>
+                <h2 className="font-black">Professional accepted your request</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {job.workerName} ne request accept kiya hai. Price, timing aur work details chat mein discuss karke confirm karo.
+                </p>
+                <div className="mt-3 grid gap-2">
+                  <button className="btn-primary h-11 text-sm" onClick={() => setStatus("Quote Accepted")} type="button">
+                    Confirm This Professional
+                  </button>
+                  <button className="btn-outline h-11 border-red-500 text-sm text-red-600" onClick={() => setStatus("Cancelled")} type="button">
+                    Cancel Request
+                  </button>
+                </div>
+                <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-xs font-black leading-5 text-amber-800">
+                  Contact number confirmation ke baad hi unlock hoga.
+                </p>
+              </>
+            ) : contactStatusUnlocked ? (
+              <>
+                <h2 className="font-black">Booking confirmed</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Aapne professional confirm kar diya hai. Contact unlock ho chuka hai aur job tracking active hai.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="font-black">Nearby workers notified successfully</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Searching nearby matching {serviceLabel} professionals. Active professionals ko category aur distance ke hisab se alert bheja gaya hai.
+                </p>
+                <p className="mt-3 rounded-2xl bg-blue-50 p-3 text-xs font-black leading-5 text-brand-700">
+                  Waiting for response. Agar 5 minutes mein response nahi milta, MistriHub.In additional nearby professionals ko retry alert bhejega.
+                </p>
+              </>
+            )}
           </div>
         )}
 

@@ -23,6 +23,15 @@ function isVisibleForWorker(job: MockJobRequest, profile: WorkerRegistration | n
   return job.workerId === profile.id && ["Accepted", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
 }
 
+function displayStatus(status: MockJobRequest["status"]) {
+  if (status === "Accepted") return "Waiting User Confirm";
+  if (status === "Quote Accepted") return "User Confirmed";
+  if (status === "Need More Details") return "Requested";
+  if (status === "Quote Rejected") return "Declined";
+  if (status === "Quote Sent") return "Accepted";
+  return status;
+}
+
 export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }) {
   const router = useRouter();
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
@@ -119,7 +128,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
               <h2 className="mt-1 text-xl font-black">{cleanCategoryName(job.service)} Request</h2>
               <p className="mt-1 text-sm text-slate-600">{job.workerName} - {job.area}</p>
             </div>
-            <span className="status-pill bg-blue-50 text-brand-600">{job.status === "Need More Details" ? "Requested" : job.status}</span>
+            <span className="status-pill bg-blue-50 text-brand-600">{displayStatus(job.status)}</span>
           </div>
           {owner === "worker" && !job.workerId ? (
             <p className="mt-3 rounded-2xl bg-brand-50 p-3 text-xs font-black text-brand-700">
