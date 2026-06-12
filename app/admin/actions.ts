@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { clearAdminSession, isAdminAuthed, setAdminSession, validateAdminCredentials } from "@/lib/admin-auth";
-import { sendBookingAlerts, type BookingAlertInput } from "@/lib/booking-alerts";
+import { sendBookingAlerts, sendWhatsAppTestMessage, type BookingAlertInput } from "@/lib/booking-alerts";
 import { supabaseServer } from "@/lib/supabase-server";
 
 export async function loginAdmin(formData: FormData) {
@@ -50,4 +50,22 @@ export async function escalateJobFromAdmin(formData: FormData) {
     adminAlert: true
   });
   revalidatePath("/admin");
+}
+
+export async function testWhatsAppFromAdmin(formData: FormData) {
+  if (!isAdminAuthed()) redirect("/admin");
+  const phone = String(formData.get("phone") || "").trim();
+  if (!phone) redirect("/admin?wa=missing");
+
+  const result = await sendWhatsAppTestMessage(phone);
+  if (supabaseServer) {
+    await supabaseServer.from("notifications").insert({
+      user_id: null,
+      title: result.ok ? "WhatsApp test sent" : "WhatsApp test failed",
+      message: `Admin WhatsApp test to ${phone}: ${result.ok ? "Sent" : result.reason || "Failed"}`,
+      type: "whatsapp_job_alert"
+    });
+  }
+  revalidatePath("/admin");
+  redirect(result.ok ? "/admin?wa=sent" : "/admin?wa=failed");
 }

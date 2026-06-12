@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cleanCategoryName } from "@/lib/category-display";
 import { isAdminAuthed, isAdminConfigured } from "@/lib/admin-auth";
+import { getWhatsAppConfigStatus } from "@/lib/booking-alerts";
 import { supabaseServer } from "@/lib/supabase-server";
-import { escalateJobFromAdmin, loginAdmin, logoutAdmin } from "./actions";
+import { escalateJobFromAdmin, loginAdmin, logoutAdmin, testWhatsAppFromAdmin } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -61,18 +62,20 @@ function whatsappLink(phone?: string | null) {
 }
 
 async function loadAdminData() {
-  if (!supabaseServer) return { jobs: [] as JobRow[], workers: [] as WorkerRow[], users: [] as ProfileRow[], alerts: [] as any[] };
-  const [jobs, workers, users, alerts] = await Promise.all([
+  if (!supabaseServer) return { jobs: [] as JobRow[], workers: [] as WorkerRow[], users: [] as ProfileRow[], alerts: [] as any[], whatsappAlerts: [] as any[] };
+  const [jobs, workers, users, alerts, whatsappAlerts] = await Promise.all([
     supabaseServer.from("job_requests").select("*").order("created_at", { ascending: false }).range(0, 49),
     supabaseServer.from("workers").select("id,name,category,city,phone,whatsapp,availability_status,service_radius").order("created_at", { ascending: false }).range(0, 199),
     supabaseServer.from("profiles").select("id,full_name,phone,email,role").order("full_name", { ascending: true }).range(0, 199),
-    supabaseServer.from("notifications").select("*").eq("type", "admin_alert").order("created_at", { ascending: false }).range(0, 20)
+    supabaseServer.from("notifications").select("*").eq("type", "admin_alert").order("created_at", { ascending: false }).range(0, 20),
+    supabaseServer.from("notifications").select("*").eq("type", "whatsapp_job_alert").order("created_at", { ascending: false }).range(0, 8)
   ]);
   return {
     jobs: (jobs.data || []) as JobRow[],
     workers: (workers.data || []) as WorkerRow[],
     users: (users.data || []) as ProfileRow[],
-    alerts: alerts.data || []
+    alerts: alerts.data || [],
+    whatsappAlerts: whatsappAlerts.data || []
   };
 }
 
@@ -104,10 +107,11 @@ function LoginPanel({ error }: { error?: string }) {
   );
 }
 
-export default async function AdminPage({ searchParams }: { searchParams?: { error?: string } }) {
+export default async function AdminPage({ searchParams }: { searchParams?: { error?: string; wa?: string } }) {
   if (!isAdminAuthed()) return <LoginPanel error={searchParams?.error} />;
 
-  const { jobs, workers, users, alerts } = await loadAdminData();
+  const { jobs, workers, users, alerts, whatsappAlerts } = await loadAdminData();
+  const whatsappConfig = getWhatsAppConfigStatus();
   const openJobs = jobs.filter((job) => job.status === "Requested");
   const noResponseJobs = openJobs.filter((job) => minutesSince(job.created_at) >= 5);
   const availableWorkers = workers.filter((worker) => (worker.availability_status || "Available Today") !== "Not Available");
@@ -138,6 +142,61 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
             </div>
           ))}
         </div>
+
+        <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-black">WhatsApp Alert Diagnostics</h2>
+              <p className="mt-1 text-sm font-bold text-slate-300">
+                Sandbox use kar rahe ho to pehle receiver mobile se +1 415 523 8886 par <b>join spirit-poetry</b> bhejna zaroori hai.
+              </p>
+            </div>
+            <span className={`rounded-full px-3 py-1 text-xs font-black ${whatsappConfig.accountSidPresent && whatsappConfig.authTokenPresent && whatsappConfig.fromLooksValid ? "bg-emerald-900 text-emerald-100" : "bg-red-950 text-red-100"}`}>
+              {whatsappConfig.accountSidPresent && whatsappConfig.authTokenPresent && whatsappConfig.fromLooksValid ? "Config looks OK" : "Config needs check"}
+            </span>
+          </div>
+          {searchParams?.wa ? (
+            <p className={`mt-4 rounded-xl p-3 text-sm font-black ${searchParams.wa === "sent" ? "bg-emerald-950 text-emerald-100" : "bg-red-950 text-red-100"}`}>
+              {searchParams.wa === "sent"
+                ? "WhatsApp test sent. Receiver phone par message check karo."
+                : searchParams.wa === "missing"
+                  ? "Test ke liye phone number bharna zaroori hai."
+                  : "WhatsApp test failed. Recent logs niche dekho."}
+            </p>
+          ) : null}
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            {[
+              ["Account SID", whatsappConfig.accountSidPresent ? "Present" : "Missing"],
+              ["Auth Token", whatsappConfig.authTokenPresent ? "Present" : "Missing"],
+              ["From", whatsappConfig.fromMasked],
+              ["From format", whatsappConfig.fromLooksValid ? "Valid" : "Invalid"]
+            ].map(([label, value]) => (
+              <div className="rounded-xl bg-slate-950 p-3" key={label}>
+                <p className="text-xs font-bold text-slate-400">{label}</p>
+                <p className="mt-1 break-words text-sm font-black text-white">{value}</p>
+              </div>
+            ))}
+          </div>
+          {!whatsappConfig.fromLooksValid ? (
+            <p className="mt-3 rounded-xl bg-amber-950/50 p-3 text-xs font-bold text-amber-100">
+              Sandbox ke liye Vercel env me TWILIO_WHATSAPP_FROM ko {whatsappConfig.sandboxFromExpected} rakho.
+            </p>
+          ) : null}
+          <form action={testWhatsAppFromAdmin} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <input className="h-11 rounded-xl border border-slate-700 bg-slate-950 px-4 text-sm font-bold text-white" name="phone" placeholder="Test WhatsApp number, example 9876543210" />
+            <button className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-black text-white" type="submit">Send Test WhatsApp</button>
+          </form>
+          {whatsappAlerts.length ? (
+            <div className="mt-4 grid gap-2">
+              <h3 className="font-black text-slate-100">Recent WhatsApp Logs</h3>
+              {whatsappAlerts.slice(0, 5).map((alert: any) => (
+                <p className="rounded-xl bg-slate-950 p-3 text-xs font-bold leading-5 text-slate-300" key={alert.id}>
+                  {alert.message}
+                </p>
+              ))}
+            </div>
+          ) : null}
+        </section>
 
         {alerts.length ? (
           <div className="mt-6 rounded-2xl border border-amber-900 bg-amber-950/40 p-4">

@@ -114,6 +114,20 @@ function twilioFrom() {
   return raw.startsWith("whatsapp:") ? raw : `whatsapp:${raw}`;
 }
 
+export function getWhatsAppConfigStatus() {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID || "";
+  const authToken = process.env.TWILIO_AUTH_TOKEN || "";
+  const from = twilioFrom();
+  return {
+    accountSidPresent: accountSid.length > 5,
+    authTokenPresent: authToken.length > 5,
+    fromPresent: Boolean(from),
+    fromLooksValid: /^whatsapp:\+\d{8,15}$/.test(from),
+    fromMasked: from ? `${from.slice(0, 12)}...${from.slice(-4)}` : "Missing",
+    sandboxFromExpected: "whatsapp:+14155238886"
+  };
+}
+
 async function sendTwilioWhatsApp(to: string, body: string) {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -140,6 +154,18 @@ async function sendTwilioWhatsApp(to: string, body: string) {
     return { ok: false, skipped: false, reason: text || `Twilio HTTP ${response.status}` };
   }
   return { ok: true, skipped: false };
+}
+
+export async function sendWhatsAppTestMessage(to: string) {
+  return sendTwilioWhatsApp(
+    normalizeWhatsAppNumber(to),
+    [
+      "MistriHub.In WhatsApp test",
+      "",
+      "Agar ye message mila hai to Twilio WhatsApp alert connected hai.",
+      "New booking alerts bhi isi number format se jayenge."
+    ].join("\n")
+  );
 }
 
 async function alreadySentWave(jobId: string, waveKey: string) {
