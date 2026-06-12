@@ -43,10 +43,10 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
             <span className={`status-pill flex items-center justify-center text-center ${statusClass}`}>{worker.status}</span>
             {hasReviews ? (
-              <span className="flex items-center justify-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">
+              <Link className="flex items-center justify-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700" href={`/workers/${worker.id}#reviews`}>
                 <Icon className="h-4 w-4 fill-amber-400 text-amber-400" name="star" />
                 {worker.rating} ({worker.reviews})
-              </span>
+              </Link>
             ) : (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-center text-xs font-black text-slate-600">Newly Joined</span>
             )}
@@ -65,10 +65,11 @@ export function WorkerCard({ worker, compact = false }: { worker: Worker; compac
             </span>
             <span className="rounded-xl bg-slate-50 px-2 py-2">
               <b className="block text-slate-950">{worker.jobs}</b>Jobs
+              <span className="block">Completed</span>
             </span>
-            <span className="rounded-xl bg-slate-50 px-2 py-2">
+            <Link className="rounded-xl bg-slate-50 px-2 py-2" href={`/workers/${worker.id}#reviews`}>
               <b className="block text-slate-950">{hasReviews ? worker.reviews : "No"}</b>Reviews
-            </span>
+            </Link>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <BookWorkerLink className="btn-primary h-10 text-sm" workerId={worker.id}>

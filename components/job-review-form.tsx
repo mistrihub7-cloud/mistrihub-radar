@@ -81,7 +81,7 @@ export function JobReviewForm({ job }: { job: MockJobRequest }) {
         className="mt-4 h-24 w-full rounded-2xl border border-slate-200 p-4 text-sm font-bold outline-none focus:border-brand-500"
         disabled={saved}
         onChange={(event) => setComment(event.target.value)}
-        placeholder="Short review optional"
+        placeholder="Short review (Optional)"
         value={comment}
       />
       {message ? <p className="mt-3 rounded-2xl bg-brand-50 p-3 text-xs font-black text-brand-700">{message}</p> : null}

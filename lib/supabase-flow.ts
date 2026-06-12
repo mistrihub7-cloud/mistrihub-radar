@@ -299,6 +299,9 @@ function mapWorker(row: WorkerRow): Worker {
     trust,
     jobs,
     response: row.fast_response_time ? `${row.fast_response_time} min` : "After request",
+    experience: row.experience_years
+      ? `${row.experience_years}${String(row.experience_years).toLowerCase().includes("year") ? "" : " years"}`
+      : undefined,
     status,
     serviceRadius: normalizeRadius(row.service_radius),
     distanceKm: 0,

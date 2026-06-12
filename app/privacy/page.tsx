@@ -14,10 +14,10 @@ export default function PrivacyPage() {
       </p>
       <h2 className="text-xl font-black text-slate-950">Information we may collect</h2>
       <ul className="list-disc space-y-2 pl-5">
-        <li>Name, phone number, optional email and account mode.</li>
+        <li>Name, phone number, email (Optional) and account mode.</li>
         <li>Worker profile details such as service category, city, service radius, availability and profile photo.</li>
         <li>User location or selected area to calculate nearby workers and distance.</li>
-        <li>Booking details including service category, problem description, urgency, preferred time and optional photos.</li>
+        <li>Booking details including service category, problem description, urgency, preferred time and photos (Optional).</li>
         <li>Job chat, status updates, reviews and notification tokens.</li>
       </ul>
       <h2 className="text-xl font-black text-slate-950">How we use data</h2>

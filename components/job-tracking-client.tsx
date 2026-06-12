@@ -78,6 +78,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   const acceptedByAnotherWorker = Boolean(isWorkerMode && job.workerId && currentWorkerProfile?.id && job.workerId !== currentWorkerProfile.id);
   const acceptedByThisWorker = Boolean(isWorkerMode && currentWorkerProfile?.id && job.workerId === currentWorkerProfile.id);
   const canWorkerControl = Boolean(isWorkerMode && currentWorkerProfile?.id && !acceptedByAnotherWorker && (!job.workerId || acceptedByThisWorker));
+  const canSeeTimeline = !acceptedByAnotherWorker;
   const contactUnlocked = contactStatusUnlocked && (isWorkerMode ? acceptedByThisWorker : Boolean(job.workerId));
   const contactPhone = contactUnlocked ? (isWorkerMode ? job.customerPhone : job.workerPhone) : undefined;
   const nextStatus = nextWorkerStatus(job.status);
@@ -85,9 +86,13 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   const chatDisabledReason =
     job.status === "Completed"
       ? "Job completed ho chuka hai. Chat aur contact ab locked hai."
-      : acceptedByAnotherWorker
-        ? "User ne is job ke liye dusre worker ko hire kar liya hai. Is job par ab chat/status action band hai."
-        : undefined;
+      : job.status === "Cancelled"
+        ? "Job cancelled ho chuka hai. Chat aur contact ab locked hai."
+        : job.status === "Declined" || job.status === "Quote Rejected"
+          ? "Job declined ho chuka hai. Chat aur contact ab locked hai."
+          : acceptedByAnotherWorker
+            ? "User ne is job ke liye dusre worker ko hire kar liya hai. Is job par ab chat/status action band hai."
+            : undefined;
 
   async function setStatus(status: MockJobRequest["status"]) {
     if (!job) return;
@@ -117,8 +122,8 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
         <div className="card p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-black text-brand-600">Job ID: {job.id}</p>
-              <h1 className="mt-1 text-2xl font-black">{serviceLabel}</h1>
+              <p className="text-sm font-black text-brand-600">Job Request ID: {job.id}</p>
+              <h1 className="mt-1 text-2xl font-black">{serviceLabel} Request</h1>
               <p className="mt-1 text-sm text-slate-500">{job.workerName}</p>
             </div>
             <span className="status-pill bg-blue-50 text-brand-600">{job.status}</span>
@@ -189,23 +194,25 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
           </div>
         )}
 
-        <div className="card p-5">
-          <h2 className="font-black">Status timeline</h2>
-          <div className="relative ml-2 mt-5 space-y-5">
-            {timeline.map((item) => {
-              const active = item === timelineStatus;
-              const done = timeline.indexOf(item) < timeline.indexOf(timelineStatus);
-              return (
-                <div className="flex gap-3" key={item}>
-                  <span className={`mt-1 grid h-5 w-5 place-items-center rounded-full text-white ${active ? "bg-brand-600" : done ? "bg-emerald-600" : "bg-slate-300"}`}>
-                    {done ? <Icon className="h-3 w-3" name="check" /> : null}
-                  </span>
-                  <span className="font-bold">{item}</span>
-                </div>
-              );
-            })}
+        {canSeeTimeline ? (
+          <div className="card p-5">
+            <h2 className="font-black">Status timeline</h2>
+            <div className="relative ml-2 mt-5 space-y-5">
+              {timeline.map((item) => {
+                const active = item === timelineStatus;
+                const done = timeline.indexOf(item) < timeline.indexOf(timelineStatus);
+                return (
+                  <div className="flex gap-3" key={item}>
+                    <span className={`mt-1 grid h-5 w-5 place-items-center rounded-full text-white ${active ? "bg-brand-600" : done ? "bg-emerald-600" : "bg-slate-300"}`}>
+                      {done ? <Icon className="h-3 w-3" name="check" /> : null}
+                    </span>
+                    <span className="font-bold">{item}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : null}
       </aside>
       {selectedPhoto ? (
         <button className="fixed inset-0 z-[80] grid bg-slate-950/80 p-4" onClick={() => setSelectedPhoto("")} type="button">

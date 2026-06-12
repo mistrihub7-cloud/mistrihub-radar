@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { BookWorkerLink } from "@/components/book-worker-link";
 import { ContactActions } from "@/components/contact-actions";
 import { MobileTopbar } from "@/components/mobile-topbar";
+import { ShareProfileButton } from "@/components/share-profile-button";
 import { Icon } from "@/components/simple-icons";
 import { WorkerDistance } from "@/components/worker-distance";
 import { cleanCategoryName } from "@/lib/category-display";
@@ -53,14 +54,15 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Link className="rounded-2xl bg-slate-50 p-3 text-center transition hover:bg-brand-50" href="#reviews">
-                <p className="text-xs font-bold text-slate-500">Reviews</p>
+                <p className="text-xs font-bold text-slate-500">Rating & Reviews</p>
                 <p className="mt-1 font-black">{hasReviews ? `${worker.rating} (${worker.reviews})` : "New worker"}</p>
                 <p className="mt-1 text-[11px] font-black text-brand-600">View</p>
               </Link>
               {[
-                { label: "Trust Score", value: worker.trust.toString() },
+                { label: "Jobs Completed", value: worker.jobs.toString() },
+                { label: "Experience", value: worker.experience || "New worker" },
                 { label: "Distance", value: <WorkerDistance workerLatitude={worker.latitude} workerLongitude={worker.longitude} /> },
-                { label: "Service Radius", value: `${worker.serviceRadius} km` }
+                { label: "Trust Score", value: worker.trust.toString() }
               ].map((item) => (
                 <div className="rounded-2xl bg-slate-50 p-3 text-center" key={item.label}>
                   <p className="text-xs font-bold text-slate-500">{item.label}</p>
@@ -113,9 +115,7 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
           <BookWorkerLink className="btn-primary w-full" workerId={worker.id}>
             Send Request
           </BookWorkerLink>
-          <BookWorkerLink className="btn-outline w-full" workerId={worker.id}>
-            Book Now
-          </BookWorkerLink>
+          <ShareProfileButton workerId={worker.id} workerName={worker.name} />
           <ContactActions unlocked={false} />
         </aside>
       </section>

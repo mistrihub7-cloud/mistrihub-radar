@@ -17,6 +17,7 @@ function mapLocalWorker(profile: WorkerRegistration): Worker {
     trust: 70,
     jobs: 0,
     response: "After request",
+    experience: profile.experience,
     status: profile.availability,
     serviceRadius: Number.parseInt(profile.serviceRadius, 10) as 5 | 10 | 15 | 20,
     distanceKm: 0,

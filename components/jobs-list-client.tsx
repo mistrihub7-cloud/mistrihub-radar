@@ -50,7 +50,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     loadJobs();
     const onChange = () => loadJobs();
     window.addEventListener("mistrihub-mock-change", onChange);
-    const timer = window.setInterval(loadJobs, 5000);
+    const timer = owner === "worker" ? undefined : window.setInterval(loadJobs, 5000);
     return () => {
       window.removeEventListener("mistrihub-mock-change", onChange);
       if (timer) window.clearInterval(timer);
@@ -109,24 +109,14 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
     router.push(`/jobs/${job.id}`);
   }
 
-  async function declineJob(job: MockJobRequest) {
-    if (job.workerId && workerProfile?.id === job.workerId) {
-      updateMockJob(job.id, { status: "Declined" });
-      await updateJobInSupabase(job.id, { status: "Declined" });
-    } else {
-      markWorkerDeclinedJob(job.id);
-    }
-    await refreshJobs();
-  }
-
   return (
     <div className="space-y-4">
       {jobs.map((job) => (
         <div className="card p-4" key={job.id}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-black text-brand-600">Job ID: {job.id}</p>
-              <h2 className="mt-1 text-xl font-black">{cleanCategoryName(job.service)}</h2>
+              <p className="text-sm font-black text-brand-600">{owner === "worker" ? "Job Request" : "Job Record"} ID: {job.id}</p>
+              <h2 className="mt-1 text-xl font-black">{cleanCategoryName(job.service)} Request</h2>
               <p className="mt-1 text-sm text-slate-600">{job.workerName} - {job.area}</p>
             </div>
             <span className="status-pill bg-blue-50 text-brand-600">{job.status === "Need More Details" ? "Requested" : job.status}</span>
@@ -139,7 +129,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
           <p className="mt-3 text-sm leading-6 text-slate-600">{job.problem}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link className="btn-primary h-10 px-4 text-sm" href={`/jobs/${job.id}`}>
-              Track
+              See Detail
             </Link>
             {owner === "worker" && ["Requested", "Need More Details"].includes(job.status) ? (
               <>
@@ -149,9 +139,6 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
                 <Link className="btn-outline h-10 px-4 text-sm" href={`/jobs/${job.id}#job-chat`}>
                   Chat
                 </Link>
-                <button className="btn-outline h-10 border-red-500 px-4 text-sm text-red-600" onClick={() => declineJob(job)} type="button">
-                  Decline
-                </button>
               </>
             ) : null}
             {owner === "user" && ["Requested", "Need More Details"].includes(job.status) ? (

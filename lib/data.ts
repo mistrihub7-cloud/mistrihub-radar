@@ -12,6 +12,7 @@ export type Worker = {
   trust: number;
   jobs: number;
   response: string;
+  experience?: string;
   status: WorkerStatus;
   serviceRadius: 5 | 10 | 15 | 20;
   distanceKm: number;

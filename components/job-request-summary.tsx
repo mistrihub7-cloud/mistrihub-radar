@@ -46,7 +46,7 @@ export function JobRequestSummary({ request }: { request: JobRequest }) {
           <div className="flex h-28 items-end rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-200 to-slate-100 p-3">
             <span className="flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-black text-slate-700 shadow-sm">
               <Icon className="h-4 w-4 text-brand-600" name="jobs" />
-              Optional photo attached
+              Photo (Optional) attached
             </span>
           </div>
         </div>

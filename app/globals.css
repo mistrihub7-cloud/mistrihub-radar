@@ -421,3 +421,17 @@ textarea {
     width: 8px;
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #020617;
+  }
+
+  body {
+    background: #020617;
+  }
+
+  .mobile-shell {
+    background: #020617;
+  }
+}

@@ -44,7 +44,7 @@ export function JobChat({
     }
 
     loadMessages();
-    const timer = window.setInterval(loadMessages, 5000);
+    const timer = window.setInterval(loadMessages, 1000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);

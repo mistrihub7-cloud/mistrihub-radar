@@ -223,7 +223,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
           <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" onChange={(event) => setPreferredDate(event.target.value)} type="date" value={preferredDate} />
         </label>
         <label className="block">
-          <span className="mb-2 block font-black">Preferred time (optional)</span>
+          <span className="mb-2 block font-black">Preferred time (Optional)</span>
           <input className="h-13 w-full rounded-2xl border border-slate-200 px-4 font-bold" onChange={(event) => setPreferredTime(event.target.value)} type="time" value={preferredTime} />
         </label>
       </div>
@@ -234,8 +234,8 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FilePreviewInput label="Problem photo 1 (optional)" onPreview={(preview) => setPhotoPreview(preview)} />
-        <FilePreviewInput label="Problem photo 2 (optional)" onPreview={(preview) => setPhotoPreview2(preview)} />
+        <FilePreviewInput label="Problem photo 1 (Optional)" onPreview={(preview) => setPhotoPreview(preview)} />
+        <FilePreviewInput label="Problem photo 2 (Optional)" onPreview={(preview) => setPhotoPreview2(preview)} />
       </div>
 
       <ImportantNotice message={bookingNotice} />
