@@ -102,10 +102,6 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
             ? contactStatusUnlocked
               ? "User ne is job ke liye dusre professional ko hire kar liya hai. Is job par ab chat/status action band hai."
               : "Dusre professional ne request accept kiya hai. User confirmation pending hai, isliye aapka action abhi locked hai."
-            : !job.workerId
-              ? "Chat worker accept ke baad on hoga. Abhi nearby professionals ko request bheja gaya hai."
-              : isWorkerMode && !acceptedByThisWorker
-                ? "Chat sirf connected professional ke liye on hota hai."
             : undefined;
 
   async function setStatus(status: MockJobRequest["status"]) {
