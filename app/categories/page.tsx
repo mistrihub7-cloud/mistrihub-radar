@@ -14,7 +14,7 @@ export default function CategoriesPage() {
           <p className="text-sm font-black text-brand-600">MistriHub.In Services</p>
           <h1 className="mt-1 text-3xl font-black text-slate-950">What service do you need?</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Choose a category to see nearby workers serving your area.
+            Choose a category to see nearby professionals serving your area.
           </p>
         </div>
 

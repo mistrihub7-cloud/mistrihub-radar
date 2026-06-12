@@ -11,14 +11,14 @@ export default function ContactPage() {
   return (
     <PublicPageShell eyebrow="Support" title="Contact MistriHub.In">
       <p>
-        For booking support, worker profile help, job request issues or platform questions, use the MistriHub.In app pages first. We keep support simple and record-based so job details stay clear.
+        For booking support, professional profile help, job request issues or platform questions, use the MistriHub.In app pages first. We keep support simple and record-based so job details stay clear.
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <Link className="rounded-2xl border border-slate-200 p-4 font-black text-slate-900 hover:border-brand-300 hover:text-brand-600" href="/jobs">
           Booking / job support
         </Link>
         <Link className="rounded-2xl border border-slate-200 p-4 font-black text-slate-900 hover:border-brand-300 hover:text-brand-600" href="/worker/profile">
-          Worker profile support
+          Professional profile support
         </Link>
       </div>
       <p>

@@ -4,12 +4,19 @@ import { notFound } from "next/navigation";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { NearbyWorkerList } from "@/components/nearby-worker-list";
 import { Icon } from "@/components/simple-icons";
-import { cleanCategoryName } from "@/lib/category-display";
+import { cleanCategoryName, professionalCategoryName } from "@/lib/category-display";
 import { seoCities, seoServices, serviceBySlug, serviceSearchTitle, siteUrl } from "@/lib/seo-pages";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+function serviceKey(value?: string) {
+  return professionalCategoryName(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 export function generateStaticParams() {
   return seoServices.map((service) => ({ service: service.slug }));
@@ -20,7 +27,7 @@ export function generateMetadata({ params }: { params: { service: string } }): M
   if (!service) return {};
   const serviceLabel = cleanCategoryName(service.name);
   const title = `${serviceSearchTitle(service.name)} Near Me - Trusted Local Workers`;
-  const description = `Find nearby ${serviceLabel.toLowerCase()} workers on MistriHub.In. Send a request, review job details, and unlock contact only after worker acceptance.`;
+  const description = `Find nearby ${serviceLabel.toLowerCase()} professionals on MistriHub.In. Send a request, review job details, and unlock contact only after professional acceptance.`;
 
   return {
     title,
@@ -47,7 +54,7 @@ function StructuredData({ serviceName }: { serviceName: string }) {
     },
     areaServed: "India",
     serviceType: serviceName,
-    description: `Nearby trusted ${serviceName.toLowerCase()} workers available through MistriHub.In.`
+    description: `Nearby trusted ${serviceName.toLowerCase()} professionals available through MistriHub.In.`
   };
 
   return <script dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} type="application/ld+json" />;
@@ -57,7 +64,7 @@ export default async function ServiceLandingPage({ params }: { params: { service
   const service = serviceBySlug(params.service);
   if (!service) notFound();
   const serviceLabel = cleanCategoryName(service.name);
-  const workers = (await loadWorkersFromSupabase()).filter((worker) => worker.skill === service.name);
+  const workers = (await loadWorkersFromSupabase()).filter((worker) => serviceKey(worker.skill) === serviceKey(service.name));
 
   return (
     <main className="mobile-shell min-h-screen">
@@ -74,11 +81,11 @@ export default async function ServiceLandingPage({ params }: { params: { service
               {serviceSearchTitle(service.name)} near you
             </h1>
             <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
-              Nearby trusted {serviceLabel.toLowerCase()} workers can review your request first. Contact stays locked until a worker accepts the job.
+              Nearby trusted {serviceLabel.toLowerCase()} professionals can review your request first. Contact stays locked until an expert accepts the job.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Link className="btn-primary" href={`/workers?service=${encodeURIComponent(service.name)}`}>
-                View Nearby Workers
+                View Nearby Professionals
               </Link>
               <Link className="btn-outline" href={`/book?service=${encodeURIComponent(service.name)}`}>
                 Send Request
@@ -88,12 +95,12 @@ export default async function ServiceLandingPage({ params }: { params: { service
 
           <section className="space-y-5">
             <div className="card p-5">
-              <h2 className="text-xl font-black">Available {serviceLabel} workers</h2>
+              <h2 className="text-xl font-black">Available {serviceLabel} professionals</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Workers are sorted by availability, distance after location save, trust score and response quality.
+                Professionals are sorted by availability, distance after location save, trust score and response quality.
               </p>
               <div className="mt-4">
-                <NearbyWorkerList emptyMessage={`No ${serviceLabel.toLowerCase()} workers registered yet.`} layout="grid" workers={workers} />
+                <NearbyWorkerList emptyMessage={`No ${serviceLabel.toLowerCase()} professionals registered yet.`} layout="grid" workers={workers} />
               </div>
             </div>
 

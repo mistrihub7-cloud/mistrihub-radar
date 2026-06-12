@@ -37,20 +37,20 @@ export type JobRequest = {
 };
 
 export const categories = [
-  { name: "Electrician", tone: "text-amber-500", bg: "bg-amber-50", icon: "bolt" },
-  { name: "Plumber", tone: "text-blue-600", bg: "bg-blue-50", icon: "tap" },
-  { name: "Mechanic", tone: "text-red-500", bg: "bg-red-50", icon: "tool" },
-  { name: "Painter", tone: "text-violet-600", bg: "bg-violet-50", icon: "paint" },
-  { name: "AC Repair", tone: "text-sky-600", bg: "bg-sky-50", icon: "snow" },
-  { name: "Carpenter", tone: "text-orange-600", bg: "bg-orange-50", icon: "hammer" },
-  { name: "Labour / Helper", tone: "text-emerald-600", bg: "bg-emerald-50", icon: "worker" },
-  { name: "Home Cleaning", tone: "text-cyan-600", bg: "bg-cyan-50", icon: "broom" },
-  { name: "Driver / Car Booking", tone: "text-blue-700", bg: "bg-blue-50", icon: "car" },
-  { name: "Mason", tone: "text-stone-600", bg: "bg-stone-100", icon: "mason" },
-  { name: "Welder", tone: "text-yellow-600", bg: "bg-yellow-50", icon: "weld" },
-  { name: "RO Service", tone: "text-indigo-600", bg: "bg-indigo-50", icon: "water" },
-  { name: "CCTV", tone: "text-slate-700", bg: "bg-slate-100", icon: "camera" },
-  { name: "Tile / Marble", tone: "text-teal-600", bg: "bg-teal-50", icon: "tiles" }
+  { name: "Electrical Expert", tone: "text-amber-500", bg: "bg-amber-50", icon: "bolt" },
+  { name: "Plumbing Expert", tone: "text-blue-600", bg: "bg-blue-50", icon: "tap" },
+  { name: "Auto Mechanic", tone: "text-red-500", bg: "bg-red-50", icon: "tool" },
+  { name: "Painting Professional", tone: "text-violet-600", bg: "bg-violet-50", icon: "paint" },
+  { name: "AC Service Expert", tone: "text-sky-600", bg: "bg-sky-50", icon: "snow" },
+  { name: "Woodwork Expert", tone: "text-orange-600", bg: "bg-orange-50", icon: "hammer" },
+  { name: "Support Assistant", tone: "text-emerald-600", bg: "bg-emerald-50", icon: "worker" },
+  { name: "Home Cleaning Expert", tone: "text-cyan-600", bg: "bg-cyan-50", icon: "broom" },
+  { name: "Driver & Car Service", tone: "text-blue-700", bg: "bg-blue-50", icon: "car" },
+  { name: "Construction Mason", tone: "text-stone-600", bg: "bg-stone-100", icon: "mason" },
+  { name: "Welding Expert", tone: "text-yellow-600", bg: "bg-yellow-50", icon: "weld" },
+  { name: "RO Water Technician", tone: "text-indigo-600", bg: "bg-indigo-50", icon: "water" },
+  { name: "CCTV Security Expert", tone: "text-slate-700", bg: "bg-slate-100", icon: "camera" },
+  { name: "Tile & Marble Expert", tone: "text-teal-600", bg: "bg-teal-50", icon: "tiles" }
 ];
 
 // Clean slate: no bundled worker records. New workers should come from Supabase registration.

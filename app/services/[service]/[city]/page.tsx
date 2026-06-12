@@ -4,12 +4,19 @@ import { notFound } from "next/navigation";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { NearbyWorkerList } from "@/components/nearby-worker-list";
 import { Icon } from "@/components/simple-icons";
-import { cleanCategoryName } from "@/lib/category-display";
+import { cleanCategoryName, professionalCategoryName } from "@/lib/category-display";
 import { cityBySlug, seoCities, seoServices, serviceBySlug, serviceSearchTitle, siteUrl } from "@/lib/seo-pages";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+function serviceKey(value?: string) {
+  return professionalCategoryName(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 export function generateStaticParams() {
   return seoServices.flatMap((service) => seoCities.map((city) => ({ service: service.slug, city: city.slug })));
@@ -21,8 +28,8 @@ export function generateMetadata({ params }: { params: { service: string; city: 
   if (!service || !city) return {};
 
   const serviceLabel = cleanCategoryName(service.name);
-  const title = `${serviceSearchTitle(service.name)} in ${city.name} - Nearby Trusted Workers`;
-  const description = `Find trusted ${serviceLabel.toLowerCase()} workers in ${city.name}, ${city.state}. Send a job request and unlock contact after worker acceptance.`;
+  const title = `${serviceSearchTitle(service.name)} in ${city.name} - Nearby Trusted Professionals`;
+  const description = `Find trusted ${serviceLabel.toLowerCase()} professionals in ${city.name}, ${city.state}. Send a job request and unlock contact after expert acceptance.`;
 
   return {
     title,
@@ -66,7 +73,7 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
 
   const workers = (await loadWorkersFromSupabase()).filter((worker) => {
     const workerCity = worker.city.toLowerCase();
-    return worker.skill === service.name && workerCity.includes(city.name.toLowerCase());
+    return serviceKey(worker.skill) === serviceKey(service.name) && workerCity.includes(city.name.toLowerCase());
   });
 
   return (
@@ -82,7 +89,7 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
                 {serviceSearchTitle(service.name)} in {city.name}
               </h1>
               <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
-                Book nearby {serviceLabel.toLowerCase()} workers serving {city.name}. MistriHub.In keeps contact locked until the worker accepts your job request.
+                Book nearby {serviceLabel.toLowerCase()} professionals serving {city.name}. MistriHub.In keeps contact locked until the expert accepts your job request.
               </p>
             </div>
             <span className={`grid h-14 w-14 place-items-center rounded-2xl ${service.bg} ${service.tone}`}>
@@ -94,26 +101,26 @@ export default async function CityServiceLandingPage({ params }: { params: { ser
               Send {serviceLabel} Request
             </Link>
             <Link className="btn-outline" href={`/services/${service.slug}`}>
-              View All {serviceLabel} Workers
+              View All {serviceLabel} Experts
             </Link>
           </div>
         </div>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_0.75fr]">
           <section className="card p-5">
-            <h2 className="text-xl font-black">Registered workers in {city.name}</h2>
+            <h2 className="text-xl font-black">Registered professionals in {city.name}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Agar city-specific worker nahi dikhe, request nearby service area workers tak dispatch ho sakti hai after location save.
+              Agar city-specific professional nahi dikhe, request nearby service area experts tak dispatch ho sakti hai after location save.
             </p>
             <div className="mt-4">
-              <NearbyWorkerList emptyMessage={`No ${serviceLabel.toLowerCase()} workers registered in ${city.name} yet.`} layout="grid" workers={workers} />
+              <NearbyWorkerList emptyMessage={`No ${serviceLabel.toLowerCase()} professionals registered in ${city.name} yet.`} layout="grid" workers={workers} />
             </div>
           </section>
 
           <aside className="card p-5">
             <h2 className="text-xl font-black">Why MistriHub.In?</h2>
             <ul className="mt-4 space-y-3 text-sm font-bold text-slate-700">
-              {["Nearby worker discovery", "Review before accepting", "Contact locked before acceptance", "Job tracking and review record"].map((item) => (
+              {["Nearby professional discovery", "Review before accepting", "Contact locked before acceptance", "Job tracking and review record"].map((item) => (
                 <li className="flex gap-3" key={item}>
                   <Icon className="h-5 w-5 text-brand-600" name="check" />
                   {item}

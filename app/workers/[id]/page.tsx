@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { BookWorkerLink } from "@/components/book-worker-link";
 import { ContactActions } from "@/components/contact-actions";
 import { MobileTopbar } from "@/components/mobile-topbar";
+import { ProfessionalAvatar } from "@/components/professional-avatar";
 import { ShareProfileButton } from "@/components/share-profile-button";
 import { Icon } from "@/components/simple-icons";
 import { WorkerDistance } from "@/components/worker-distance";
@@ -11,6 +12,12 @@ import { loadWorkerFromSupabase, loadWorkerReviews } from "@/lib/supabase-flow";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+function formatExperience(value?: string) {
+  const cleanValue = (value || "").trim();
+  if (!cleanValue || cleanValue === "0") return "New expert";
+  return cleanValue.toLowerCase().includes("year") ? cleanValue : `${cleanValue} years`;
+}
 
 export default async function WorkerProfilePage({ params }: { params: { id: string } }) {
   const worker = await loadWorkerFromSupabase(params.id);
@@ -25,6 +32,12 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
         ? "status-busy"
         : "status-offline";
 
+  const badges = [
+    worker.trust >= 75 ? "Verified Professional" : "Skilled Technician",
+    worker.trust >= 85 ? "Trusted Expert" : "Skilled Technician",
+    hasReviews ? "Top Rated" : "Skilled Technician"
+  ];
+
   const services = [
     `${skillLabel} inspection`,
     `${skillLabel} repair service`,
@@ -34,7 +47,7 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
 
   return (
     <main className="mobile-shell min-h-screen">
-      <MobileTopbar back title="Worker Profile" />
+      <MobileTopbar back title="Professional Profile" />
       <section className="container-page pb-8 pt-2 md:grid md:grid-cols-[1fr_0.75fr] md:gap-6 md:py-10">
         <div className="space-y-5">
           <div className="card p-5">
@@ -43,24 +56,31 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
                 // eslint-disable-next-line @next/next/no-img-element
                 <img alt={worker.name} className="h-32 w-24 rounded-2xl border border-slate-200 object-cover object-top shadow-sm ring-4 ring-blue-50" src={worker.profilePhoto} />
               ) : (
-                <div className="worker-avatar !h-32 !w-24 !rounded-2xl shadow-sm ring-4 ring-blue-50" />
+                <ProfessionalAvatar className="h-32 w-24 shrink-0 text-2xl" name={worker.name} />
               )}
               <div className="min-w-0 flex-1">
                 <span className={`status-pill ${statusClass}`}>{worker.status}</span>
                 <h1 className="mt-3 text-3xl font-black">{worker.name}</h1>
                 <p className="text-sm font-bold text-slate-600">{skillLabel}</p>
                 <p className="mt-1 text-sm text-slate-500">{worker.city || "City not saved"}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {Array.from(new Set(badges)).map((badge) => (
+                    <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-black text-brand-700" key={badge}>
+                      {badge}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Link className="rounded-2xl bg-slate-50 p-3 text-center transition hover:bg-brand-50" href="#reviews">
                 <p className="text-xs font-bold text-slate-500">Rating & Reviews</p>
-                <p className="mt-1 font-black">{hasReviews ? `${worker.rating} (${worker.reviews})` : "New worker"}</p>
+                <p className="mt-1 font-black">{hasReviews ? `${worker.rating} (${worker.reviews})` : "New expert"}</p>
                 <p className="mt-1 text-[11px] font-black text-brand-600">View</p>
               </Link>
               {[
                 { label: "Jobs Completed", value: worker.jobs.toString() },
-                { label: "Experience", value: worker.experience || "New worker" },
+                { label: "Experience", value: formatExperience(worker.experience) },
                 { label: "Distance", value: <WorkerDistance workerLatitude={worker.latitude} workerLongitude={worker.longitude} /> },
                 { label: "Trust Score", value: worker.trust.toString() }
               ].map((item) => (
@@ -73,9 +93,9 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
           </div>
 
           <div className="card p-5">
-            <h2 className="text-xl font-black">About worker</h2>
+            <h2 className="text-xl font-black">About professional</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              {worker.name} provides {skillLabel.toLowerCase()} services in {worker.city || "saved service city"}. Contact details stay locked until a job is accepted.
+              {worker.name} is a MistriHub.In service partner for {skillLabel.toLowerCase()} services in {worker.city || "saved service city"}. Contact details stay locked until a request is accepted.
             </p>
           </div>
 

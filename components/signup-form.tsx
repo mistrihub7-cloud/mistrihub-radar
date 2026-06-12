@@ -63,11 +63,11 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       return;
     }
     if (role === "worker" && (!experience.trim() || !city.trim())) {
-      setMessage("Worker ke liye experience aur city zaroori hai.");
+      setMessage("Service partner ke liye experience aur city zaroori hai.");
       return;
     }
     if (role === "worker" && (latitude == null || longitude == null)) {
-      setMessage("Worker location zaroori hai. Current location save karo ya manual city list se select karo.");
+      setMessage("Professional location zaroori hai. Current location save karo ya manual city list se select karo.");
       return;
     }
 
@@ -115,7 +115,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     if (existingWorker) {
       clearMistriHubSession();
       saveWorkerRegistration(existingWorker);
-      setMessage("Ye mobile/email already registered hai. Existing worker profile login kar diya.");
+      setMessage("Ye mobile/email already registered hai. Existing service partner profile login kar diya.");
       setShowSuccess(true);
       setSubmitting(false);
       window.setTimeout(() => router.replace("/dashboard/worker"), 900);
@@ -144,7 +144,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       saveWorkerRegistration(profile);
       const result = await saveWorkerRegistrationToSupabase(profile);
       if (!result.ok) {
-        setMessage(`Profile save nahi hua. ${result.error || "Supabase workers table columns/RLS policy check karo."}`);
+        setMessage(`Profile save nahi hua. ${result.error || "Supabase service partner table columns/RLS policy check karo."}`);
         setSubmitting(false);
         return;
       }
@@ -152,7 +152,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
       setSubmitting(false);
       window.setTimeout(() => router.replace(`/workers/${result.workerId || id}`), 1200);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Worker profile save nahi hua.");
+      setMessage(error instanceof Error ? error.message : "Professional profile save nahi hua.");
       setSubmitting(false);
     }
   }
@@ -190,7 +190,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
 
   return (
     <div className="card p-5">
-      {showSuccess ? <SuccessPopup message={role === "worker" ? "Registration completed" : "Account created successfully"} /> : null}
+        {showSuccess ? <SuccessPopup message={role === "worker" ? "Registration completed" : "Account created successfully"} /> : null}
       <div className="grid grid-cols-2 gap-3">
         {(["user", "worker"] as const).map((item) => (
           <button
@@ -199,7 +199,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
             onClick={() => setRole(item)}
             type="button"
           >
-            {item === "user" ? "Continue as User" : "Join as Worker"}
+            {item === "user" ? "Continue as User" : "Join as Service Partner"}
           </button>
         ))}
       </div>
@@ -263,7 +263,7 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
             ) : null}
           </label>
           <div className="rounded-xl border border-slate-200 p-4">
-            <span className="mb-2 block text-sm font-bold">Worker location</span>
+            <span className="mb-2 block text-sm font-bold">Professional location</span>
             <button className="btn-outline h-11 w-full text-sm" onClick={saveWorkerLocation} type="button">
               {latitude != null && longitude != null ? "Location Saved" : "Save Location"}
             </button>
@@ -284,16 +284,16 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
               {["Available Today", "Busy", "Not Available"].map((item) => <option key={item}>{item}</option>)}
             </select>
           </label>
-          <FilePreviewInput label="Profile photo upload" onPreview={(preview) => setProfilePhoto(preview)} />
+          <FilePreviewInput label="Profile photo (Optional)" onPreview={(preview) => setProfilePhoto(preview)} />
           <FilePreviewInput label="ID verification placeholder" onPreview={(_, fileName) => setIdFile(fileName)} />
         </div>
       ) : null}
 
       {message ? <p className="mt-4 rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600">{message}</p> : null}
       <button className="btn-primary relative z-10 mt-5 w-full" disabled={submitting} onClick={submit} type="button">
-        {submitting ? "Saving..." : role === "worker" ? "Create Worker Profile" : "Create Account"}
+        {submitting ? "Saving..." : role === "worker" ? "Create Professional Profile" : "Create Account"}
       </button>
-      <p className="mt-3 text-xs leading-5 text-slate-500">Authentication is temporarily disabled. User profile saves locally; worker registration saves to workers table.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-500">Authentication is temporarily disabled. User profile saves locally; professional registration saves to service partner records.</p>
     </div>
   );
 }

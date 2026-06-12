@@ -102,7 +102,7 @@ export function NearbyWorkerList({ workers, compact = false, emptyMessage, layou
   if (!workers.length) {
     return (
       <div className="rounded-2xl bg-slate-50 p-6 text-center text-sm font-bold text-slate-500">
-        {emptyMessage || "No workers registered yet. New Supabase workers will appear here."}
+        {emptyMessage || "No professionals registered yet. New Supabase service partners will appear here."}
       </div>
     );
   }

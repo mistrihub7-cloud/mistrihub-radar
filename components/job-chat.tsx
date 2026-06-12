@@ -33,8 +33,8 @@ export function JobChat({
   const displayName = accountDisplayName(account, workerProfile || undefined);
   const notice =
     account?.role === "worker"
-      ? `Dear ${displayName}, job accept karne se pehle user se price, work details aur timing properly discuss kar lein. Agar sab details clear ho tabhi job accept karein. Accept karne ke baad unnecessary cancel na karein, isse aapka score affect ho sakta hai. MistriHub.In sirf users aur workers ko connect karta hai. Final deal, payment aur work agreement user aur worker ke beech hoga.`
-      : `Dear ${displayName}, worker ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple workers aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi worker ko hire karein. MistriHub.In sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.`;
+      ? `Dear ${displayName}, job accept karne se pehle user se price, work details aur timing properly discuss kar lein. Agar sab details clear ho tabhi job accept karein. Accept karne ke baad unnecessary cancel na karein, isse aapka score affect ho sakta hai. MistriHub.In sirf users aur professionals ko connect karta hai. Final deal, payment aur work agreement user aur service partner ke beech hoga.`
+      : `Dear ${displayName}, professional ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple service partners aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi expert ko hire karein. MistriHub.In sirf nearby professionals se connect karwata hai. Final deal, price aur payment user aur service partner ke beech hoga.`;
 
   useEffect(() => {
     let cancelled = false;
@@ -91,13 +91,13 @@ export function JobChat({
   const conversations = useMemo(() => {
     const nextConversations = Array.from(
       messages.reduce((map, item) => {
-        if (item.workerId) map.set(item.workerId, item.workerName || item.senderName || "Worker");
+        if (item.workerId) map.set(item.workerId, item.workerName || item.senderName || "Professional");
         return map;
       }, new Map<string, string>())
     ).map(([id, name]) => ({ id, name }));
 
     if (account?.role !== "worker" && worker?.id && !nextConversations.some((item) => item.id === worker.id)) {
-      nextConversations.unshift({ id: worker.id, name: worker.name || "Worker" });
+      nextConversations.unshift({ id: worker.id, name: worker.name || "Professional" });
     }
 
     if (account?.role !== "worker" && lockedWorkerId) {
@@ -128,7 +128,7 @@ export function JobChat({
         <div>
           <h2 className="font-black">Job Chat</h2>
           <p className="mt-1 text-sm text-slate-500">
-            {lockedWorkerId ? "Booking accepted ho gaya. Chat sirf hired worker ke saath active hai." : "User aur worker ki job discussion ka record yahin rahega."}
+            {lockedWorkerId ? "Booking accepted ho gaya. Chat sirf hired professional ke saath active hai." : "User aur professional ki job discussion ka record yahin rahega."}
           </p>
         </div>
         <span className="status-pill bg-brand-50 text-brand-600">{messages.length}</span>

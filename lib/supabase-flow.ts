@@ -1,4 +1,5 @@
 import { workers, type Worker, type WorkerStatus } from "./data";
+import { professionalCategoryName } from "./category-display";
 import {
   getMockAccount,
   getMockJob,
@@ -115,27 +116,45 @@ function findWorker(workerId?: string | null) {
 function categorySlugFor(name: string) {
   const map: Record<string, string> = {
     Electrician: "electrician",
+    "Electrical Expert": "electrician",
     Plumber: "plumber",
+    "Plumbing Expert": "plumber",
     Mechanic: "mechanic",
+    "Auto Mechanic": "mechanic",
     Painter: "painter",
+    "Painting Professional": "painter",
     "AC Repair": "ac-repair",
+    "AC Service Expert": "ac-repair",
     Carpenter: "carpenter",
+    "Woodwork Expert": "carpenter",
     Labour: "helper-labour",
     "Labour / Helper": "helper-labour",
+    "Labour Helper": "helper-labour",
+    "Skilled Professional": "helper-labour",
+    "Support Assistant": "helper-labour",
     "Home Cleaning": "home-cleaning",
+    "Home Cleaning Expert": "home-cleaning",
     Driver: "driver",
     "Driver / Car Booking": "driver",
+    "Driver Car Booking": "driver",
+    "Driver & Car Service": "driver",
     Mason: "mason",
+    "Construction Mason": "mason",
     Welder: "welder",
+    "Welding Expert": "welder",
     "RO Service": "ro-service",
+    "RO Water Technician": "ro-service",
     CCTV: "cctv",
-    "Tile / Marble": "tile-marble"
+    "CCTV Security Expert": "cctv",
+    "Tile / Marble": "tile-marble",
+    "Tile Marble": "tile-marble",
+    "Tile & Marble Expert": "tile-marble"
   };
   return map[name] || name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 
 function displayCategoryName(name?: string | null) {
-  return name === "Driver" ? "Driver / Car Booking" : name || "Worker";
+  return professionalCategoryName(name);
 }
 
 function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobRequest {
@@ -143,7 +162,7 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
   return {
     id: row.id,
     workerId: row.worker_id || worker?.id || "",
-    workerName: workerRow?.name || worker?.name || "Nearby matching workers",
+    workerName: workerRow?.name || worker?.name || "Nearby matching professionals",
     workerPhone: workerRow?.phone || workerRow?.whatsapp || worker?.phone || "",
     service: row.service,
     problem: row.problem_description,
@@ -289,7 +308,7 @@ function mapWorker(row: WorkerRow): Worker {
   });
   return {
     id: row.id,
-    name: row.name || "Worker",
+    name: row.name || "Professional",
     skill: displayCategoryName(row.category || row.skill),
     location: row.location || row.service_area || "Saved location",
     city: row.city || "City",
@@ -318,7 +337,7 @@ function mapWorkerRegistration(row: WorkerRow): WorkerRegistration {
   return {
     id: row.id,
     role: "worker",
-    name: row.name || "Worker",
+    name: row.name || "Professional",
     phone: row.phone || row.whatsapp || "",
     email: row.email || undefined,
     skill: displayCategoryName(row.category || row.skill),

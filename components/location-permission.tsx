@@ -38,12 +38,12 @@ export function LocationPermission() {
 
   const helperText =
     state === "allowed"
-      ? "Location allowed. Nearby workers can be sorted by distance."
+      ? "Location allowed. Nearby professionals can be sorted by distance."
       : state === "denied"
         ? "Location denied. Type your area manually to continue."
         : state === "unsupported"
           ? "Location is not supported here. Type your area manually."
-          : "We use your location to show nearest available workers.";
+          : "We use your location to show nearest available professionals.";
 
   return (
     <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -53,7 +53,7 @@ export function LocationPermission() {
         </span>
         <div>
           <p className="font-black">
-            {state === "allowed" ? "Location ready" : "Allow location to see nearby workers"}
+            {state === "allowed" ? "Location ready" : "Allow location to see nearby professionals"}
           </p>
           <p className="text-sm text-slate-500">{helperText}</p>
           <input

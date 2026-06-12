@@ -21,6 +21,6 @@ export function accountDisplayName(account?: MockAccount | null, profile?: Worke
   return (
     displayNameFromValue(profile?.name) ||
     displayNameFromValue(account?.name) ||
-    (account?.role === "worker" ? "Worker" : "User")
+    (account?.role === "worker" ? "Professional" : "User")
   );
 }

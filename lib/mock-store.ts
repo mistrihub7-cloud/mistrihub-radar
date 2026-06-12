@@ -226,7 +226,7 @@ export function createMockJob(input: Omit<MockJobRequest, "id" | "createdAt" | "
     ...input,
     id: `MH${Date.now().toString().slice(-6)}`,
     workerId: worker?.id || input.workerId || "",
-    workerName: worker?.name || "Nearby matching workers",
+    workerName: worker?.name || "Nearby matching professionals",
     createdAt: new Date().toISOString(),
     status: "Requested"
   };

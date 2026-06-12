@@ -91,7 +91,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
         : job.status === "Declined" || job.status === "Quote Rejected"
           ? "Job declined ho chuka hai. Chat aur contact ab locked hai."
           : acceptedByAnotherWorker
-            ? "User ne is job ke liye dusre worker ko hire kar liya hai. Is job par ab chat/status action band hai."
+            ? "User ne is job ke liye dusre professional ko hire kar liya hai. Is job par ab chat/status action band hai."
             : undefined;
 
   async function setStatus(status: MockJobRequest["status"]) {
@@ -110,7 +110,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
     if (nextJob) {
       setJob({
         ...nextJob,
-        workerName: nextJob.workerName && nextJob.workerName !== "Nearby matching workers" ? nextJob.workerName : optimisticJob.workerName,
+        workerName: nextJob.workerName && nextJob.workerName !== "Nearby matching professionals" ? nextJob.workerName : optimisticJob.workerName,
         workerPhone: nextJob.workerPhone || optimisticJob.workerPhone
       });
     }
@@ -163,12 +163,12 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
           <div className="card p-4">
             <h2 className="font-black">Job already hired</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              User ne is job ke liye dusre worker ko hire kar liya hai. Aapka contact locked rahega aur status control yahan nahi dikhega.
+              User ne is job ke liye dusre professional ko hire kar liya hai. Aapka contact locked rahega aur status control yahan nahi dikhega.
             </p>
           </div>
         ) : isWorkerMode ? (
           <div className="card p-4">
-            <h2 className="font-black">Worker status controls</h2>
+            <h2 className="font-black">Professional status controls</h2>
             <p className="mt-1 text-xs text-slate-500">Sirf next step ka action yahan dikhega.</p>
             <div className="mt-3 grid gap-2">
               {canWorkerControl && nextStatus ? (
@@ -186,7 +186,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
           <div className="card p-4">
             <h2 className="font-black">Request sent</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Ye booking matching {serviceLabel} workers ke New Job Requests mein jayegi. First worker jo accept karega, uske baad contact unlock hoga.
+              Ye booking matching {serviceLabel} professionals ke New Job Requests mein jayegi. First expert jo accept karega, uske baad contact unlock hoga.
             </p>
             <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-xs font-black leading-5 text-amber-800">
               WhatsApp auto-send ke liye WhatsApp Cloud API connect karna hoga. Abhi website request flow active hai.

@@ -2,9 +2,17 @@ import Link from "next/link";
 import { LocalWorkerList } from "@/components/local-worker-list";
 import { MobileTopbar } from "@/components/mobile-topbar";
 import { NearbyWorkerList } from "@/components/nearby-worker-list";
+import { professionalCategoryName } from "@/lib/category-display";
 import { loadWorkersFromSupabase } from "@/lib/supabase-flow";
 
 const tabs = ["All", "Available Today", "Busy", "Not Available"];
+
+function serviceKey(value?: string) {
+  return professionalCategoryName(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,28 +23,28 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
   const selectedService = searchParams?.service || "";
   const matchingWorkers = workers
     .filter((worker) => selectedStatus === "All" || worker.status === selectedStatus)
-    .filter((worker) => !selectedService || worker.skill === selectedService);
+    .filter((worker) => !selectedService || serviceKey(worker.skill) === serviceKey(selectedService));
   const availableCount = matchingWorkers.filter((worker) => worker.status === "Available Today").length;
   const reviewedWorkers = matchingWorkers.filter((worker) => worker.reviews > 0 && Number(worker.rating) > 0);
   const topRating = reviewedWorkers.length ? reviewedWorkers.reduce((max, worker) => Math.max(max, Number(worker.rating) || 0), 0).toFixed(1) : "New";
 
   return (
     <main className="mobile-shell min-h-screen">
-      <MobileTopbar title="Nearby Workers" />
+      <MobileTopbar title="Professionals" />
       <section className="container-page pb-28 pt-2 md:py-10">
         <div className="mb-5 rounded-2xl bg-brand-50 p-4 text-sm font-bold text-brand-700 md:hidden">
-          Nearby workers serving your area
+          Nearby professionals serving your area
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
           <aside className="card p-5">
-            <p className="text-sm font-black text-brand-600">Nearby Worker Discovery</p>
-            <h1 className="mt-1 break-words text-2xl font-black text-slate-950 md:text-3xl">Workers serving your area</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Nearby trusted workers available for booking requests.</p>
+            <p className="text-sm font-black text-brand-600">Nearby Professional Discovery</p>
+            <h1 className="mt-1 break-words text-2xl font-black text-slate-950 md:text-3xl">Experts serving your area</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Nearby trusted professionals available for booking requests.</p>
 
             <div className="mt-5 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
               <b className="block">Emergency requests</b>
-              Matching workers in the saved service area receive website and WhatsApp notifications first. Other added workers stay visible for discovery.
+              Matching experts in the saved service area receive website and WhatsApp notifications first. Other added professionals stay visible for discovery.
             </div>
           </aside>
 
@@ -63,9 +71,9 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
 
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {[
-                ["Workers found", matchingWorkers.length.toString()],
+                ["Professionals found", matchingWorkers.length.toString()],
                 ["Available today", availableCount.toString()],
-                ["Reviews", topRating]
+                ["Top rating", topRating]
               ].map(([label, value]) => (
                 <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 text-center" key={label}>
                   <p className="text-xl font-black text-brand-600">{value}</p>

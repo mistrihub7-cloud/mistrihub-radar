@@ -10,6 +10,7 @@ import { createJobInSupabase, saveProfileToSupabase } from "@/lib/supabase-flow"
 import { DEFAULT_LOCATION, LOCATION_KEY, LOCATION_LAT_KEY, LOCATION_LNG_KEY } from "./location-label";
 import { FilePreviewInput } from "./file-preview-input";
 import { ImportantNotice } from "./important-notice";
+import { ProfessionalAvatar } from "./professional-avatar";
 import { Icon } from "./simple-icons";
 
 type BookingFormProps = {
@@ -38,7 +39,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const noticeName = loggedInAccount?.name || customerName.trim() || "User";
-  const bookingNotice = `Dear ${noticeName}, worker ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple workers aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi worker ko hire karein. MistriHub.In sirf nearby workers se connect karwata hai. Final deal, price aur payment user aur worker ke beech hoga.`;
+  const bookingNotice = `Dear ${noticeName}, professional ko hire karne se pehle price, work details aur timing achhe se discuss kar lein. Multiple service partners aapse contact kar sakte hain. Aapko jo trusted aur sahi lage, usi professional ko hire karein. MistriHub.In sirf nearby professionals se connect karwata hai. Final deal, price aur payment user aur service partner ke beech hoga.`;
 
   function switchToUserMode() {
     if (!loggedInAccount) return;
@@ -121,7 +122,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
           </span>
           <h1 className="mt-4 text-2xl font-black">Switch to User Mode</h1>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-            Aap abhi worker mode mein ho. Service book karne ke liye pehle user mode par switch karo.
+            Aap abhi service partner mode mein ho. Service book karne ke liye pehle user mode par switch karo.
           </p>
           <button className="btn-primary mx-auto mt-5 max-w-xs" onClick={switchToUserMode} type="button">
             Switch and Continue Booking
@@ -133,13 +134,13 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         <>
       {matchedWorker ? (
         <div className="card p-4">
-          <p className="text-sm font-black text-brand-600">Selected worker</p>
+          <p className="text-sm font-black text-brand-600">Selected professional</p>
           <div className="mt-3 flex items-center gap-3">
             {matchedWorker.profilePhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img alt={matchedWorker.name} className="h-14 w-14 rounded-2xl object-cover" src={matchedWorker.profilePhoto} />
             ) : (
-              <div className="worker-avatar" />
+              <ProfessionalAvatar className="h-14 w-14 rounded-2xl text-sm" name={matchedWorker.name} />
             )}
             <div>
               <h2 className="font-black">{matchedWorker.name}</h2>
@@ -151,7 +152,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         <div className="card p-4">
           <p className="text-sm font-black text-brand-600">Open job request</p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Fast Nearby Dispatch: matching nearby workers will review the job. First worker who accepts gets the booking.
+            Fast Nearby Dispatch: matching nearby professionals will review the job. First expert who accepts gets the booking.
           </p>
         </div>
       )}
@@ -246,7 +247,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         {submitting ? "Creating request..." : "Submit Request"}
       </button>
       <p className="text-xs leading-5 text-slate-500">
-        Contact stays locked until a worker accepts. Alerts use website and WhatsApp notification flow.
+        Contact stays locked until a professional accepts. Alerts use website and WhatsApp notification flow.
       </p>
         </>
       )}

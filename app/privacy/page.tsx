@@ -15,14 +15,14 @@ export default function PrivacyPage() {
       <h2 className="text-xl font-black text-slate-950">Information we may collect</h2>
       <ul className="list-disc space-y-2 pl-5">
         <li>Name, phone number, email (Optional) and account mode.</li>
-        <li>Worker profile details such as service category, city, service radius, availability and profile photo.</li>
-        <li>User location or selected area to calculate nearby workers and distance.</li>
+        <li>Professional profile details such as service category, city, service radius, availability and profile photo.</li>
+        <li>User location or selected area to calculate nearby professionals and distance.</li>
         <li>Booking details including service category, problem description, urgency, preferred time and photos (Optional).</li>
         <li>Job chat, status updates, reviews and notification tokens.</li>
       </ul>
       <h2 className="text-xl font-black text-slate-950">How we use data</h2>
       <p>
-        We use this data to show nearby workers, send job alerts, keep contact locked until acceptance, track jobs, calculate trust score and improve service quality.
+        We use this data to show nearby professionals, send job alerts, keep contact locked until acceptance, track jobs, calculate trust score and improve service quality.
       </p>
       <h2 className="text-xl font-black text-slate-950">Contact privacy</h2>
       <p>

@@ -6,6 +6,7 @@ import { LocationLabel } from "@/components/location-label";
 import { Logo } from "@/components/logo";
 import { NearbyWorkerList } from "@/components/nearby-worker-list";
 import { NotificationBell } from "@/components/notification-bell";
+import { ProfessionalAvatar } from "@/components/professional-avatar";
 import { SectionTitle, ViewAllLink } from "@/components/section-title";
 import { LocalWorkerList } from "@/components/local-worker-list";
 import { cleanCategoryName } from "@/lib/category-display";
@@ -20,7 +21,7 @@ function HeroWorker({ className = "h-auto w-full object-contain" }: { className?
     // Use a direct public image so the hero appears immediately after deploy/cache refresh.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      alt="MistriHub.In trusted worker"
+      alt="MistriHub.In trusted professional"
       className={className}
       src="/hero-worker.png?v=3"
     />
@@ -50,8 +51,8 @@ function CategoryGrid() {
 
 function EmergencyBox() {
   const items = [
-    ["Need Electrician Now", "Electrician", "bolt", "text-orange-600", "bg-orange-50"],
-    ["Need Plumber Now", "Plumber", "tap", "text-blue-600", "bg-blue-50"],
+    ["Need Electrical Expert", "Electrical Expert", "bolt", "text-orange-600", "bg-orange-50"],
+    ["Need Plumbing Expert", "Plumbing Expert", "tap", "text-blue-600", "bg-blue-50"],
     ["Need Mechanic Now", "Mechanic", "tool", "text-emerald-600", "bg-emerald-50"],
     ["Other Emergency", "Emergency", "bell", "text-violet-600", "bg-violet-50"]
   ];
@@ -76,13 +77,13 @@ function NearbyWorkersPanel({ workers }: { workers: Awaited<ReturnType<typeof lo
   return (
     <aside className="hidden space-y-4 xl:block">
       <div className="card p-5">
-        <SectionTitle title="Nearby Workers" />
+        <SectionTitle title="Nearby Professionals" />
         <p className="mb-4 rounded-2xl bg-brand-50 p-3 text-sm font-bold text-brand-700">
-          Nearby workers serving your area. Km updates after user location is allowed.
+          Nearby experts serving your area. Km updates after user location is allowed.
         </p>
-        <NearbyWorkerList compact emptyMessage="No workers registered yet." limit={3} workers={workers} />
+        <NearbyWorkerList compact emptyMessage="No professionals registered yet." limit={3} workers={workers} />
         <div className="mt-4 flex justify-end">
-          <ViewAllLink action="View Nearby Workers" actionHref="/workers" />
+          <ViewAllLink action="View Nearby Experts" actionHref="/workers" />
         </div>
       </div>
     </aside>
@@ -96,7 +97,7 @@ function TrustStatsSection({ workers }: { workers: Awaited<ReturnType<typeof loa
         <div>
           <h3 className="text-xl font-black">Trust & Safety</h3>
           <ul className="mt-4 grid gap-3 text-sm font-semibold text-slate-700 sm:grid-cols-2">
-            {["Verified Workers", "No Direct Contact Before Booking", "Secure Job Tracking", "Customer Support 24/7"].map((item) => (
+            {["Verified Professionals", "No Direct Contact Before Booking", "Secure Job Tracking", "Customer Support 24/7"].map((item) => (
               <li className="flex items-center gap-3" key={item}>
                 <span className="grid h-5 w-5 place-items-center rounded-full bg-brand-50 text-brand-600">
                   <Icon className="h-3 w-3" name="check" />
@@ -112,7 +113,7 @@ function TrustStatsSection({ workers }: { workers: Awaited<ReturnType<typeof loa
       </div>
       <div className="card grid grid-cols-2 gap-5 bg-gradient-to-br from-white to-blue-50 p-5">
         {[
-          [workers.length.toString(), "Workers Added"],
+          [workers.length.toString(), "Professionals Added"],
           [categories.length.toString(), "Service Categories"],
           ["Locked", "Contact Before Accept"],
           ["PWA", "Install Ready"]
@@ -147,7 +148,7 @@ function StructuredData() {
         name: "MistriHub.In",
         url: siteUrl,
         areaServed: "India",
-        description: "Nearby trusted workers for electrician, plumber, mechanic, painter, AC repair, carpenter, driver and helper services."
+        description: "Nearby trusted professionals for electrical, plumbing, auto mechanic, painting, AC service, woodwork, driver and support services."
       },
       {
         "@type": "ItemList",
@@ -189,15 +190,15 @@ export default async function HomePage() {
         <div className="space-y-5 md:pt-16">
           <div className="hidden w-fit rounded-lg bg-emerald-50 px-4 py-2 text-sm font-black text-slate-800 md:flex md:items-center md:gap-2">
             <Icon className="h-4 w-4 text-emerald-600" name="shield" />
-            Real added workers
+            Real added professionals
           </div>
           <div className="grid grid-cols-[1.1fr_0.9fr] items-center gap-3 md:block">
             <div>
               <h1 className="text-3xl font-black leading-tight tracking-tight text-slate-950 md:text-6xl">
-                Find Trusted <span className="text-brand-600">Workers Near You</span>
+                Find Trusted <span className="text-brand-600">Professionals Near You</span>
               </h1>
               <p className="mt-4 text-sm leading-6 text-slate-600 md:text-xl">
-                Electrician, Plumber, Mechanic, Painter, AC Repair, Carpenter, Labour and more.
+                Electrical Expert, Plumbing Expert, Auto Mechanic, AC Service Expert, Driver & Car Service and more.
               </p>
             </div>
             <div className="md:hidden">
@@ -207,11 +208,11 @@ export default async function HomePage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <Link className="btn-primary" href="/workers">
               <Icon name="location" />
-              Find Worker Now
+              Find Professional Now
             </Link>
             <Link className="btn-outline" href="/worker/register">
               <Icon name="user" />
-              Join as Worker
+              Join as Service Partner
             </Link>
           </div>
         </div>
@@ -241,7 +242,7 @@ export default async function HomePage() {
 
       <section className="container-page mt-5">
         <div className="card p-4 md:p-5">
-          <SectionTitle title="Nearby Workers" />
+          <SectionTitle title="Nearby Professionals" />
           <NearbyWorkerList layout="grid" limit={4} workers={workers} />
           <div className="mt-4">
             <LocalWorkerList />
@@ -258,7 +259,7 @@ export default async function HomePage() {
         <div className="card p-5">
           <SectionTitle title="How It Works" />
           <div className="grid grid-cols-4 gap-2 text-center">
-            {["Choose Service", "Send Request", "Worker Accepts", "Track & Review"].map((step, index) => (
+            {["Choose Service", "Send Request", "Expert Accepts", "Track & Review"].map((step, index) => (
               <div key={step}>
                 <span className="mx-auto grid h-11 w-11 place-items-center rounded-xl bg-brand-50 font-black text-brand-600">
                   {index + 1}
@@ -272,7 +273,7 @@ export default async function HomePage() {
           </div>
         </div>
         <div className="card p-5" id="featured">
-          <SectionTitle title="Featured Workers" />
+          <SectionTitle title="Featured Professionals" />
           {topWorkers.length ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {topWorkers.map((worker) => (
@@ -285,7 +286,7 @@ export default async function HomePage() {
                       src={worker.profilePhoto}
                     />
                   ) : (
-                    <div className="worker-avatar !h-14 !w-14 !rounded-2xl" />
+                    <ProfessionalAvatar className="h-14 w-14 shrink-0 text-sm" name={worker.name} />
                   )}
                   <div>
                     <p className="font-black">{worker.name}</p>
@@ -299,7 +300,7 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="rounded-2xl bg-slate-50 p-6 text-center text-sm font-bold text-slate-500">
-              Top rated workers will appear after worker registrations and reviews.
+              Top rated professionals will appear after service partner registrations and reviews.
             </div>
           )}
           <div className="mt-4 flex justify-end">

@@ -11,7 +11,7 @@ export function ShareProfileButton({ workerId, workerName }: { workerId: string;
 
     try {
       if (navigator.share) {
-        await navigator.share({ title, text: `${workerName} ka MistriHub.In worker profile`, url });
+        await navigator.share({ title, text: `${workerName} ka MistriHub.In professional profile`, url });
         setMessage("Profile link ready to share.");
         return;
       }

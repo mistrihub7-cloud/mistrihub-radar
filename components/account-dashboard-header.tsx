@@ -5,6 +5,7 @@ import { cleanCategoryName } from "@/lib/category-display";
 import { getMockAccount, getWorkerRegistration } from "@/lib/mock-store";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
 import { NotificationBell } from "./notification-bell";
+import { ProfessionalAvatar } from "./professional-avatar";
 
 export function AccountDashboardHeader({ type }: { type: "user" | "worker" }) {
   const [name, setName] = useState("Loading...");
@@ -17,7 +18,7 @@ export function AccountDashboardHeader({ type }: { type: "user" | "worker" }) {
       const account = getMockAccount();
       const workerProfile = getWorkerRegistration();
       setName(workerProfile?.name || account?.name || "User");
-      setSubtitle(type === "worker" ? cleanCategoryName(workerProfile?.skill || "Worker profile") : savedLocation);
+      setSubtitle(type === "worker" ? cleanCategoryName(workerProfile?.skill || "Professional profile") : savedLocation);
       setPhoto(workerProfile?.profilePhoto || null);
     }
 
@@ -31,7 +32,7 @@ export function AccountDashboardHeader({ type }: { type: "user" | "worker" }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img alt={name} className="h-14 w-14 rounded-full object-cover ring-4 ring-blue-50" src={photo} />
         ) : (
-          <div className="worker-avatar" />
+          <ProfessionalAvatar className="h-14 w-14 rounded-full text-sm" name={name} />
         )}
         <div>
           <h1 className="text-xl font-black">Hello, {name}</h1>

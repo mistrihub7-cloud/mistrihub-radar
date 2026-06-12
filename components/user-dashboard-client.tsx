@@ -7,6 +7,7 @@ import { clearMistriHubSession, getMockAccount, getWorkerRegistration, saveMockA
 import { loadJobsFromSupabase } from "@/lib/supabase-flow";
 import { DEFAULT_LOCATION, LOCATION_KEY } from "./location-label";
 import { NotificationBell } from "./notification-bell";
+import { ProfessionalAvatar } from "./professional-avatar";
 import { Icon } from "./simple-icons";
 
 function MenuRow({ href, icon, label, value }: { href: string; icon: string; label: string; value?: string }) {
@@ -70,7 +71,7 @@ export function UserDashboardClient() {
     <div className="space-y-7 pb-24">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="worker-avatar !h-20 !w-20" />
+          <ProfessionalAvatar className="h-20 w-20 rounded-full text-xl" name={accountName} />
           <div>
             <h1 className="text-2xl font-black leading-tight text-slate-950 md:text-3xl">Hello, {accountName}</h1>
             <p className="text-base font-bold text-slate-500">{location}</p>
@@ -101,10 +102,10 @@ export function UserDashboardClient() {
       <section className="card p-4">
         <h2 className="font-black text-slate-950">Account mode</h2>
         <p className="mt-1 text-sm font-bold text-slate-500">
-          {workerProfile ? "Worker profile found. Aap user aur worker dono mode use kar sakte ho." : "Worker banne ke liye worker profile complete karo."}
+          {workerProfile ? "Professional profile found. Aap user aur service partner dono mode use kar sakte ho." : "Service partner banne ke liye professional profile complete karo."}
         </p>
         <button className="btn-outline mt-4 w-full" onClick={switchToWorker} type="button">
-          {workerProfile ? "Switch to Worker Mode" : "Join as Worker"}
+          {workerProfile ? "Switch to Service Partner Mode" : "Join as Service Partner"}
         </button>
       </section>
 
@@ -113,7 +114,7 @@ export function UserDashboardClient() {
         <MenuRow href="/jobs" icon="calendar" label="My Bookings" />
         <MenuRow href="/jobs" icon="jobs" label="Job History" />
         <MenuRow href="/jobs" icon="star" label="My Reviews" />
-        <MenuRow href="/workers" icon="bell" label="Saved Workers" />
+        <MenuRow href="/workers" icon="bell" label="Saved Professionals" />
         <MenuRow href="/login" icon="phone" label="Help & Support" />
         <button className="flex w-full items-center gap-4 py-4 text-left" onClick={logout} type="button">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-red-600">

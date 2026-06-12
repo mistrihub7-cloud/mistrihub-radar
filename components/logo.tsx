@@ -12,7 +12,7 @@ export function Logo() {
           MistriHub.In
         </span>
         <span className="text-xs font-semibold text-slate-500">
-          Trusted Workers Near You
+          Trusted Professionals Near You
         </span>
       </span>
     </Link>

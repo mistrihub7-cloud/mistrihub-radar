@@ -23,7 +23,7 @@ export function SiteFooter() {
       </div>
 
       <div className="container-page mt-8 border-t border-slate-100 pt-5 text-xs font-bold text-slate-500">
-        © {new Date().getFullYear()} MistriHub.In. Nearby worker discovery platform.
+        © {new Date().getFullYear()} MistriHub.In. Nearby professional discovery platform.
       </div>
     </footer>
   );

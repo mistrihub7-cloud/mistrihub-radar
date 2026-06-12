@@ -39,7 +39,7 @@ export function siteUrl() {
 
 export function serviceSearchTitle(serviceName: string) {
   const lower = serviceName.toLowerCase();
-  if (lower.includes("labour")) return "Labour helper";
+  if (lower.includes("labour") || lower.includes("support")) return "Support assistant";
   if (lower.includes("ac")) return "AC repair";
   if (lower.includes("ro")) return "RO service";
   return cleanCategoryName(serviceName);

@@ -54,7 +54,7 @@ export function JobReviewForm({ job }: { job: MockJobRequest }) {
     setSaving(false);
     if (result.ok) {
       setSaved(true);
-      setMessage(result.fallback ? "Review saved on this device. Public sync ke liye latest SQL run karo." : "Review saved. Worker rating update ho jayegi.");
+      setMessage(result.fallback ? "Review saved on this device. Public sync ke liye latest SQL run karo." : "Review saved. Professional rating update ho jayegi.");
       return;
     }
     setMessage(`Review save nahi hua. ${result.error || "worker_reviews table/policy check karo."}`);
@@ -62,8 +62,8 @@ export function JobReviewForm({ job }: { job: MockJobRequest }) {
 
   return (
     <div className="card p-5">
-      <h2 className="text-xl font-black">Rate this worker</h2>
-      <p className="mt-1 text-sm text-slate-500">Job complete hone ke baad rating se worker ka trust score improve hota hai.</p>
+      <h2 className="text-xl font-black">Rate this professional</h2>
+      <p className="mt-1 text-sm text-slate-500">Job complete hone ke baad rating se professional ka trust score improve hota hai.</p>
       <div className="mt-4 flex gap-2">
         {[1, 2, 3, 4, 5].map((item) => (
           <button

@@ -10,7 +10,7 @@ type BookPageProps = {
 export default function BookPage({ searchParams }: BookPageProps) {
   return (
     <main className="mobile-shell min-h-screen">
-      <MobileTopbar back title="Book Worker" />
+      <MobileTopbar back title="Book Expert" />
       <section className="container-page pb-8 pt-2 md:py-10">
         <div className="mx-auto max-w-3xl">
           <BookingForm initialService={searchParams?.service} />

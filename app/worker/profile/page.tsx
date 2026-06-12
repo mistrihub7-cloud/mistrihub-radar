@@ -7,7 +7,7 @@ export default function WorkerProfilePage() {
       <MobileTopbar back title="Edit Profile" />
       <section className="container-page pb-28 pt-2 md:py-10">
         <div className="mx-auto max-w-3xl">
-          <h1 className="mb-5 text-3xl font-black">Worker profile</h1>
+          <h1 className="mb-5 text-3xl font-black">Professional profile</h1>
           <WorkerProfileForm />
         </div>
       </section>

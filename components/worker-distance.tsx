@@ -51,7 +51,7 @@ function parseSavedCoordinates() {
   return isValidCoordinate(latitude, longitude) ? { latitude, longitude } : null;
 }
 
-export function WorkerDistance({ workerLatitude, workerLongitude, missingWorkerText = "Worker location off", missingUserText = "Set location" }: WorkerDistanceProps) {
+export function WorkerDistance({ workerLatitude, workerLongitude, missingWorkerText = "Professional location off", missingUserText = "Set location" }: WorkerDistanceProps) {
   const [label, setLabel] = useState(missingUserText);
   const canOpenLocation = label === missingUserText;
 

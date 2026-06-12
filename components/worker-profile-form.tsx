@@ -110,7 +110,7 @@ export function WorkerProfileForm() {
     const result = await saveWorkerRegistrationToSupabase(nextProfile);
     setSaving(false);
     if (!result.ok) {
-      setMessage(`Profile save nahi hua. ${result.error || "Supabase workers table columns/RLS policy check karo."}`);
+      setMessage(`Profile save nahi hua. ${result.error || "Supabase service partner table columns/RLS policy check karo."}`);
       return;
     }
 
@@ -153,7 +153,7 @@ export function WorkerProfileForm() {
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" onChange={(event) => setCity(event.target.value)} value={city} />
         </label>
         <div className="rounded-xl border border-slate-200 p-4">
-          <span className="mb-2 block text-sm font-bold">Worker location</span>
+          <span className="mb-2 block text-sm font-bold">Professional location</span>
           <button className="btn-outline h-11 w-full text-sm" onClick={saveWorkerLocation} type="button">
             {latitude != null && longitude != null ? "Update Location" : "Save Location"}
           </button>
@@ -171,7 +171,7 @@ export function WorkerProfileForm() {
             {["Available Today", "Busy", "Not Available"].map((item) => <option key={item}>{item}</option>)}
           </select>
         </label>
-        <FilePreviewInput label="Profile photo" onPreview={(preview) => setProfilePhoto(preview)} />
+        <FilePreviewInput label="Profile photo (Optional)" onPreview={(preview) => setProfilePhoto(preview)} />
       </div>
       {message ? <p className="mt-4 rounded-2xl bg-brand-50 p-3 text-sm font-bold text-brand-700">{message}</p> : null}
       <button className="btn-primary mt-5 w-full" disabled={saving} onClick={saveProfile} type="button">

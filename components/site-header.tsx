@@ -11,10 +11,10 @@ import { useAccountState } from "./use-account-state";
 
 const links = [
   ["Home", "/"],
-  ["Workers", "/workers"],
+  ["Professionals", "/workers"],
   ["Services", "/categories"],
   ["Featured", "/#featured"],
-  ["Book Worker", "/book"],
+  ["Book Expert", "/book"],
   ["Jobs", "/jobs"],
   ["How It Works", "/#how-it-works"]
 ];

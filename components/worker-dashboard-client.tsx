@@ -18,6 +18,7 @@ import {
 import { getJobAlertsEnabled, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
 import { NotificationBell } from "./notification-bell";
+import { ProfessionalAvatar } from "./professional-avatar";
 import { Icon } from "./simple-icons";
 
 function MenuRow({ href, icon, label, value, badge }: { href: string; icon: string; label: string; value?: string; badge?: string }) {
@@ -142,11 +143,11 @@ export function WorkerDashboardClient() {
             // eslint-disable-next-line @next/next/no-img-element
             <img alt={profile.name} className="h-20 w-20 rounded-full object-cover shadow-sm" src={profile.profilePhoto} />
           ) : (
-            <div className="worker-avatar !h-20 !w-20" />
+            <ProfessionalAvatar className="h-20 w-20 rounded-full text-xl" name={profile?.name || accountName} />
           )}
           <div>
             <h1 className="text-2xl font-black leading-tight text-slate-950 md:text-3xl">Hello, {accountName}</h1>
-            <p className="text-base font-bold text-slate-500">{cleanCategoryName(profile?.skill || "Worker profile")}</p>
+            <p className="text-base font-bold text-slate-500">{cleanCategoryName(profile?.skill || "Professional profile")}</p>
           </div>
         </div>
         <NotificationBell className="grid h-12 w-12 place-items-center rounded-full text-slate-900" />
@@ -154,7 +155,7 @@ export function WorkerDashboardClient() {
 
       <section className="card p-4">
         <h2 className="font-black text-slate-950">Account mode</h2>
-        <p className="mt-1 text-sm font-bold text-slate-500">Worker mode active hai. Service book karne ke liye user mode par switch karo.</p>
+        <p className="mt-1 text-sm font-bold text-slate-500">Service partner mode active hai. Service book karne ke liye user mode par switch karo.</p>
         <button className="btn-outline mt-4 w-full" onClick={switchToUser} type="button">
           Switch to User Mode
         </button>
@@ -163,7 +164,7 @@ export function WorkerDashboardClient() {
       <section className="card p-4">
         <div className="mb-3 flex items-center gap-2">
           <Icon className="h-5 w-5 text-brand-600" name="shield" />
-          <h2 className="font-black text-slate-950">Worker status</h2>
+          <h2 className="font-black text-slate-950">Professional status</h2>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {availabilityOptions.map((item) => {

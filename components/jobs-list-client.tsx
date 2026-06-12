@@ -69,10 +69,10 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
         </span>
         <h1 className="mt-4 text-2xl font-black">{owner === "worker" ? "No job requests" : "No active jobs"}</h1>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-          {owner === "worker" ? "New booking requests will appear here." : "Book a worker to create your first request."}
+          {owner === "worker" ? "New booking requests will appear here." : "Book a professional to create your first request."}
         </p>
         <Link className="btn-primary mx-auto mt-5 max-w-xs" href={owner === "worker" ? "/dashboard/worker" : "/workers"}>
-          {owner === "worker" ? "Back to Dashboard" : "Find Worker"}
+          {owner === "worker" ? "Back to Dashboard" : "Find Professional"}
         </Link>
       </div>
     );
@@ -123,7 +123,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
           </div>
           {owner === "worker" && !job.workerId ? (
             <p className="mt-3 rounded-2xl bg-brand-50 p-3 text-xs font-black text-brand-700">
-              Fast Nearby Dispatch: nearest matching workers can review this request. First worker who accepts gets the booking.
+              Fast Nearby Dispatch: nearest matching professionals can review this request. First expert who accepts gets the booking.
             </p>
           ) : null}
           <p className="mt-3 text-sm leading-6 text-slate-600">{job.problem}</p>
