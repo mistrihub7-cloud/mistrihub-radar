@@ -15,7 +15,7 @@ import {
   type MockJobRequest,
   type WorkerRegistration
 } from "@/lib/mock-store";
-import { getJobAlertsEnabled, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
+import { getJobAlertsEnabled, requestJobAlertPermission, saveJobAlertsEnabled, showJobNotification } from "@/lib/notifications";
 import { loadJobsFromSupabase, saveWorkerSettingsToSupabase } from "@/lib/supabase-flow";
 import { NotificationBell } from "./notification-bell";
 import { ProfessionalAvatar } from "./professional-avatar";
@@ -126,6 +126,13 @@ export function WorkerDashboardClient() {
     };
     setWhatsappNotifications(nextSettings.whatsappNotifications);
     setBrowserNotifications(nextSettings.browserNotifications);
+    if (type === "browser" && enabled && "Notification" in window) {
+      const permission = Notification.permission === "granted" ? "granted" : await requestJobAlertPermission();
+      if (permission === "granted") {
+        saveJobAlertsEnabled(true);
+        import("@/lib/fcm-client").then(({ registerFcmToken }) => registerFcmToken()).catch(() => null);
+      }
+    }
     saveWorkerSettings(nextSettings);
     const result = await saveWorkerSettingsToSupabase(nextSettings);
     setStatusMessage(result.ok ? "Notification setting saved." : "Notification setting local save hua.");

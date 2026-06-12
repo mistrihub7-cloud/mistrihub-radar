@@ -1,5 +1,5 @@
 import { cleanCategoryName, professionalCategoryName } from "./category-display";
-import { sendPushToTokens, type PushTokenRow } from "./push-server";
+import { normalizePhone, sendPushToTokens, type PushTokenRow } from "./push-server";
 import { supabaseServer } from "./supabase-server";
 
 type WorkerAlertRow = {
@@ -268,23 +268,35 @@ export async function sendBookingAlerts(
     });
   }
 
-  const pushWorkerIds = workers.filter((worker) => worker.browser_notifications !== false).map((worker) => worker.id);
+  const pushWorkers = workers.filter((worker) => worker.browser_notifications !== false);
+  const pushWorkerIds = new Set(pushWorkers.map((worker) => worker.id).filter(Boolean));
+  const pushPhones = new Set(pushWorkers.map((worker) => normalizePhone(worker.phone || worker.whatsapp)).filter(Boolean));
   let pushSent = 0;
-  if (pushWorkerIds.length) {
+  if (pushWorkerIds.size || pushPhones.size) {
     const { data: tokens } = await supabaseServer
       .from("push_tokens")
-      .select("token,worker_id,role")
+      .select("token,worker_id,phone,role")
       .eq("role", "worker")
-      .in("worker_id", pushWorkerIds)
       .range(0, 999);
+    const matchedTokens = ((tokens || []) as PushTokenRow[]).filter((row) => {
+      const tokenWorkerId = row.worker_id || "";
+      const tokenPhone = normalizePhone(row.phone);
+      return (tokenWorkerId && pushWorkerIds.has(tokenWorkerId)) || (tokenPhone && pushPhones.has(tokenPhone));
+    });
     const pushResult = await sendPushToTokens({
-      tokens: ((tokens || []) as PushTokenRow[]).map((row) => row.token),
+      tokens: matchedTokens.map((row) => row.token),
       title: "New MistriHub.In work request",
       body: `${serviceLabel} request in ${input.area || "your area"}. ${(input.problem || "").slice(0, 80)}`,
       url: `/jobs/${input.jobId}`,
       jobId: input.jobId
     });
     pushSent = pushResult.sent || 0;
+    await supabaseServer.from("notifications").insert({
+      user_id: null,
+      title: "Browser push result",
+      message: `Job ${input.jobId}: matched ${matchedTokens.length} saved FCM tokens, sent ${pushSent}.`,
+      type: "browser_job_alert"
+    });
   }
 
   const note = `${workers.length} matching professionals notified within ${radiusKm} km. WhatsApp sent: ${whatsappSent}. Browser push sent: ${pushSent}.`;
