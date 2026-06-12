@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { markJobAlertsRead } from "@/lib/alert-state";
 import { cleanCategoryName } from "@/lib/category-display";
 import { getMockAccount, getWorkerRegistration, updateMockJob, type MockJobRequest } from "@/lib/mock-store";
-import { loadJobFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
+import { loadJobDispatchEvents, loadJobFromSupabase, updateJobInSupabase, type JobDispatchEvent } from "@/lib/supabase-flow";
 import { ContactActions } from "./contact-actions";
 import { JobChat } from "./job-chat";
 import { JobReviewForm } from "./job-review-form";
@@ -48,8 +48,81 @@ function formatCompletedDate(value?: string) {
   });
 }
 
+function parseAlertNote(note: string) {
+  const match = note.match(/(\d+)\s+matching professionals notified within\s+(\d+)\s+km/i);
+  if (!match) return null;
+  return { count: Number(match[1]), radius: Number(match[2]) };
+}
+
+function minutesUntil(targetMinutes: number, createdAt: string) {
+  const remainingMs = new Date(createdAt).getTime() + targetMinutes * 60000 - Date.now();
+  if (remainingMs <= 0) return "";
+  const seconds = Math.ceil(remainingMs / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.ceil(seconds / 60)} min`;
+}
+
+function DispatchStatusCard({ events, job }: { events: JobDispatchEvent[]; job: MockJobRequest }) {
+  const alertEvents = events.filter((event) => event.status.toLowerCase().includes("alert"));
+  const latestAlert = alertEvents[alertEvents.length - 1];
+  const latestInfo = latestAlert ? parseAlertNote(latestAlert.note) : null;
+  const isEmergency = job.urgency === "Emergency";
+  const isOpen = ["Requested", "Need More Details"].includes(job.status);
+  const isAccepted = job.status === "Accepted";
+  const confirmed = ["Quote Accepted", "On The Way", "In Progress"].includes(job.status);
+  const completed = job.status === "Completed";
+  const nextNormalWave = [
+    { minute: 2, radius: 10, label: "10 km" },
+    { minute: 5, radius: 15, label: "15 km" },
+    { minute: 10, radius: 20, label: "20 km + admin" }
+  ].find((wave) => !latestInfo?.radius || wave.radius > latestInfo.radius);
+  const nextWave = isEmergency
+    ? latestInfo?.radius && latestInfo.radius >= 20
+      ? ""
+      : `20 km + admin ${minutesUntil(2, job.createdAt) ? `in ${minutesUntil(2, job.createdAt)}` : "checking now"}`
+    : nextNormalWave
+      ? `${nextNormalWave.label} ${minutesUntil(nextNormalWave.minute, job.createdAt) ? `in ${minutesUntil(nextNormalWave.minute, job.createdAt)}` : "checking now"}`
+      : "";
+
+  return (
+    <div className="card border-brand-100 bg-gradient-to-br from-brand-50 to-white p-5">
+      <div className="flex items-start gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-600 text-white">
+          <Icon className="h-6 w-6" name="bell" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-black uppercase tracking-wide text-brand-600">Live request status</p>
+          <h2 className="mt-1 text-lg font-black text-slate-950">
+            {completed ? "Job completed" : confirmed ? "Booking confirmed" : isAccepted ? "Professional accepted" : "Searching nearby professionals"}
+          </h2>
+          <div className="mt-4 grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-3">
+            <span className="rounded-2xl bg-white p-3 shadow-sm">
+              <b className="block text-slate-950">Searching</b>
+              Nearby matching category
+            </span>
+            <span className="rounded-2xl bg-white p-3 shadow-sm">
+              <b className="block text-slate-950">Workers Notified</b>
+              {latestInfo ? `${latestInfo.count} within ${latestInfo.radius} km` : "Sending alerts"}
+            </span>
+            <span className="rounded-2xl bg-white p-3 shadow-sm">
+              <b className="block text-slate-950">{isOpen ? "Waiting Response" : "Response received"}</b>
+              {isOpen ? "We are still checking" : displayStatus(job.status)}
+            </span>
+          </div>
+          {isOpen ? (
+            <p className="mt-3 rounded-2xl bg-white p-3 text-xs font-black leading-5 text-brand-700 shadow-sm">
+              {nextWave ? `No response mila to next alert ${nextWave}.` : "Maximum nearby range notify ho chuka hai. Admin support bhi check karega."}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function JobTrackingClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<MockJobRequest | null>(null);
+  const [dispatchEvents, setDispatchEvents] = useState<JobDispatchEvent[]>([]);
   const [isWorkerMode, setIsWorkerMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState("");
@@ -63,14 +136,18 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
       if (!cancelled) {
         setJob(nextJob);
         if (nextJob) markJobAlertsRead(getMockAccount(), [nextJob], getWorkerRegistration());
+        setDispatchEvents(await loadJobDispatchEvents(jobId));
       }
       setLoading(false);
     }
 
     loadJob();
     const timer = window.setInterval(async () => {
-      const nextJob = await loadJobFromSupabase(jobId);
-      if (!cancelled) setJob(nextJob);
+      const [nextJob, nextEvents] = await Promise.all([loadJobFromSupabase(jobId), loadJobDispatchEvents(jobId)]);
+      if (!cancelled) {
+        setJob(nextJob);
+        setDispatchEvents(nextEvents);
+      }
     }, 5000);
     return () => {
       cancelled = true;
@@ -178,6 +255,8 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
             </div>
           ) : null}
         </div>
+
+        {!isWorkerMode ? <DispatchStatusCard events={dispatchEvents} job={job} /> : null}
 
         {userNeedsToConfirmWorker ? (
           <div className="sticky top-3 z-30 rounded-2xl border-2 border-brand-200 bg-white p-4 shadow-card">

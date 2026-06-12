@@ -302,7 +302,7 @@ export async function sendBookingAlerts(
   const note = `${workers.length} matching professionals notified within ${radiusKm} km. WhatsApp sent: ${whatsappSent}. Browser push sent: ${pushSent}.`;
   await markWave(input.jobId, waveKey, note);
 
-  if (options.adminAlert || input.urgency === "Emergency") {
+  if (options.adminAlert) {
     await supabaseServer.from("notifications").insert({
       user_id: null,
       title: input.urgency === "Emergency" ? "Admin alert: emergency request" : "Admin alert: no response escalation",

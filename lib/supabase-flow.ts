@@ -104,7 +104,14 @@ type WorkerReviewRow = {
 type JobStatusHistoryRow = {
   job_id: string;
   status: string;
+  note?: string | null;
   created_at: string | null;
+};
+
+export type JobDispatchEvent = {
+  status: string;
+  note: string;
+  createdAt: string;
 };
 
 type CreateJobInput = Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">;
@@ -220,6 +227,29 @@ function attachCompletedDates(jobs: MockJobRequest[], completedDates: Map<string
     ...job,
     completedAt: job.completedAt || completedDates.get(job.id)
   }));
+}
+
+export async function loadJobDispatchEvents(jobId: string): Promise<JobDispatchEvent[]> {
+  if (!hasSupabaseConfig || !supabase || !jobId) return [];
+
+  const { data, error } = await supabase
+    .from("job_status_history")
+    .select("status,note,created_at")
+    .eq("job_id", jobId)
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return [];
+
+  return (data as Array<{ status?: string | null; note?: string | null; created_at?: string | null }>)
+    .filter((row) => {
+      const status = row.status || "";
+      return row.created_at && (status.toLowerCase().includes("alert") || ["Requested", "Accepted", "Quote Accepted", "Completed"].includes(status));
+    })
+    .map((row) => ({
+      status: row.status || "",
+      note: row.note || "",
+      createdAt: row.created_at || ""
+    }));
 }
 
 function normalizeContact(value?: string | null) {

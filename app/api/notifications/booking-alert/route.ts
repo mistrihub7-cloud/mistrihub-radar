@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     maxWorkers: input.workerId ? 1 : input.urgency === "Emergency" ? 15 : 10,
     waveKey: input.workerId ? "Direct profile alert" : input.urgency === "Emergency" ? "Emergency 15km alert" : "Initial 5km alert",
     excludeAlreadyNotified: false,
-    adminAlert: input.urgency === "Emergency"
+    adminAlert: false
   });
 
   return NextResponse.json(result);
