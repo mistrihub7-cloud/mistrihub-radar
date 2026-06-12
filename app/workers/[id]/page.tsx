@@ -34,7 +34,6 @@ export default async function WorkerProfilePage({ params }: { params: { id: stri
 
   const badges = [
     worker.trust >= 75 ? "Verified Professional" : "Skilled Technician",
-    worker.trust >= 85 ? "Trusted Expert" : "Skilled Technician",
     hasReviews ? "Top Rated" : "Skilled Technician"
   ];
 
