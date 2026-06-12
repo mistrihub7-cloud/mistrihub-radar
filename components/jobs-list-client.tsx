@@ -17,10 +17,18 @@ import { markJobAlertsRead } from "@/lib/alert-state";
 import { loadJobsFromSupabase, updateJobInSupabase } from "@/lib/supabase-flow";
 import { Icon } from "./simple-icons";
 
+type JobsListView = "user-records" | "worker-requests" | "worker-history";
+
 function isVisibleForWorker(job: MockJobRequest, profile: WorkerRegistration | null, declinedJobs: string[]) {
   if (!profile || declinedJobs.includes(job.id) || job.service !== profile.skill) return false;
   if (["Requested", "Need More Details"].includes(job.status)) return !job.workerId || job.workerId === profile.id;
   return job.workerId === profile.id && ["Accepted", "Quote Sent", "Quote Accepted", "On The Way", "In Progress", "Completed"].includes(job.status);
+}
+
+function filterJobsForView(jobs: MockJobRequest[], view: JobsListView) {
+  if (view === "worker-requests") return jobs.filter((job) => ["Requested", "Need More Details"].includes(job.status));
+  if (view === "worker-history") return jobs.filter((job) => !["Requested", "Need More Details"].includes(job.status));
+  return jobs;
 }
 
 function displayStatus(status: MockJobRequest["status"]) {
@@ -45,7 +53,7 @@ function formatCompletedDate(value?: string) {
   });
 }
 
-export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }) {
+export function JobsListClient({ owner = "user", view = owner === "worker" ? "worker-requests" : "user-records" }: { owner?: "user" | "worker"; view?: JobsListView }) {
   const router = useRouter();
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,12 +66,12 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
       if (owner === "worker") {
         const profile = getWorkerRegistration();
         const declinedJobs = getWorkerDeclinedJobs();
-        const visibleJobs = nextJobs.filter((job) => isVisibleForWorker(job, profile, declinedJobs));
+        const visibleJobs = filterJobsForView(nextJobs.filter((job) => isVisibleForWorker(job, profile, declinedJobs)), view);
         setWorkerProfile(profile);
         setJobs(visibleJobs);
         markJobAlertsRead(getMockAccount(), visibleJobs, profile);
       } else {
-        setJobs(nextJobs);
+        setJobs(filterJobsForView(nextJobs, view));
         markJobAlertsRead(getMockAccount(), nextJobs);
       }
       setLoading(false);
@@ -77,7 +85,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
       window.removeEventListener("mistrihub-mock-change", onChange);
       if (timer) window.clearInterval(timer);
     };
-  }, [owner]);
+  }, [owner, view]);
 
   if (loading) {
     return <div className="card p-6 text-center text-sm font-bold text-slate-500">Loading jobs...</div>;
@@ -89,9 +97,15 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand-50 text-brand-600">
           <Icon name="jobs" />
         </span>
-        <h1 className="mt-4 text-2xl font-black">{owner === "worker" ? "No job requests" : "No active jobs"}</h1>
+        <h1 className="mt-4 text-2xl font-black">
+          {view === "worker-history" ? "No job history" : owner === "worker" ? "No new job requests" : "No job records"}
+        </h1>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-          {owner === "worker" ? "New booking requests will appear here." : "Book a professional to create your first request."}
+          {view === "worker-history"
+            ? "Accepted, completed and cancelled worker jobs will appear here."
+            : owner === "worker"
+              ? "New booking requests will appear here."
+              : "Book a professional to create your first request."}
         </p>
         <Link className="btn-primary mx-auto mt-5 max-w-xs" href={owner === "worker" ? "/dashboard/worker" : "/workers"}>
           {owner === "worker" ? "Back to Dashboard" : "Find Professional"}
@@ -103,14 +117,14 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
   async function refreshJobs() {
     const nextJobs = await loadJobsFromSupabase(owner);
     if (owner !== "worker") {
-      setJobs(nextJobs);
+      setJobs(filterJobsForView(nextJobs, view));
       return;
     }
 
     const profile = getWorkerRegistration();
     const declinedJobs = getWorkerDeclinedJobs();
     setWorkerProfile(profile);
-    setJobs(nextJobs.filter((job) => isVisibleForWorker(job, profile, declinedJobs)));
+    setJobs(filterJobsForView(nextJobs.filter((job) => isVisibleForWorker(job, profile, declinedJobs)), view));
   }
 
   async function acceptJob(job: MockJobRequest) {
@@ -175,7 +189,7 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
                   updateMockJob(job.id, { status: "Cancelled" });
                   setJobs((currentJobs) => currentJobs.map((item) => (item.id === job.id ? { ...item, status: "Cancelled" } : item)));
                   await updateJobInSupabase(job.id, { status: "Cancelled" });
-                  setJobs(await loadJobsFromSupabase(owner));
+                  setJobs(filterJobsForView(await loadJobsFromSupabase(owner), view));
                 }}
                 type="button"
               >

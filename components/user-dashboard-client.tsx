@@ -103,10 +103,10 @@ export function UserDashboardClient() {
             ["Completed", completedJobs.toString(), "bg-emerald-50 text-emerald-700"],
             ["Cancelled", cancelledJobs.toString(), "bg-red-50 text-red-600"]
           ].map(([label, value, tone]) => (
-            <div className={`rounded-2xl p-4 ${tone}`} key={label}>
+            <Link className={`rounded-2xl p-4 transition hover:-translate-y-0.5 hover:shadow-card ${tone}`} href="/jobs" key={label}>
               <p className="text-sm font-black">{label}</p>
               <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -123,11 +123,9 @@ export function UserDashboardClient() {
 
       <section className="card px-5 py-2">
         <MenuRow href="/user/profile" icon="user" label="My Profile" />
-        <MenuRow href="/jobs" icon="calendar" label="My Bookings" />
-        <MenuRow href="/jobs" icon="jobs" label="Job History" />
-        <MenuRow href="/jobs" icon="star" label="My Reviews" />
-        <MenuRow href="/workers" icon="bell" label="Saved Professionals" />
-        <MenuRow href="/login" icon="phone" label="Help & Support" />
+        <MenuRow href="/jobs" icon="calendar" label="My Job Records" value={jobs.length ? jobs.length.toString() : undefined} />
+        <MenuRow href="/workers" icon="worker" label="Find Professionals" />
+        <MenuRow href="/contact" icon="phone" label="Help & Support" />
         <button className="flex w-full items-center gap-4 py-4 text-left" onClick={logout} type="button">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-red-600">
             <Icon className="h-7 w-7" name="user" />

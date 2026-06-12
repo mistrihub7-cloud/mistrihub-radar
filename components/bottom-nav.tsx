@@ -24,6 +24,7 @@ export function BottomNav() {
   const navItems = items.map((item) => {
     if (item.label === "Profile") return { ...item, href: profileHref, label: profileLabel };
     if (item.label === "Book" && account?.role === "worker") return { ...item, label: "Mode" };
+    if (item.label === "Jobs" && account?.role === "worker") return { ...item, href: "/worker/history" };
     return item;
   });
 

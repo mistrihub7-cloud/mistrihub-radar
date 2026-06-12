@@ -162,6 +162,7 @@ export function WorkerDashboardClient() {
 
   const activeRequests = jobs.filter((job) => job.status === "Requested" && (!profile?.id || !job.workerId || job.workerId === profile.id)).length;
   const completedJobs = jobs.filter((job) => job.status === "Completed" && profile?.id && job.workerId === profile.id).length;
+  const reviewHref = profile?.id ? `/workers/${profile.id}#reviews` : "/worker/profile";
 
   return (
     <div className="space-y-7 pb-24">
@@ -264,8 +265,8 @@ export function WorkerDashboardClient() {
 
       <section className="card px-5 py-2">
         <MenuRow badge={activeRequests ? activeRequests.toString() : undefined} href="/worker-request" icon="jobs" label="New Job Requests" />
-        <MenuRow href="/jobs" icon="calendar" label="My Jobs" />
-        <MenuRow href="/jobs" icon="star" label="Reviews" value="New" />
+        <MenuRow href="/worker/history" icon="calendar" label="My Job History" />
+        <MenuRow href={reviewHref} icon="star" label="Reviews" />
         <MenuRow href="/worker/profile" icon="user" label="Edit Profile" />
         <button className="flex w-full items-center gap-4 py-4 text-left" onClick={logout} type="button">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-red-600">
