@@ -18,7 +18,7 @@ export function BottomNav() {
   const pathname = usePathname();
   const { account } = useAccountState();
   const workerProfile = account?.role === "worker" ? getWorkerRegistration() : null;
-  const profilePhoto = workerProfile?.profilePhoto || "";
+  const profilePhoto = account?.profilePhoto || workerProfile?.profilePhoto || "";
   const profileHref = account?.role === "worker" ? "/dashboard/worker" : account ? "/dashboard/user" : "/login";
   const profileLabel = account ? "Profile" : "Login";
   const navItems = items.map((item) => {

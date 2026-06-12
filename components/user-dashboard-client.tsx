@@ -63,7 +63,14 @@ export function UserDashboardClient() {
       window.location.href = "/worker/register";
       return;
     }
-    saveMockAccount({ ...account, role: "worker", name: worker.name || account.name, phone: worker.phone || account.phone, email: worker.email || account.email });
+    saveMockAccount({
+      ...account,
+      role: "worker",
+      name: worker.name || account.name,
+      phone: worker.phone || account.phone,
+      email: worker.email || account.email,
+      profilePhoto: worker.profilePhoto || account.profilePhoto || ""
+    });
     window.location.href = "/dashboard/worker";
   }
 
@@ -71,7 +78,12 @@ export function UserDashboardClient() {
     <div className="space-y-7 pb-24">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <ProfessionalAvatar className="h-20 w-20 rounded-full text-xl" name={accountName} />
+          {account?.profilePhoto || workerProfile?.profilePhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img alt={accountName} className="h-20 w-20 rounded-full object-cover object-top shadow-sm ring-4 ring-blue-50" src={account?.profilePhoto || workerProfile?.profilePhoto} />
+          ) : (
+            <ProfessionalAvatar className="h-20 w-20 rounded-full text-xl" name={accountName} />
+          )}
           <div>
             <h1 className="text-2xl font-black leading-tight text-slate-950 md:text-3xl">Hello, {accountName}</h1>
             <p className="text-base font-bold text-slate-500">{location}</p>

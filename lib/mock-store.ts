@@ -8,6 +8,7 @@ export type MockAccount = {
   name: string;
   phone: string;
   email?: string;
+  profilePhoto?: string;
 };
 
 export type MockJobRequest = {
@@ -198,7 +199,7 @@ export function saveMockAccount(account: MockAccount) {
 }
 
 export function saveWorkerRegistration(profile: WorkerRegistration) {
-  saveMockAccount({ id: profile.id, role: "worker", name: profile.name, phone: profile.phone, email: profile.email });
+  saveMockAccount({ id: profile.id, role: "worker", name: profile.name, phone: profile.phone, email: profile.email, profilePhoto: profile.profilePhoto || "" });
   const savedProfile = {
     ...profile,
     profilePhoto: profile.profilePhoto || "",

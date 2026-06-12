@@ -48,6 +48,7 @@ export function WorkerDashboardClient() {
   const [whatsappNotifications, setWhatsappNotifications] = useState(true);
   const [browserNotifications, setBrowserNotifications] = useState(true);
   const [profile, setProfile] = useState<WorkerRegistration | null>(null);
+  const [accountPhoto, setAccountPhoto] = useState("");
   const [accountName, setAccountName] = useState("Worker");
   const [statusMessage, setStatusMessage] = useState("");
   const availabilityOptions = ["Available Today", "Busy", "Not Available"];
@@ -68,6 +69,7 @@ export function WorkerDashboardClient() {
       setWhatsappNotifications(settings.whatsappNotifications !== false);
       setBrowserNotifications(settings.browserNotifications !== false);
       setProfile(workerProfile);
+      setAccountPhoto(account.profilePhoto || "");
       setAccountName(accountDisplayName(account, workerProfile));
       await refreshWorkerJobs(workerProfile, false);
     }
@@ -152,7 +154,8 @@ export function WorkerDashboardClient() {
       role: "user",
       name: worker?.name || account.name,
       phone: worker?.phone || account.phone,
-      email: worker?.email || account.email
+      email: worker?.email || account.email,
+      profilePhoto: worker?.profilePhoto || account.profilePhoto || ""
     });
     window.location.href = "/dashboard/user";
   }
@@ -164,9 +167,9 @@ export function WorkerDashboardClient() {
     <div className="space-y-7 pb-24">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {profile?.profilePhoto ? (
+          {profile?.profilePhoto || accountPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img alt={profile.name} className="h-20 w-20 rounded-full object-cover shadow-sm" src={profile.profilePhoto} />
+            <img alt={profile?.name || accountName} className="h-20 w-20 rounded-full object-cover object-top shadow-sm ring-4 ring-blue-50" src={profile?.profilePhoto || accountPhoto} />
           ) : (
             <ProfessionalAvatar className="h-20 w-20 rounded-full text-xl" name={profile?.name || accountName} />
           )}

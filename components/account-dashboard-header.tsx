@@ -17,9 +17,9 @@ export function AccountDashboardHeader({ type }: { type: "user" | "worker" }) {
       const savedLocation = localStorage.getItem(LOCATION_KEY) || DEFAULT_LOCATION;
       const account = getMockAccount();
       const workerProfile = getWorkerRegistration();
-      setName(workerProfile?.name || account?.name || "User");
+      setName(type === "worker" ? workerProfile?.name || account?.name || "User" : account?.name || workerProfile?.name || "User");
       setSubtitle(type === "worker" ? cleanCategoryName(workerProfile?.skill || "Professional profile") : savedLocation);
-      setPhoto(workerProfile?.profilePhoto || null);
+      setPhoto(type === "worker" ? workerProfile?.profilePhoto || account?.profilePhoto || null : account?.profilePhoto || workerProfile?.profilePhoto || null);
     }
 
     loadAccount();
