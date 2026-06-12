@@ -101,6 +101,12 @@ type WorkerReviewRow = {
   created_at: string;
 };
 
+type JobStatusHistoryRow = {
+  job_id: string;
+  status: string;
+  created_at: string | null;
+};
+
 type CreateJobInput = Omit<MockJobRequest, "id" | "createdAt" | "status" | "workerName">;
 
 const JOB_SELECT =
@@ -178,11 +184,42 @@ function mapJob(row: JobRequestRow, workerRow?: WorkerRow | null): MockJobReques
     photoPreview2: row.photo_url_2 || "",
     status: row.status,
     createdAt: row.created_at,
+    completedAt: undefined,
     workerQuestion: row.worker_question || "",
     quoteAmount: row.quote_amount || "",
     quoteNote: row.quote_note || "",
     quoteEta: row.quote_eta || ""
   };
+}
+
+async function loadCompletedDates(jobIds: string[]) {
+  const ids = Array.from(new Set(jobIds.filter(Boolean)));
+  const completedDates = new Map<string, string>();
+  if (!hasSupabaseConfig || !supabase || !ids.length) return completedDates;
+
+  const { data, error } = await supabase
+    .from("job_status_history")
+    .select("job_id,status,created_at")
+    .in("job_id", ids)
+    .eq("status", "Completed")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return completedDates;
+
+  (data as JobStatusHistoryRow[]).forEach((row) => {
+    if (row.job_id && row.created_at && !completedDates.has(row.job_id)) {
+      completedDates.set(row.job_id, row.created_at);
+    }
+  });
+
+  return completedDates;
+}
+
+function attachCompletedDates(jobs: MockJobRequest[], completedDates: Map<string, string>) {
+  return jobs.map((job) => ({
+    ...job,
+    completedAt: job.completedAt || completedDates.get(job.id)
+  }));
 }
 
 function normalizeContact(value?: string | null) {
@@ -778,10 +815,11 @@ export async function loadJobsFromSupabase(owner: "user" | "worker" = "user") {
   const account = owner === "user" ? getMockAccount() : null;
   const visibleRows = owner === "user" && !userId ? data.filter((row) => jobBelongsToAccount(row as JobRequestRow, account)) : data;
 
-  return visibleRows.map((row) => {
+  const mappedJobs = visibleRows.map((row) => {
     const workerRow = Array.isArray(row.workers) ? row.workers[0] : row.workers;
     return mapJob(row as JobRequestRow, workerRow as WorkerRow | null);
   });
+  return attachCompletedDates(mappedJobs, await loadCompletedDates(mappedJobs.map((job) => job.id)));
 }
 
 export async function loadJobFromSupabase(jobId: string) {
@@ -801,14 +839,17 @@ export async function loadJobFromSupabase(jobId: string) {
       .maybeSingle();
     if (fallback.error || !fallback.data) return getMockJob(jobId);
     const workerRow = Array.isArray(fallback.data.workers) ? fallback.data.workers[0] : fallback.data.workers;
-    return mapJob(fallback.data as JobRequestRow, workerRow as WorkerRow | null);
+    const mappedJob = mapJob(fallback.data as JobRequestRow, workerRow as WorkerRow | null);
+    return attachCompletedDates([mappedJob], await loadCompletedDates([mappedJob.id]))[0];
   }
   const workerRow = Array.isArray(data.workers) ? data.workers[0] : data.workers;
-  return mapJob(data as JobRequestRow, workerRow as WorkerRow | null);
+  const mappedJob = mapJob(data as JobRequestRow, workerRow as WorkerRow | null);
+  return attachCompletedDates([mappedJob], await loadCompletedDates([mappedJob.id]))[0];
 }
 
 export async function updateJobInSupabase(jobId: string, update: Partial<MockJobRequest>) {
-  const localJob = updateMockJob(jobId, update);
+  const updateWithCompletedAt = update.status === "Completed" && !update.completedAt ? { ...update, completedAt: new Date().toISOString() } : update;
+  const localJob = updateMockJob(jobId, updateWithCompletedAt);
   if (!hasSupabaseConfig || !supabase) return localJob;
 
   const dbUpdate: Record<string, string | null> = {};
@@ -835,7 +876,10 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
 
     if (!error && data && update.status) {
       await supabase.from("job_status_history").insert({ job_id: jobId, status: update.status, note: "Status updated" });
-      const mappedJob = mapJob(data as JobRequestRow);
+      const mappedJob = {
+        ...mapJob(data as JobRequestRow),
+        completedAt: update.status === "Completed" ? updateWithCompletedAt.completedAt : undefined
+      };
       await sendFcmJobUpdated(mappedJob);
       return mappedJob;
     }
@@ -851,7 +895,7 @@ export async function updateJobInSupabase(jobId: string, update: Partial<MockJob
       const fallback = await fallbackQuery.select(JOB_SELECT_BASE).maybeSingle();
       if (!fallback.error && fallback.data && update.status) {
         await supabase.from("job_status_history").insert({ job_id: jobId, status: update.status, note: "Status updated" });
-        const mappedJob = { ...mapJob(fallback.data as JobRequestRow), ...update };
+        const mappedJob = { ...mapJob(fallback.data as JobRequestRow), ...updateWithCompletedAt };
         await sendFcmJobUpdated(mappedJob);
         return mappedJob;
       }

@@ -35,6 +35,19 @@ function nextWorkerStatus(status: MockJobRequest["status"]): MockJobRequest["sta
   return null;
 }
 
+function formatCompletedDate(value?: string) {
+  if (!value) return "Date not recorded";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date not recorded";
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
 export function JobTrackingClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<MockJobRequest | null>(null);
   const [isWorkerMode, setIsWorkerMode] = useState(false);
@@ -91,6 +104,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   const contactPhone = contactUnlocked ? (isWorkerMode ? job.customerPhone : job.workerPhone) : undefined;
   const nextStatus = nextWorkerStatus(job.status);
   const lockedWorkerId = job.workerId || undefined;
+  const userNeedsToConfirmWorker = !isWorkerMode && job.status === "Accepted" && Boolean(job.workerId);
   const chatDisabledReason =
     job.status === "Completed"
       ? "Job completed ho chuka hai. Chat aur contact ab locked hai."
@@ -109,6 +123,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
     const workerProfile = isWorkerMode ? getWorkerRegistration() : null;
     const update: Partial<MockJobRequest> = {
       status,
+      ...(status === "Completed" ? { completedAt: new Date().toISOString() } : {}),
       ...(workerProfile && (!job.workerId || job.workerId === workerProfile.id)
         ? { workerId: workerProfile.id, workerName: workerProfile.name, workerPhone: workerProfile.phone }
         : {})
@@ -143,7 +158,8 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
               ["Problem", job.problem],
               ["Urgency", job.urgency],
               ["Location", job.area],
-              ["Preferred date", job.preferredDate || "Not selected"]
+              ["Preferred date", job.preferredDate || "Not selected"],
+              ...(job.status === "Completed" ? [["Completed on", formatCompletedDate(job.completedAt)]] : [])
             ].map(([label, value]) => (
               <div className="rounded-2xl bg-slate-50 p-3" key={label}>
                 <p className="text-xs font-bold text-slate-500">{label}</p>
@@ -162,6 +178,31 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
             </div>
           ) : null}
         </div>
+
+        {userNeedsToConfirmWorker ? (
+          <div className="sticky top-3 z-30 rounded-2xl border-2 border-brand-200 bg-white p-4 shadow-card">
+            <div className="flex items-start gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700">
+                <Icon className="h-6 w-6" name="check" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-black uppercase tracking-wide text-brand-600">Action needed</p>
+                <h2 className="mt-1 text-lg font-black text-slate-950">{job.workerName} accepted your request</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  Chat mein price, timing aur work details confirm karke booking final karo. Contact number confirmation ke baad unlock hoga.
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <button className="btn-primary h-11 text-sm" onClick={() => setStatus("Quote Accepted")} type="button">
+                    Confirm This Professional
+                  </button>
+                  <button className="btn-outline h-11 border-red-500 text-sm text-red-600" onClick={() => setStatus("Cancelled")} type="button">
+                    Cancel Request
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <JobChat disabledReason={chatDisabledReason} jobId={job.id} lockedWorkerId={lockedWorkerId} worker={{ id: job.workerId, name: job.workerName }} />
         <JobReviewForm job={job} />

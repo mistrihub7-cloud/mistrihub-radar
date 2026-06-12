@@ -32,6 +32,19 @@ function displayStatus(status: MockJobRequest["status"]) {
   return status;
 }
 
+function formatCompletedDate(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
 export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }) {
   const router = useRouter();
   const [jobs, setJobs] = useState<MockJobRequest[]>([]);
@@ -136,6 +149,11 @@ export function JobsListClient({ owner = "user" }: { owner?: "user" | "worker" }
             </p>
           ) : null}
           <p className="mt-3 text-sm leading-6 text-slate-600">{job.problem}</p>
+          {job.status === "Completed" ? (
+            <p className="mt-3 rounded-2xl bg-emerald-50 p-3 text-sm font-black text-emerald-700">
+              Completed: {formatCompletedDate(job.completedAt) || "Date not recorded"}
+            </p>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-2">
             <Link className="btn-primary h-10 px-4 text-sm" href={`/jobs/${job.id}`}>
               See Detail

@@ -26,18 +26,13 @@ export async function sendPushToTokens(input: {
 
   const response = await messaging.sendEachForMulticast({
     tokens,
-    notification: {
-      title: input.title,
-      body: input.body
-    },
     webpush: {
+      headers: {
+        TTL: "3600",
+        Urgency: "high"
+      },
       fcmOptions: {
         link: input.url || "/jobs"
-      },
-      notification: {
-        icon: "/icon.svg",
-        badge: "/icon.svg",
-        tag: input.jobId || "mistrihub-job"
       }
     },
     data: {

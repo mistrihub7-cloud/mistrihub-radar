@@ -41,6 +41,7 @@ export type MockJobRequest = {
     | "Declined"
     | "Need More Details";
   createdAt: string;
+  completedAt?: string;
   workerQuestion?: string;
   quoteAmount?: string;
   quoteNote?: string;
