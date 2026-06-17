@@ -32,7 +32,7 @@ function firebaseApp() {
 
 async function ensureFirebaseWorker() {
   if (!("serviceWorker" in navigator)) return undefined;
-  return navigator.serviceWorker.register("/firebase-messaging-sw.js");
+  return navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" });
 }
 
 function setupForegroundMessages() {
