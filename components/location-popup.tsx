@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { resolveAreaName, searchAreaSuggestions, type LocationSuggestion } from "./location-geocode";
-import { DEFAULT_LOCATION, LOCATION_KEY, LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, OPEN_LOCATION_EVENT, saveLocationLabel } from "./location-label";
+import { DEFAULT_LOCATION, getCurrentPositionWithFallback, LOCATION_KEY, LOCATION_LOCK_KEY, LOCATION_SKIP_KEY, OPEN_LOCATION_EVENT, saveLocationLabel } from "./location-label";
 import { Icon } from "./simple-icons";
 
 type LocationState = "idle" | "loading" | "saved" | "denied" | "unsupported";
@@ -113,22 +113,18 @@ export function LocationPopup() {
     }
 
     setState("loading");
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
+    getCurrentPositionWithFallback()
+      .then(async (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
         const areaName = await resolveAreaName(latitude, longitude);
-        saveLocationLabel(areaName, true, { latitude, longitude });
+        saveLocationLabel(areaName, true, { latitude, longitude, accuracy });
         setState("saved");
         closeAndReload();
-      },
-      (error) => {
-        if (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT) {
-          setArea("");
-        }
+      })
+      .catch(() => {
+        setArea("");
         setState("denied");
-      },
-      { enableHighAccuracy: true, maximumAge: 300000, timeout: 12000 }
-    );
+      });
   };
 
   if (!visible) {
@@ -137,7 +133,7 @@ export function LocationPopup() {
 
   const helperText =
     state === "denied"
-      ? "Location nahi mila. Mobile ka location/GPS on karke Allow dabao, ya Area manually save karo."
+      ? "Location बंद है। Nearby experts देखने के लिए location ON करें. Chrome > Site Settings > Location > Allow, phir Try Again dabao."
       : state === "unsupported"
         ? "Is browser mein auto location support nahi hai. Area manually save karo."
         : "Ek baar save hone ke baad location is device par lock rahegi.";
@@ -189,7 +185,7 @@ export function LocationPopup() {
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           <button className="btn-primary h-11 text-sm" disabled={state === "loading"} onClick={requestLocation} type="button">
-            {state === "loading" ? "Checking..." : "Use Current Location"}
+            {state === "loading" ? "Checking..." : state === "denied" ? "Location On / Try Again" : "Use Current Location"}
           </button>
           <button className="btn-outline h-11 text-sm" onClick={saveManualArea} type="button">
             Save Area

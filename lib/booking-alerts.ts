@@ -151,9 +151,33 @@ async function sendTwilioWhatsApp(to: string, body: string) {
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
+    console.error("Twilio WhatsApp failed", { to, status: response.status, error: text.slice(0, 500) });
     return { ok: false, skipped: false, reason: text || `Twilio HTTP ${response.status}` };
   }
-  return { ok: true, skipped: false };
+  const json = await response.json().catch(() => ({} as { sid?: string }));
+  console.info("Twilio WhatsApp sent", { to, sid: json.sid || "" });
+  return { ok: true, skipped: false, sid: json.sid || "" };
+}
+
+async function logNotificationAttempt(input: {
+  requestId: string;
+  workerId?: string | null;
+  phone?: string | null;
+  channel: "whatsapp" | "web_push";
+  status: "sent" | "failed" | "skipped";
+  twilioSid?: string | null;
+  errorMessage?: string | null;
+}) {
+  if (!supabaseServer) return;
+  await supabaseServer.from("notification_logs").insert({
+    request_id: input.requestId,
+    worker_id: input.workerId || null,
+    phone: input.phone || null,
+    channel: input.channel,
+    status: input.status,
+    twilio_sid: input.twilioSid || null,
+    error_message: input.errorMessage || null
+  }).then(undefined, () => undefined);
 }
 
 export async function sendWhatsAppTestMessage(to: string) {
@@ -286,6 +310,15 @@ export async function sendBookingAlerts(
     const to = normalizeWhatsAppNumber(worker.whatsapp || worker.phone);
     const result = await sendTwilioWhatsApp(to, alertBody(input, worker));
     if (result.ok) whatsappSent += 1;
+    await logNotificationAttempt({
+      requestId: input.jobId,
+      workerId: worker.id,
+      phone: to,
+      channel: "whatsapp",
+      status: result.ok ? "sent" : result.skipped ? "skipped" : "failed",
+      twilioSid: "sid" in result ? result.sid : null,
+      errorMessage: result.ok ? null : result.reason || "WhatsApp send failed"
+    });
     await supabaseServer.from("notifications").insert({
       user_id: worker.user_id || null,
       title: result.ok ? "WhatsApp alert sent" : "WhatsApp alert queued",
@@ -317,6 +350,18 @@ export async function sendBookingAlerts(
       jobId: input.jobId
     });
     pushSent = pushResult.sent || 0;
+    await Promise.all(
+      pushWorkers.map((worker) =>
+        logNotificationAttempt({
+          requestId: input.jobId,
+          workerId: worker.id,
+          phone: normalizeWhatsAppNumber(worker.whatsapp || worker.phone),
+          channel: "web_push",
+          status: pushSent > 0 ? "sent" : "failed",
+          errorMessage: pushSent > 0 ? null : pushResult.reason || "No saved FCM token matched or Firebase send failed"
+        })
+      )
+    );
     await supabaseServer.from("notifications").insert({
       user_id: null,
       title: "Browser push result",

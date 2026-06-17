@@ -7,6 +7,7 @@ import { categories } from "@/lib/data";
 import { clearMistriHubSession, findSavedAccount, findSavedWorkerRegistration, saveMockAccount, saveWorkerRegistration, type MockAccount, type MockRole, type WorkerRegistration } from "@/lib/mock-store";
 import { findUserAccountByLogin, findWorkerRegistrationByLogin, saveProfileToSupabase, saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
+import { getCurrentPositionWithFallback } from "./location-label";
 import { searchAreaSuggestions, type LocationSuggestion } from "./location-geocode";
 import { SuccessPopup } from "./success-popup";
 
@@ -164,18 +165,16 @@ export function SignupForm({ defaultRole = "user" }: { defaultRole?: MockRole })
     }
 
     setLocationStatus("Location check ho raha hai...");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+    getCurrentPositionWithFallback()
+      .then((position) => {
         const nextLatitude = Number(position.coords.latitude.toFixed(6));
         const nextLongitude = Number(position.coords.longitude.toFixed(6));
         setLatitude(nextLatitude);
         setLongitude(nextLongitude);
         setLocation("Worker location saved");
         setLocationStatus("Location saved.");
-      },
-      () => setLocationStatus("Location nahi mila. Mobile ka location/GPS on karke Allow dabao, ya city list se manual location select karo."),
-      { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 }
-    );
+      })
+      .catch(() => setLocationStatus("Location बंद है। Chrome > Site Settings > Location > Allow karke Location On / Try Again dabao."));
   }
 
   function selectWorkerLocation(suggestion: LocationSuggestion) {

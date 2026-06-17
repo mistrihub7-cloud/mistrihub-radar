@@ -7,6 +7,7 @@ import { categories } from "@/lib/data";
 import { getMockAccount, getWorkerRegistration, saveWorkerRegistration, type WorkerRegistration } from "@/lib/mock-store";
 import { saveWorkerRegistrationToSupabase } from "@/lib/supabase-flow";
 import { FilePreviewInput } from "./file-preview-input";
+import { getCurrentPositionWithFallback } from "./location-label";
 import { SuccessPopup } from "./success-popup";
 
 export function WorkerProfileForm() {
@@ -65,18 +66,16 @@ export function WorkerProfileForm() {
     }
 
     setMessage("Location check ho raha hai...");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+    getCurrentPositionWithFallback()
+      .then((position) => {
         const nextLatitude = Number(position.coords.latitude.toFixed(6));
         const nextLongitude = Number(position.coords.longitude.toFixed(6));
         setLatitude(nextLatitude);
         setLongitude(nextLongitude);
         setLocation(`GPS saved`);
         setMessage("Location saved.");
-      },
-      () => setMessage("Location permission nahi mila. Browser se allow karke dobara try karo."),
-      { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 }
-    );
+      })
+      .catch(() => setMessage("Location बंद है। Chrome > Site Settings > Location > Allow karke Location On / Try Again dabao."));
   }
 
   async function saveProfile() {

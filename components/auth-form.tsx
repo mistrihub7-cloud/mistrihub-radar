@@ -8,6 +8,19 @@ import { clearMistriHubSession, findSavedAccount, findSavedWorkerRegistration, r
 import { findUserAccountByLogin, findWorkerRegistrationByLogin } from "@/lib/supabase-flow";
 import { useAccountState } from "./use-account-state";
 
+async function requestPushAfterLogin() {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  try {
+    const permission = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
+    if (permission === "granted") {
+      const { registerFcmToken } = await import("@/lib/fcm-client");
+      await registerFcmToken();
+    }
+  } catch {
+    // Login should not fail just because push registration failed.
+  }
+}
+
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -54,12 +67,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     clearMistriHubSession();
     if (workerProfile) {
       saveWorkerRegistration(workerProfile);
+      await requestPushAfterLogin();
       setLoading(false);
       router.push("/dashboard/worker");
       return;
     }
     restoreWorkerRegistrationForAccount(account);
     saveMockAccount(account);
+    await requestPushAfterLogin();
     setLoading(false);
 
     router.push("/dashboard/user");

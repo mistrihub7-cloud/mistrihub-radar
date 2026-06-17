@@ -37,18 +37,58 @@ create table if not exists public.worker_reviews (
 create table if not exists public.push_tokens (
   id uuid primary key default gen_random_uuid(),
   token text not null unique,
+  user_id text,
   account_id text,
   role text not null default 'user',
   name text,
   phone text,
   service text,
   worker_id text,
+  endpoint text,
+  p256dh text,
+  auth text,
+  last_seen timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
+alter table if exists public.push_tokens
+add column if not exists user_id text,
+add column if not exists endpoint text,
+add column if not exists p256dh text,
+add column if not exists auth text,
+add column if not exists last_seen timestamptz;
+
+create table if not exists public.user_locations (
+  id uuid primary key default gen_random_uuid(),
+  account_id text not null,
+  role text not null default 'user',
+  phone text,
+  label text,
+  latitude double precision not null,
+  longitude double precision not null,
+  accuracy double precision,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (account_id, role)
+);
+
+create table if not exists public.notification_logs (
+  id uuid primary key default gen_random_uuid(),
+  request_id text,
+  worker_id text,
+  phone text,
+  channel text not null,
+  status text not null,
+  twilio_sid text,
+  error_message text,
+  created_at timestamptz not null default now()
+);
+
 alter table if exists public.worker_reviews enable row level security;
 alter table if exists public.push_tokens enable row level security;
+alter table if exists public.user_locations enable row level security;
+alter table if exists public.notification_logs enable row level security;
 
 drop policy if exists "mistrihub public read job requests" on public.job_requests;
 drop policy if exists "mistrihub public create job requests" on public.job_requests;
@@ -163,4 +203,42 @@ on public.push_tokens
 for update
 to anon, authenticated
 using (true)
+with check (true);
+
+drop policy if exists "mistrihub public read user locations" on public.user_locations;
+drop policy if exists "mistrihub public create user locations" on public.user_locations;
+drop policy if exists "mistrihub public update user locations" on public.user_locations;
+
+create policy "mistrihub public read user locations"
+on public.user_locations
+for select
+to anon, authenticated
+using (true);
+
+create policy "mistrihub public create user locations"
+on public.user_locations
+for insert
+to anon, authenticated
+with check (true);
+
+create policy "mistrihub public update user locations"
+on public.user_locations
+for update
+to anon, authenticated
+using (true)
+with check (true);
+
+drop policy if exists "mistrihub public read notification logs" on public.notification_logs;
+drop policy if exists "mistrihub public create notification logs" on public.notification_logs;
+
+create policy "mistrihub public read notification logs"
+on public.notification_logs
+for select
+to anon, authenticated
+using (true);
+
+create policy "mistrihub public create notification logs"
+on public.notification_logs
+for insert
+to anon, authenticated
 with check (true);

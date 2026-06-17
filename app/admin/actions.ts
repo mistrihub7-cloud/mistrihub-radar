@@ -65,6 +65,15 @@ export async function testWhatsAppFromAdmin(formData: FormData) {
       message: `Admin WhatsApp test to ${phone}: ${result.ok ? "Sent" : result.reason || "Failed"}`,
       type: "whatsapp_job_alert"
     });
+    await supabaseServer.from("notification_logs").insert({
+      request_id: "admin-test",
+      worker_id: null,
+      phone,
+      channel: "whatsapp",
+      status: result.ok ? "sent" : result.skipped ? "skipped" : "failed",
+      twilio_sid: "sid" in result ? result.sid : null,
+      error_message: result.ok ? null : result.reason || "WhatsApp test failed"
+    });
   }
   revalidatePath("/admin");
   redirect(result.ok ? "/admin?wa=sent" : "/admin?wa=failed");

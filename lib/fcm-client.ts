@@ -32,9 +32,7 @@ function firebaseApp() {
 
 async function ensureFirebaseWorker() {
   if (!("serviceWorker" in navigator)) return undefined;
-  return navigator.serviceWorker.register("/firebase-messaging-sw.js", {
-    scope: "/firebase-cloud-messaging-push-scope"
-  });
+  return navigator.serviceWorker.register("/firebase-messaging-sw.js");
 }
 
 function setupForegroundMessages() {
@@ -74,6 +72,8 @@ export async function registerFcmToken() {
 
   if (!token) return { ok: false, reason: "FCM token not created." };
 
+  const subscription = await registration?.pushManager.getSubscription().catch(() => null);
+  const subscriptionJson = subscription?.toJSON() as PushSubscriptionJSON | undefined;
   setupForegroundMessages();
   const response = await fetch("/api/push/register", {
     method: "POST",
@@ -85,7 +85,10 @@ export async function registerFcmToken() {
       name: workerProfile?.name || account?.name || "",
       phone: workerProfile?.phone || account?.phone || "",
       service: workerProfile?.skill || "",
-      workerId: workerProfile?.id || ""
+      workerId: workerProfile?.id || "",
+      endpoint: subscriptionJson?.endpoint || "",
+      p256dh: subscriptionJson?.keys?.p256dh || "",
+      auth: subscriptionJson?.keys?.auth || ""
     })
   });
 

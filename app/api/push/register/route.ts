@@ -11,6 +11,9 @@ type PushTokenPayload = {
   phone?: string;
   service?: string;
   workerId?: string;
+  endpoint?: string;
+  p256dh?: string;
+  auth?: string;
 };
 
 export async function POST(request: Request) {
@@ -21,12 +24,17 @@ export async function POST(request: Request) {
   const { error } = await supabaseServer.from("push_tokens").upsert(
     {
       token: payload.token,
+      user_id: payload.accountId || null,
       account_id: payload.accountId || null,
       role: payload.role === "worker" ? "worker" : "user",
       name: payload.name || null,
       phone: payload.phone || null,
       service: payload.service || null,
       worker_id: payload.workerId || null,
+      endpoint: payload.endpoint || null,
+      p256dh: payload.p256dh || null,
+      auth: payload.auth || null,
+      last_seen: new Date().toISOString(),
       updated_at: new Date().toISOString()
     },
     { onConflict: "token" }

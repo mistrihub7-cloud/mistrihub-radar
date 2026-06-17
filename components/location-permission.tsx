@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DEFAULT_LOCATION, saveLocationLabel } from "./location-label";
+import { DEFAULT_LOCATION, getCurrentPositionWithFallback, saveLocationLabel } from "./location-label";
 import { resolveAreaName } from "./location-geocode";
 import { Icon } from "./simple-icons";
 
@@ -23,24 +23,22 @@ export function LocationPermission() {
     }
 
     setState("loading");
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
+    getCurrentPositionWithFallback()
+      .then(async (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
         const detectedArea = await resolveAreaName(latitude, longitude);
         setState("allowed");
         setArea(detectedArea);
-        saveLocationLabel(detectedArea, true, { latitude, longitude });
-      },
-      () => setState("denied"),
-      { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 }
-    );
+        saveLocationLabel(detectedArea, true, { latitude, longitude, accuracy });
+      })
+      .catch(() => setState("denied"));
   };
 
   const helperText =
     state === "allowed"
       ? "Location allowed. Nearby professionals can be sorted by distance."
       : state === "denied"
-        ? "Location denied. Type your area manually to continue."
+        ? "Location बंद है। Nearby experts देखने के लिए location ON करें. Chrome > Site Settings > Location > Allow."
         : state === "unsupported"
           ? "Location is not supported here. Type your area manually."
           : "We use your location to show nearest available professionals.";
@@ -65,7 +63,7 @@ export function LocationPermission() {
         </div>
       </div>
       <button className="btn-outline h-10 shrink-0 text-sm" onClick={requestLocation} type="button">
-        {state === "loading" ? "Checking..." : state === "allowed" ? "Allowed" : "Allow Location"}
+        {state === "loading" ? "Checking..." : state === "allowed" ? "Allowed" : state === "denied" ? "Location On / Try Again" : "Allow Location"}
       </button>
     </div>
   );

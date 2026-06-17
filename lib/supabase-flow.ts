@@ -734,6 +734,27 @@ async function sendFcmJobUpdated(job: MockJobRequest) {
   }
 }
 
+async function sendFcmChatMessage(input: Omit<MockRequestMessage, "id" | "createdAt">) {
+  if (typeof window === "undefined") return;
+  const job = getMockJob(input.jobId) || (await loadJobFromSupabase(input.jobId));
+  try {
+    await fetch("/api/push/chat-message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId: input.jobId,
+        senderRole: input.senderRole,
+        workerId: input.workerId || job?.workerId || "",
+        customerPhone: job?.customerPhone || "",
+        senderName: input.senderName,
+        message: input.message
+      })
+    });
+  } catch {
+    // Chat still saves even if push fails.
+  }
+}
+
 export async function createJobInSupabase(input: CreateJobInput) {
   if (!hasSupabaseConfig || !supabase) {
     return null;
@@ -985,6 +1006,7 @@ export async function sendRequestMessage(input: Omit<MockRequestMessage, "id" | 
     .maybeSingle();
 
   if (error || !data) return localMessage;
+  await sendFcmChatMessage(input);
   return mapRequestMessage(data as RequestMessageRow);
 }
 

@@ -20,30 +20,47 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || payload.data?.title || "MistriHub.In update";
-  const body = payload.notification?.body || payload.data?.body || "New job update received.";
-  self.registration.showNotification(title, {
+function showMistriHubNotification(payload) {
+  const data = payload.data || payload || {};
+  const title = payload.notification?.title || data.title || "MistriHub.In update";
+  const body = payload.notification?.body || data.body || "New job update received.";
+  const url = data.url || data.click_action || "/jobs";
+  return self.registration.showNotification(title, {
     body,
     icon: "/icon.svg",
     badge: "/icon.svg",
-    tag: payload.data?.jobId || "mistrihub-job",
-    data: { url: payload.data?.url || "/jobs" }
+    tag: data.jobId || data.requestId || "mistrihub-job",
+    data: { url }
   });
+}
+
+messaging.onBackgroundMessage((payload) => {
+  return showMistriHubNotification(payload);
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = { title: "MistriHub.In update", body: event.data?.text() || "New update received.", url: "/jobs" };
+  }
+  event.waitUntil(showMistriHubNotification(payload));
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const targetUrl = event.notification.data?.url || "/jobs";
+  const absoluteUrl = new URL(targetUrl, self.location.origin).href;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
         if ("focus" in client) {
-          client.navigate(targetUrl);
+          client.navigate(absoluteUrl);
           return client.focus();
         }
       }
-      return self.clients.openWindow(targetUrl);
+      return self.clients.openWindow(absoluteUrl);
     })
   );
 });

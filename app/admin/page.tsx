@@ -62,20 +62,22 @@ function whatsappLink(phone?: string | null) {
 }
 
 async function loadAdminData() {
-  if (!supabaseServer) return { jobs: [] as JobRow[], workers: [] as WorkerRow[], users: [] as ProfileRow[], alerts: [] as any[], whatsappAlerts: [] as any[] };
-  const [jobs, workers, users, alerts, whatsappAlerts] = await Promise.all([
+  if (!supabaseServer) return { jobs: [] as JobRow[], workers: [] as WorkerRow[], users: [] as ProfileRow[], alerts: [] as any[], whatsappAlerts: [] as any[], failedLogs: [] as any[] };
+  const [jobs, workers, users, alerts, whatsappAlerts, failedLogs] = await Promise.all([
     supabaseServer.from("job_requests").select("*").order("created_at", { ascending: false }).range(0, 49),
     supabaseServer.from("workers").select("id,name,category,city,phone,whatsapp,availability_status,service_radius").order("created_at", { ascending: false }).range(0, 199),
     supabaseServer.from("profiles").select("id,full_name,phone,email,role").order("full_name", { ascending: true }).range(0, 199),
     supabaseServer.from("notifications").select("*").eq("type", "admin_alert").order("created_at", { ascending: false }).range(0, 20),
-    supabaseServer.from("notifications").select("*").eq("type", "whatsapp_job_alert").order("created_at", { ascending: false }).range(0, 8)
+    supabaseServer.from("notifications").select("*").eq("type", "whatsapp_job_alert").order("created_at", { ascending: false }).range(0, 8),
+    supabaseServer.from("notification_logs").select("*").eq("status", "failed").order("created_at", { ascending: false }).range(0, 10)
   ]);
   return {
     jobs: (jobs.data || []) as JobRow[],
     workers: (workers.data || []) as WorkerRow[],
     users: (users.data || []) as ProfileRow[],
     alerts: alerts.data || [],
-    whatsappAlerts: whatsappAlerts.data || []
+    whatsappAlerts: whatsappAlerts.data || [],
+    failedLogs: failedLogs.data || []
   };
 }
 
@@ -110,7 +112,7 @@ function LoginPanel({ error }: { error?: string }) {
 export default async function AdminPage({ searchParams }: { searchParams?: { error?: string; wa?: string } }) {
   if (!isAdminAuthed()) return <LoginPanel error={searchParams?.error} />;
 
-  const { jobs, workers, users, alerts, whatsappAlerts } = await loadAdminData();
+  const { jobs, workers, users, alerts, whatsappAlerts, failedLogs } = await loadAdminData();
   const whatsappConfig = getWhatsAppConfigStatus();
   const openJobs = jobs.filter((job) => job.status === "Requested");
   const noResponseJobs = openJobs.filter((job) => minutesSince(job.created_at) >= 5);
@@ -207,6 +209,19 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
               ))}
             </div>
           </div>
+        ) : null}
+
+        {failedLogs.length ? (
+          <section className="mt-6 rounded-2xl border border-red-900 bg-red-950/30 p-4">
+            <h2 className="text-xl font-black text-red-100">Failed Notification Logs</h2>
+            <div className="mt-3 grid gap-2">
+              {failedLogs.map((log: any) => (
+                <p className="rounded-xl bg-slate-950 p-3 text-xs font-bold leading-5 text-red-100" key={log.id}>
+                  {log.channel} | Job {log.request_id} | Worker {log.worker_id || "n/a"} | {log.phone || "phone missing"} | {log.error_message || "Failed"}
+                </p>
+              ))}
+            </div>
+          </section>
         ) : null}
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
