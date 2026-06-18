@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { accountDisplayName } from "@/lib/display-name";
 import { clearMistriHubSession, findSavedAccount, findSavedWorkerRegistration, restoreWorkerRegistrationForAccount, saveMockAccount, saveWorkerRegistration } from "@/lib/mock-store";
-import { findUserAccountByLogin, findWorkerRegistrationByLogin } from "@/lib/supabase-flow";
+import { findUserAccountByLogin, findWorkerRegistrationByLogin, saveProfileToSupabase } from "@/lib/supabase-flow";
 import { useAccountState } from "./use-account-state";
 
 async function requestPushAfterLogin() {
@@ -21,6 +21,15 @@ async function requestPushAfterLogin() {
   }
 }
 
+function normalizeIdentifier(value: string) {
+  const trimmed = value.trim();
+  if (trimmed.includes("@")) {
+    return { email: trimmed.toLowerCase(), phone: "" };
+  }
+
+  return { email: undefined, phone: trimmed.replace(/\D/g, "").slice(-10) };
+}
+
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -32,7 +41,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const dashboardHref = account?.role === "worker" ? "/dashboard/worker" : "/dashboard/user";
   const loggedInName = accountDisplayName(account);
   const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  const isValidMobile = (value: string) => value.replace(/\D/g, "").length === 10;
+  const isValidMobile = (value: string) => value.replace(/\D/g, "").length >= 10;
 
   async function handleSubmit() {
     const cleanIdentifier = identifier.trim();
@@ -47,12 +56,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
     setLoading(true);
     setMessage("");
+    const normalizedIdentifier = normalizeIdentifier(cleanIdentifier);
     const loginIdentity = {
-      id: `local-${Date.now()}`,
+      id: globalThis.crypto?.randomUUID?.() || `local-${Date.now()}`,
       role: "user" as const,
       name: name.trim() || "User",
-      phone: cleanIdentifier.includes("@") ? "" : cleanIdentifier,
-      email: cleanIdentifier.includes("@") ? cleanIdentifier : undefined
+      phone: normalizedIdentifier.phone,
+      email: normalizedIdentifier.email
     };
     const savedAccount = findSavedAccount(loginIdentity) || (await findUserAccountByLogin(loginIdentity));
     const workerProfile = findSavedWorkerRegistration(loginIdentity) || (await findWorkerRegistrationByLogin(loginIdentity));
@@ -73,7 +83,16 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       return;
     }
     restoreWorkerRegistrationForAccount(account);
-    saveMockAccount(account);
+    if (isRegister && !savedAccount) {
+      const result = await saveProfileToSupabase(account);
+      if (!result.ok) {
+        setLoading(false);
+        setMessage(`Account save nahi hua. ${result.error || "Supabase profiles table check karo."}`);
+        return;
+      }
+    } else {
+      saveMockAccount(account);
+    }
     await requestPushAfterLogin();
     setLoading(false);
 

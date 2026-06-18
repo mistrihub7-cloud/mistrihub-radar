@@ -455,19 +455,30 @@ export async function loadAccountFromSupabase() {
 }
 
 export async function saveProfileToSupabase(account: MockAccount) {
-  saveMockAccount(account);
-  if (!hasSupabaseConfig || !supabase || !isUuid(account.id)) return { ok: true, fallback: true };
+  const normalizedPhone = normalizeContact(account.phone).slice(-10);
+  const normalizedEmail = normalizeEmail(account.email);
+  const existingAccount = await findUserAccountByLogin({ phone: normalizedPhone, email: normalizedEmail || undefined });
+  const profileId = existingAccount?.id || (isUuid(account.id) ? account.id : globalThis.crypto?.randomUUID?.() || account.id);
+  const accountToSave: MockAccount = {
+    ...account,
+    id: profileId,
+    phone: normalizedPhone || account.phone.trim(),
+    email: normalizedEmail || undefined
+  };
+
+  saveMockAccount(accountToSave);
+  if (!hasSupabaseConfig || !supabase || !isUuid(accountToSave.id)) return { ok: true, fallback: true };
 
   try {
     const { error } = await supabase.from("profiles").upsert({
-      id: account.id,
-      full_name: account.name,
-      phone: account.phone,
-      email: account.email || null,
-      role: account.role
+      id: accountToSave.id,
+      full_name: accountToSave.name,
+      phone: accountToSave.phone,
+      email: accountToSave.email || null,
+      role: accountToSave.role
     });
 
-    return { ok: !error, error: error?.message };
+    return { ok: !error, error: error?.message, account: accountToSave };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Profile save failed." };
   }
