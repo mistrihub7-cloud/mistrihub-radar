@@ -374,11 +374,34 @@ export async function sendBookingAlerts(
   await markWave(input.jobId, waveKey, note);
 
   if (options.adminAlert) {
+    const adminTitle = input.urgency === "Emergency" ? "Admin alert: emergency request" : "Admin alert: no response escalation";
+    const adminMessage = `Job ${input.jobId}: ${serviceLabel} in ${input.area || "customer area"}. ${note}`;
     await supabaseServer.from("notifications").insert({
       user_id: null,
-      title: input.urgency === "Emergency" ? "Admin alert: emergency request" : "Admin alert: no response escalation",
-      message: `Job ${input.jobId}: ${serviceLabel} in ${input.area || "customer area"}. ${note}`,
+      title: adminTitle,
+      message: adminMessage,
       type: "admin_alert"
+    });
+
+    const { data: adminTokens } = await supabaseServer
+      .from("push_tokens")
+      .select("token,role")
+      .eq("role", "admin")
+      .range(0, 25);
+    const adminPushResult = await sendPushToTokens({
+      tokens: ((adminTokens || []) as PushTokenRow[]).map((row) => row.token),
+      title: adminTitle,
+      body: adminMessage,
+      url: `/admin`,
+      jobId: input.jobId
+    });
+    await logNotificationAttempt({
+      requestId: input.jobId,
+      workerId: null,
+      phone: null,
+      channel: "web_push",
+      status: adminPushResult.ok ? "sent" : "failed",
+      errorMessage: adminPushResult.ok ? null : adminPushResult.reason || "Admin push token missing or failed."
     });
   }
 

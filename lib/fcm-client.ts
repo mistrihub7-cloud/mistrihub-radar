@@ -104,3 +104,46 @@ export async function registerFcmToken() {
   });
   return { ok: true, token };
 }
+
+export async function registerAdminFcmToken() {
+  if (typeof window === "undefined" || !hasFirebaseMessagingConfig()) {
+    return { ok: false, reason: "Firebase web config missing." };
+  }
+  if (!("Notification" in window) || Notification.permission !== "granted") {
+    return { ok: false, reason: "Notification permission not granted." };
+  }
+  if (!(await isSupported())) {
+    return { ok: false, reason: "FCM is not supported in this browser." };
+  }
+
+  const registration = await ensureFirebaseWorker();
+  const messaging = getMessaging(firebaseApp());
+  const token = await getToken(messaging, {
+    vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+    serviceWorkerRegistration: registration
+  });
+
+  if (!token) return { ok: false, reason: "FCM token not created." };
+
+  const subscription = await registration?.pushManager.getSubscription().catch(() => null);
+  const subscriptionJson = subscription?.toJSON() as PushSubscriptionJSON | undefined;
+  setupForegroundMessages();
+  const response = await fetch("/admin/push/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      token,
+      endpoint: subscriptionJson?.endpoint || "",
+      p256dh: subscriptionJson?.keys?.p256dh || "",
+      auth: subscriptionJson?.keys?.auth || ""
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    console.error("Admin push token server save failed", errorText.slice(0, 500));
+    return { ok: false, reason: errorText || "Admin push token server save failed." };
+  }
+  console.info("MistriHub admin FCM token saved", { hasEndpoint: Boolean(subscriptionJson?.endpoint) });
+  return { ok: true, token };
+}

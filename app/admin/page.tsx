@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminPushSetup } from "@/components/admin-push-setup";
 import { cleanCategoryName } from "@/lib/category-display";
 import { isAdminAuthed, isAdminConfigured } from "@/lib/admin-auth";
 import { getWhatsAppConfigStatus } from "@/lib/booking-alerts";
@@ -142,6 +143,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
   );
   const workerPushTokens = pushTokens.filter((token: any) => token.role === "worker");
   const userPushTokens = pushTokens.filter((token: any) => token.role === "user");
+  const adminPushTokens = pushTokens.filter((token: any) => token.role === "admin");
   const openJobs = jobs.filter((job) => job.status === "Requested");
   const noResponseJobs = openJobs.filter((job) => minutesSince(job.created_at) >= 5);
   const availableWorkers = workers.filter((worker) => (worker.availability_status || "Available Today") !== "Not Available");
@@ -164,13 +166,17 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
             ["Open requests", openJobs.length],
             ["No response 5m+", noResponseJobs.length],
             ["Active professionals", availableWorkers.length],
-            ["Users", users.length]
+            ["Admin devices", adminPushTokens.length || 0]
           ].map(([label, value]) => (
             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4" key={label}>
               <p className="text-3xl font-black text-blue-300">{value}</p>
               <p className="mt-1 text-sm font-bold text-slate-300">{label}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-6">
+          <AdminPushSetup />
         </div>
 
         <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-4">
