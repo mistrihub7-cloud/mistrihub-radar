@@ -3,7 +3,7 @@ import Link from "next/link";
 import { cleanCategoryName } from "@/lib/category-display";
 import { isAdminAuthed, isAdminConfigured } from "@/lib/admin-auth";
 import { getWhatsAppConfigStatus } from "@/lib/booking-alerts";
-import { hasFirebaseAdminConfig } from "@/lib/firebase-admin";
+import { firebaseAdminMessaging, getFirebaseAdminError, hasFirebaseAdminConfig } from "@/lib/firebase-admin";
 import { supabaseServer } from "@/lib/supabase-server";
 import { escalateJobFromAdmin, loginAdmin, logoutAdmin, testPushFromAdmin, testWhatsAppFromAdmin } from "./actions";
 
@@ -130,7 +130,9 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
 
   const { jobs, workers, users, alerts, whatsappAlerts, failedLogs, pushLogs, pushTokens } = await loadAdminData();
   const whatsappConfig = getWhatsAppConfigStatus();
-  const firebaseAdminReady = hasFirebaseAdminConfig();
+  const firebaseAdminConfigured = hasFirebaseAdminConfig();
+  const firebaseAdminReady = Boolean(firebaseAdminMessaging());
+  const firebaseAdminError = getFirebaseAdminError();
   const fcmPublicReady = Boolean(
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
       process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
@@ -253,7 +255,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
 
           <div className="mt-4 grid gap-3 md:grid-cols-4">
             {[
-              ["Firebase Admin", firebaseAdminReady ? "Present" : "Missing"],
+              ["Firebase Admin", firebaseAdminError ? "Invalid key" : firebaseAdminConfigured && firebaseAdminReady ? "Present" : "Missing"],
               ["Public FCM config", fcmPublicReady ? "Present" : "Missing"],
               ["Worker tokens", workerPushTokens.length],
               ["User tokens", userPushTokens.length]
@@ -278,6 +280,11 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
             <input className="h-11 rounded-xl border border-slate-700 bg-slate-950 px-4 text-sm font-bold text-white" name="target" placeholder="Worker phone or worker id for test push" />
             <button className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-black text-white" type="submit">Send Test Notification</button>
           </form>
+          {firebaseAdminError ? (
+            <p className="mt-3 rounded-xl bg-red-950 p-3 text-xs font-bold leading-5 text-red-100">
+              Firebase Admin key invalid hai: {firebaseAdminError}. Vercel me FIREBASE_PRIVATE_KEY ko service account private_key ke exact value ke saath save karo.
+            </p>
+          ) : null}
 
           {pushTokens.length ? (
             <div className="mt-4 grid gap-2">
