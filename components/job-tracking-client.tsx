@@ -239,6 +239,36 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
     };
   }, [jobId]);
 
+  useEffect(() => {
+    let cancelled = false;
+    let inFlight = false;
+
+    async function triggerRetryWave() {
+      if (inFlight || getMockAccount()?.role === "worker") return;
+      inFlight = true;
+      try {
+        const latestJob = await loadJobFromSupabase(jobId);
+        if (!latestJob || !["Requested", "Need More Details"].includes(latestJob.status)) return;
+        await fetch("/api/notifications/retry-job", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobId })
+        }).catch(() => null);
+        if (!cancelled) setDispatchEvents(await loadJobDispatchEvents(jobId));
+      } finally {
+        inFlight = false;
+      }
+    }
+
+    const firstRun = window.setTimeout(triggerRetryWave, 12000);
+    const timer = window.setInterval(triggerRetryWave, 30000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(firstRun);
+      window.clearInterval(timer);
+    };
+  }, [jobId]);
+
   if (loading) {
     return <div className="card p-6 text-center text-sm font-bold text-slate-500">Loading job...</div>;
   }
