@@ -105,7 +105,7 @@ export function BookingForm({ worker, initialService }: BookingFormProps) {
         return;
       }
       const job = supabaseJob || createMockJob(input);
-      router.push(`/jobs/${job.id}`);
+      router.push(`/jobs/${job.id}#live-feed`);
     } catch {
       setError("Request create nahi hua. Please dobara try karo.");
     } finally {

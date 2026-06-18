@@ -26,7 +26,9 @@ export function JobChat({
   const [message, setMessage] = useState("");
   const [selectedWorkerId, setSelectedWorkerId] = useState("");
   const [sending, setSending] = useState(false);
+  const chatRef = useRef<HTMLDivElement | null>(null);
   const messagesListRef = useRef<HTMLDivElement | null>(null);
+  const pageScrolledToChatRef = useRef(false);
   const account = typeof window !== "undefined" ? getMockAccount() : null;
   const workerProfile = typeof window !== "undefined" && account?.role === "worker" ? getWorkerRegistration() : null;
   const scopedWorkerId = account?.role === "worker" ? workerProfile?.id : undefined;
@@ -53,6 +55,10 @@ export function JobChat({
 
   useEffect(() => {
     if (!messages.length) return;
+    if (!pageScrolledToChatRef.current) {
+      pageScrolledToChatRef.current = true;
+      window.setTimeout(() => chatRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    }
     const scrollToLatestMessage = () => {
       messagesListRef.current?.scrollTo({
         behavior: "smooth",
@@ -123,7 +129,7 @@ export function JobChat({
   }, [account?.role, conversations, lockedWorkerId, selectedWorkerId]);
 
   return (
-    <div className="card p-5" id="job-chat">
+    <div className="card scroll-mt-24 p-5" id="job-chat" ref={chatRef}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-black">Job Chat</h2>

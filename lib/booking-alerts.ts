@@ -243,7 +243,7 @@ async function loadMatchingWorkers(input: BookingAlertInput, radiusKm: number, m
           { latitude: worker.latitude as number, longitude: worker.longitude as number }
         );
         const workerRadius = Number(worker.service_radius || 10);
-        if (calculatedDistance > radiusKm || calculatedDistance > workerRadius) return null;
+        if (!input.workerId && (calculatedDistance > radiusKm || calculatedDistance > workerRadius)) return null;
       }
 
       return { ...worker, distanceKm: calculatedDistance };
@@ -370,7 +370,10 @@ export async function sendBookingAlerts(
     });
   }
 
-  const note = `${workers.length} matching professionals notified within ${radiusKm} km. WhatsApp sent: ${whatsappSent}. Browser push sent: ${pushSent}.`;
+  const note =
+    input.workerId && waveKey.toLowerCase().includes("selected")
+      ? `${workers.length} selected professional notified. WhatsApp sent: ${whatsappSent}. Browser push sent: ${pushSent}.`
+      : `${workers.length} matching professionals notified within ${radiusKm} km. WhatsApp sent: ${whatsappSent}. Browser push sent: ${pushSent}.`;
   await markWave(input.jobId, waveKey, note);
 
   if (options.adminAlert) {

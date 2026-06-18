@@ -63,9 +63,15 @@ export async function GET(request: Request) {
       continue;
     }
 
-    if (job.worker_id && age >= 2) {
-      results.push(await sendBookingAlerts(input, { radiusKm: 5, maxWorkers: 10, waveKey: "Direct fallback 5km alert", excludeAlreadyNotified: true }));
-      if (age < 5) continue;
+    if (job.worker_id) {
+      if (age >= 10) {
+        results.push(await sendBookingAlerts(input, { radiusKm: 20, maxWorkers: 20, waveKey: "Direct fallback 20km admin alert", excludeAlreadyNotified: true, adminAlert: true }));
+      } else if (age >= 5) {
+        results.push(await sendBookingAlerts(input, { radiusKm: 15, maxWorkers: 15, waveKey: "Direct fallback 15km alert", excludeAlreadyNotified: true }));
+      } else if (age >= 2) {
+        results.push(await sendBookingAlerts(input, { radiusKm: 10, maxWorkers: 10, waveKey: "Direct fallback 10km alert", excludeAlreadyNotified: true }));
+      }
+      continue;
     }
 
     if (age >= 10) {

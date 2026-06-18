@@ -50,42 +50,74 @@ function formatCompletedDate(value?: string) {
 
 function parseAlertNote(note: string) {
   const match = note.match(/(\d+)\s+matching professionals notified within\s+(\d+)\s+km/i);
-  if (!match) return null;
-  return { count: Number(match[1]), radius: Number(match[2]) };
+  if (match) return { count: Number(match[1]), radius: Number(match[2]), selected: false };
+  const selectedMatch = note.match(/(\d+)\s+selected professional notified/i);
+  if (selectedMatch) return { count: Number(selectedMatch[1]), radius: 0, selected: true };
+  return null;
 }
 
-function minutesUntil(targetMinutes: number, createdAt: string) {
-  const remainingMs = new Date(createdAt).getTime() + targetMinutes * 60000 - Date.now();
+function formatCountdown(remainingMs: number) {
   if (remainingMs <= 0) return "";
   const seconds = Math.ceil(remainingMs / 1000);
   if (seconds < 60) return `${seconds}s`;
-  return `${Math.ceil(seconds / 60)} min`;
+  const minutes = Math.floor(seconds / 60);
+  const leftoverSeconds = seconds % 60;
+  return leftoverSeconds ? `${minutes}m ${leftoverSeconds}s` : `${minutes}m`;
+}
+
+function requestPlan(job: MockJobRequest) {
+  if (job.urgency === "Emergency") {
+    return [
+      { minute: 0, radius: 15, label: "15 km instant", statusNeedle: "Emergency 15km alert", admin: false },
+      { minute: 2, radius: 20, label: "20 km + admin", statusNeedle: "Emergency 20km admin alert", admin: true }
+    ];
+  }
+
+  if (job.workerId && job.status === "Requested") {
+    return [
+      { minute: 0, radius: 0, label: "Selected professional instant", statusNeedle: "Selected professional alert", admin: false },
+      { minute: 2, radius: 10, label: "10 km", statusNeedle: "Direct fallback 10km alert", admin: false },
+      { minute: 5, radius: 15, label: "15 km", statusNeedle: "Direct fallback 15km alert", admin: false },
+      { minute: 10, radius: 20, label: "20 km + admin", statusNeedle: "Direct fallback 20km admin alert", admin: true }
+    ];
+  }
+
+  return [
+    { minute: 0, radius: 5, label: "5 km instant", statusNeedle: "Initial 5km alert", admin: false },
+    { minute: 2, radius: 10, label: "10 km", statusNeedle: "Retry 10km alert", admin: false },
+    { minute: 5, radius: 15, label: "15 km", statusNeedle: "Retry 15km alert", admin: false },
+    { minute: 10, radius: 20, label: "20 km + admin", statusNeedle: "Retry 20km alert", admin: true }
+  ];
 }
 
 function DispatchStatusCard({ events, job }: { events: JobDispatchEvent[]; job: MockJobRequest }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const alertEvents = events.filter((event) => event.status.toLowerCase().includes("alert"));
   const latestAlert = alertEvents[alertEvents.length - 1];
   const latestInfo = latestAlert ? parseAlertNote(latestAlert.note) : null;
-  const isEmergency = job.urgency === "Emergency";
   const isOpen = ["Requested", "Need More Details"].includes(job.status);
   const isAccepted = job.status === "Accepted";
   const confirmed = ["Quote Accepted", "On The Way", "In Progress"].includes(job.status);
   const completed = job.status === "Completed";
-  const nextNormalWave = [
-    { minute: 2, radius: 10, label: "10 km" },
-    { minute: 5, radius: 15, label: "15 km" },
-    { minute: 10, radius: 20, label: "20 km + admin" }
-  ].find((wave) => !latestInfo?.radius || wave.radius > latestInfo.radius);
-  const nextWave = isEmergency
-    ? latestInfo?.radius && latestInfo.radius >= 20
-      ? ""
-      : `20 km + admin ${minutesUntil(2, job.createdAt) ? `in ${minutesUntil(2, job.createdAt)}` : "checking now"}`
-    : nextNormalWave
-      ? `${nextNormalWave.label} ${minutesUntil(nextNormalWave.minute, job.createdAt) ? `in ${minutesUntil(nextNormalWave.minute, job.createdAt)}` : "checking now"}`
-      : "";
+  const plan = requestPlan(job);
+  const completedWave = (needle: string) => alertEvents.some((event) => event.status.toLowerCase().includes(needle.toLowerCase()));
+  const nextWave = plan.find((wave) => !completedWave(wave.statusNeedle));
+  const nextWaveRemaining = nextWave ? new Date(job.createdAt).getTime() + nextWave.minute * 60000 - now : 0;
+  const nextWaveCountdown = nextWave ? formatCountdown(nextWaveRemaining) : "";
+  const totalNotified = alertEvents.reduce((sum, event) => sum + (parseAlertNote(event.note)?.count || 0), 0);
+  const latestRadiusLabel = latestInfo?.selected
+    ? "selected professional"
+    : latestInfo
+      ? `${latestInfo.radius} km`
+      : plan[0]?.label || "nearby";
 
   return (
-    <div className="card border-brand-100 bg-gradient-to-br from-brand-50 to-white p-5">
+    <div className="card scroll-mt-24 border-brand-100 bg-gradient-to-br from-brand-50 to-white p-5" id="live-feed">
       <div className="flex items-start gap-3">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-600 text-white">
           <Icon className="h-6 w-6" name="bell" />
@@ -101,18 +133,53 @@ function DispatchStatusCard({ events, job }: { events: JobDispatchEvent[]; job: 
               Nearby matching category
             </span>
             <span className="rounded-2xl bg-white p-3 shadow-sm">
-              <b className="block text-slate-950">Workers Notified</b>
-              {latestInfo ? `${latestInfo.count} within ${latestInfo.radius} km` : "Sending alerts"}
+              <b className="block text-slate-950">Professionals Notified</b>
+              {totalNotified ? `${totalNotified} total, latest ${latestRadiusLabel}` : "Sending first alert"}
             </span>
             <span className="rounded-2xl bg-white p-3 shadow-sm">
               <b className="block text-slate-950">{isOpen ? "Waiting Response" : "Response received"}</b>
               {isOpen ? "We are still checking" : displayStatus(job.status)}
             </span>
           </div>
+          <div className="mt-4 space-y-2">
+            {plan.map((wave) => {
+              const done = completedWave(wave.statusNeedle);
+              const remaining = new Date(job.createdAt).getTime() + wave.minute * 60000 - now;
+              const active = !done && remaining <= 0 && isOpen;
+              return (
+                <div className="flex items-center gap-3 rounded-2xl bg-white p-3 text-sm shadow-sm" key={wave.statusNeedle}>
+                  <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black ${done ? "bg-emerald-600 text-white" : active ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600"}`}>
+                    {done ? "✓" : active ? "!" : wave.minute}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black text-slate-950">{wave.label}</p>
+                    <p className="text-xs font-bold text-slate-500">
+                      {done ? "Alert sent" : active ? "Checking now" : `Next in ${formatCountdown(remaining)}`}
+                      {wave.admin ? " - admin also alerted" : ""}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           {isOpen ? (
             <p className="mt-3 rounded-2xl bg-white p-3 text-xs font-black leading-5 text-brand-700 shadow-sm">
-              {nextWave ? `No response mila to next alert ${nextWave}.` : "Maximum nearby range notify ho chuka hai. Admin support bhi check karega."}
+              {nextWave
+                ? `No response mila to next alert ${nextWave.label}${nextWaveCountdown ? ` in ${nextWaveCountdown}` : " checking now"}.`
+                : "Maximum nearby range notify ho chuka hai. Admin support bhi check karega."}
             </p>
+          ) : null}
+          {alertEvents.length ? (
+            <div className="mt-4 rounded-2xl bg-slate-950 p-3 text-xs font-bold leading-5 text-white">
+              <p className="font-black text-blue-200">Alert feed</p>
+              <div className="mt-2 space-y-2">
+                {alertEvents.slice(-4).reverse().map((event) => (
+                  <p key={`${event.status}-${event.createdAt}`}>
+                    <span className="text-blue-200">{event.status}:</span> {event.note}
+                  </p>
+                ))}
+              </div>
+            </div>
           ) : null}
         </div>
       </div>
@@ -126,6 +193,23 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
   const [isWorkerMode, setIsWorkerMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState("");
+
+  useEffect(() => {
+    if (!job || typeof window === "undefined" || window.location.hash !== "#live-feed") return;
+    const timer = window.setTimeout(() => {
+      document.getElementById("live-feed")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [job?.id]);
+
+  useEffect(() => {
+    if (!job || typeof window === "undefined") return;
+    if (job.status !== "Accepted") return;
+    const timer = window.setTimeout(() => {
+      document.getElementById("job-chat")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [job?.status, job?.workerId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -346,15 +430,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
                 </p>
               </>
             ) : (
-              <>
-                <h2 className="font-black">Nearby workers notified successfully</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Searching nearby matching {serviceLabel} professionals. Active professionals ko category aur distance ke hisab se alert bheja gaya hai.
-                </p>
-                <p className="mt-3 rounded-2xl bg-blue-50 p-3 text-xs font-black leading-5 text-brand-700">
-                  Waiting for response. Agar 5 minutes mein response nahi milta, MistriHub.In additional nearby professionals ko retry alert bhejega.
-                </p>
-              </>
+              null
             )}
           </div>
         )}
