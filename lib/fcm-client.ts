@@ -92,6 +92,15 @@ export async function registerFcmToken() {
     })
   });
 
-  if (!response.ok) return { ok: false, reason: "Push token server save failed." };
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    console.error("Push token server save failed", errorText.slice(0, 500));
+    return { ok: false, reason: errorText || "Push token server save failed." };
+  }
+  console.info("MistriHub FCM token saved", {
+    role: account?.role || workerProfile?.role || "user",
+    workerId: workerProfile?.id || "",
+    hasEndpoint: Boolean(subscriptionJson?.endpoint)
+  });
   return { ok: true, token };
 }

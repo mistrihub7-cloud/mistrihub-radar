@@ -3,8 +3,9 @@ import Link from "next/link";
 import { cleanCategoryName } from "@/lib/category-display";
 import { isAdminAuthed, isAdminConfigured } from "@/lib/admin-auth";
 import { getWhatsAppConfigStatus } from "@/lib/booking-alerts";
+import { hasFirebaseAdminConfig } from "@/lib/firebase-admin";
 import { supabaseServer } from "@/lib/supabase-server";
-import { escalateJobFromAdmin, loginAdmin, logoutAdmin, testWhatsAppFromAdmin } from "./actions";
+import { escalateJobFromAdmin, loginAdmin, logoutAdmin, testPushFromAdmin, testWhatsAppFromAdmin } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -62,14 +63,27 @@ function whatsappLink(phone?: string | null) {
 }
 
 async function loadAdminData() {
-  if (!supabaseServer) return { jobs: [] as JobRow[], workers: [] as WorkerRow[], users: [] as ProfileRow[], alerts: [] as any[], whatsappAlerts: [] as any[], failedLogs: [] as any[] };
-  const [jobs, workers, users, alerts, whatsappAlerts, failedLogs] = await Promise.all([
+  if (!supabaseServer) {
+    return {
+      jobs: [] as JobRow[],
+      workers: [] as WorkerRow[],
+      users: [] as ProfileRow[],
+      alerts: [] as any[],
+      whatsappAlerts: [] as any[],
+      failedLogs: [] as any[],
+      pushLogs: [] as any[],
+      pushTokens: [] as any[]
+    };
+  }
+  const [jobs, workers, users, alerts, whatsappAlerts, failedLogs, pushLogs, pushTokens] = await Promise.all([
     supabaseServer.from("job_requests").select("*").order("created_at", { ascending: false }).range(0, 49),
     supabaseServer.from("workers").select("id,name,category,city,phone,whatsapp,availability_status,service_radius").order("created_at", { ascending: false }).range(0, 199),
     supabaseServer.from("profiles").select("id,full_name,phone,email,role").order("full_name", { ascending: true }).range(0, 199),
     supabaseServer.from("notifications").select("*").eq("type", "admin_alert").order("created_at", { ascending: false }).range(0, 20),
     supabaseServer.from("notifications").select("*").eq("type", "whatsapp_job_alert").order("created_at", { ascending: false }).range(0, 8),
-    supabaseServer.from("notification_logs").select("*").eq("status", "failed").order("created_at", { ascending: false }).range(0, 10)
+    supabaseServer.from("notification_logs").select("*").eq("status", "failed").order("created_at", { ascending: false }).range(0, 10),
+    supabaseServer.from("notification_logs").select("*").eq("channel", "web_push").order("created_at", { ascending: false }).range(0, 20),
+    supabaseServer.from("push_tokens").select("id,role,name,phone,service,worker_id,endpoint,last_seen,updated_at,created_at").order("updated_at", { ascending: false }).range(0, 30)
   ]);
   return {
     jobs: (jobs.data || []) as JobRow[],
@@ -77,7 +91,9 @@ async function loadAdminData() {
     users: (users.data || []) as ProfileRow[],
     alerts: alerts.data || [],
     whatsappAlerts: whatsappAlerts.data || [],
-    failedLogs: failedLogs.data || []
+    failedLogs: failedLogs.data || [],
+    pushLogs: pushLogs.data || [],
+    pushTokens: pushTokens.data || []
   };
 }
 
@@ -109,11 +125,21 @@ function LoginPanel({ error }: { error?: string }) {
   );
 }
 
-export default async function AdminPage({ searchParams }: { searchParams?: { error?: string; wa?: string } }) {
+export default async function AdminPage({ searchParams }: { searchParams?: { error?: string; wa?: string; push?: string } }) {
   if (!isAdminAuthed()) return <LoginPanel error={searchParams?.error} />;
 
-  const { jobs, workers, users, alerts, whatsappAlerts, failedLogs } = await loadAdminData();
+  const { jobs, workers, users, alerts, whatsappAlerts, failedLogs, pushLogs, pushTokens } = await loadAdminData();
   const whatsappConfig = getWhatsAppConfigStatus();
+  const firebaseAdminReady = hasFirebaseAdminConfig();
+  const fcmPublicReady = Boolean(
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
+      process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID &&
+      process.env.NEXT_PUBLIC_FIREBASE_APP_ID &&
+      process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
+  );
+  const workerPushTokens = pushTokens.filter((token: any) => token.role === "worker");
+  const userPushTokens = pushTokens.filter((token: any) => token.role === "user");
   const openJobs = jobs.filter((job) => job.status === "Requested");
   const noResponseJobs = openJobs.filter((job) => minutesSince(job.created_at) >= 5);
   const availableWorkers = workers.filter((worker) => (worker.availability_status || "Available Today") !== "Not Available");
@@ -194,6 +220,86 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
               {whatsappAlerts.slice(0, 5).map((alert: any) => (
                 <p className="rounded-xl bg-slate-950 p-3 text-xs font-bold leading-5 text-slate-300" key={alert.id}>
                   {alert.message}
+                </p>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-black">Browser / PWA Push Diagnostics</h2>
+              <p className="mt-1 text-sm font-bold text-slate-300">
+                Background notification ke liye worker mobile me notification permission Allow, saved FCM token, Firebase Admin env aur active service worker zaroori hai.
+              </p>
+            </div>
+            <span className={`rounded-full px-3 py-1 text-xs font-black ${firebaseAdminReady && fcmPublicReady && workerPushTokens.length ? "bg-emerald-900 text-emerald-100" : "bg-red-950 text-red-100"}`}>
+              {firebaseAdminReady && fcmPublicReady && workerPushTokens.length ? "Push ready" : "Push needs check"}
+            </span>
+          </div>
+
+          {searchParams?.push ? (
+            <p className={`mt-4 rounded-xl p-3 text-sm font-black ${searchParams.push === "sent" ? "bg-emerald-950 text-emerald-100" : "bg-red-950 text-red-100"}`}>
+              {searchParams.push === "sent"
+                ? "Test push sent. Worker phone/PWA par notification check karo."
+                : searchParams.push === "missing"
+                  ? "Test ke liye worker phone ya worker id bharna zaroori hai."
+                  : searchParams.push === "notoken"
+                    ? "Is worker/phone ka saved FCM token nahi mila. Worker ko login karke notification Allow karna hoga."
+                    : "Test push failed. Recent push logs niche dekho."}
+            </p>
+          ) : null}
+
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            {[
+              ["Firebase Admin", firebaseAdminReady ? "Present" : "Missing"],
+              ["Public FCM config", fcmPublicReady ? "Present" : "Missing"],
+              ["Worker tokens", workerPushTokens.length],
+              ["User tokens", userPushTokens.length]
+            ].map(([label, value]) => (
+              <div className="rounded-xl bg-slate-950 p-3" key={label}>
+                <p className="text-xs font-bold text-slate-400">{label}</p>
+                <p className="mt-1 break-words text-sm font-black text-white">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <a className="rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm font-black text-blue-200" href="/sw.js" rel="noreferrer" target="_blank">
+              Active service worker: /sw.js
+            </a>
+            <a className="rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm font-black text-blue-200" href="/firebase-messaging-sw.js" rel="noreferrer" target="_blank">
+              Legacy Firebase worker check: /firebase-messaging-sw.js
+            </a>
+          </div>
+
+          <form action={testPushFromAdmin} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <input className="h-11 rounded-xl border border-slate-700 bg-slate-950 px-4 text-sm font-bold text-white" name="target" placeholder="Worker phone or worker id for test push" />
+            <button className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-black text-white" type="submit">Send Test Notification</button>
+          </form>
+
+          {pushTokens.length ? (
+            <div className="mt-4 grid gap-2">
+              <h3 className="font-black text-slate-100">Recent Saved FCM Tokens</h3>
+              {pushTokens.slice(0, 8).map((token: any) => (
+                <p className="rounded-xl bg-slate-950 p-3 text-xs font-bold leading-5 text-slate-300" key={token.id}>
+                  {token.role} | {token.name || "No name"} | {token.phone || "No phone"} | {token.service || "No service"} | worker {token.worker_id || "n/a"} | last seen {token.last_seen || token.updated_at || token.created_at || "n/a"} | endpoint {token.endpoint ? "saved" : "missing"}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-xl bg-red-950 p-3 text-sm font-black text-red-100">
+              Saved FCM token zero hai. Worker phone par login karo, notification Allow karo, phir dashboard open rakho ek baar.
+            </p>
+          )}
+
+          {pushLogs.length ? (
+            <div className="mt-4 grid gap-2">
+              <h3 className="font-black text-slate-100">Recent Push Logs</h3>
+              {pushLogs.slice(0, 8).map((log: any) => (
+                <p className={`rounded-xl bg-slate-950 p-3 text-xs font-bold leading-5 ${log.status === "sent" ? "text-emerald-100" : "text-red-100"}`} key={log.id}>
+                  {log.status} | Job {log.request_id || "n/a"} | Worker {log.worker_id || "n/a"} | {log.phone || "phone missing"} | {log.error_message || "No error"}
                 </p>
               ))}
             </div>

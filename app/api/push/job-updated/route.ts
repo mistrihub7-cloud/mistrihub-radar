@@ -42,5 +42,14 @@ export async function POST(request: Request) {
     jobId: payload.jobId
   });
 
+  await supabaseServer.from("notification_logs").insert({
+    request_id: payload.jobId,
+    worker_id: payload.workerId || null,
+    phone: cleanCustomerPhone || null,
+    channel: "web_push",
+    status: result.sent > 0 ? "sent" : "failed",
+    error_message: result.sent > 0 ? null : result.reason || "No matching token or Firebase status push failed"
+  });
+
   return NextResponse.json({ matched: tokens.length, ...result });
 }

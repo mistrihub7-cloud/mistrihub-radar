@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { clearAdminSession, isAdminAuthed, setAdminSession, validateAdminCredentials } from "@/lib/admin-auth";
 import { sendBookingAlerts, sendWhatsAppTestMessage, type BookingAlertInput } from "@/lib/booking-alerts";
+import { normalizePhone, sendPushToTokens } from "@/lib/push-server";
 import { supabaseServer } from "@/lib/supabase-server";
 
 export async function loginAdmin(formData: FormData) {
@@ -77,4 +78,52 @@ export async function testWhatsAppFromAdmin(formData: FormData) {
   }
   revalidatePath("/admin");
   redirect(result.ok ? "/admin?wa=sent" : "/admin?wa=failed");
+}
+
+export async function testPushFromAdmin(formData: FormData) {
+  if (!isAdminAuthed()) redirect("/admin");
+  if (!supabaseServer) redirect("/admin?push=failed");
+
+  const target = String(formData.get("target") || "").trim();
+  if (!target) redirect("/admin?push=missing");
+
+  const cleanPhone = normalizePhone(target);
+  const { data, error } = await supabaseServer
+    .from("push_tokens")
+    .select("token,worker_id,phone,role,name,service")
+    .or(cleanPhone ? `phone.ilike.%${cleanPhone}%,worker_id.eq.${target},account_id.eq.${target}` : `worker_id.eq.${target},account_id.eq.${target}`)
+    .range(0, 20);
+
+  if (error || !data?.length) {
+    await supabaseServer.from("notification_logs").insert({
+      request_id: "admin-push-test",
+      worker_id: target,
+      phone: cleanPhone || target,
+      channel: "web_push",
+      status: "failed",
+      error_message: error?.message || "No saved FCM token found for this phone/worker."
+    });
+    revalidatePath("/admin");
+    redirect("/admin?push=notoken");
+  }
+
+  const result = await sendPushToTokens({
+    tokens: data.map((row: any) => row.token).filter(Boolean),
+    title: "MistriHub.In test notification",
+    body: "Agar ye notification dikha, background push token connected hai.",
+    url: "/worker-request",
+    jobId: "admin-push-test"
+  });
+
+  await supabaseServer.from("notification_logs").insert({
+    request_id: "admin-push-test",
+    worker_id: data[0]?.worker_id || target,
+    phone: data[0]?.phone || cleanPhone || target,
+    channel: "web_push",
+    status: result.sent > 0 ? "sent" : "failed",
+    error_message: result.sent > 0 ? null : result.reason || "Firebase push test failed"
+  });
+
+  revalidatePath("/admin");
+  redirect(result.sent > 0 ? "/admin?push=sent" : "/admin?push=failed");
 }

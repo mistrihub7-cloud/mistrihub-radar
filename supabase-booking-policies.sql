@@ -37,6 +37,7 @@ create table if not exists public.worker_reviews (
 create table if not exists public.push_tokens (
   id uuid primary key default gen_random_uuid(),
   token text not null unique,
+  registration_key text,
   user_id text,
   account_id text,
   role text not null default 'user',
@@ -53,11 +54,22 @@ create table if not exists public.push_tokens (
 );
 
 alter table if exists public.push_tokens
+drop constraint if exists push_tokens_token_key;
+
+alter table if exists public.push_tokens
+add column if not exists registration_key text,
 add column if not exists user_id text,
 add column if not exists endpoint text,
 add column if not exists p256dh text,
 add column if not exists auth text,
 add column if not exists last_seen timestamptz;
+
+update public.push_tokens
+set registration_key = coalesce(registration_key, token || ':' || role || ':' || coalesce(worker_id, account_id, phone, 'device'))
+where registration_key is null;
+
+create unique index if not exists push_tokens_registration_key_idx
+on public.push_tokens (registration_key);
 
 create table if not exists public.user_locations (
   id uuid primary key default gen_random_uuid(),

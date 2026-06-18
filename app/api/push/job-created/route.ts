@@ -18,10 +18,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Job ID and service required." }, { status: 400 });
   }
   if (!supabaseServer) return NextResponse.json({ ok: false, error: "Supabase server config missing." }, { status: 500 });
+  const db = supabaseServer;
 
-  const { data, error } = await supabaseServer
+  const { data, error } = await db
     .from("push_tokens")
-    .select("token,role,service")
+    .select("token,role,service,worker_id,phone")
     .eq("role", "worker")
     .eq("service", payload.service)
     .range(0, 999);
@@ -37,6 +38,19 @@ export async function POST(request: Request) {
     url: `/jobs/${payload.jobId}`,
     jobId: payload.jobId
   });
+
+  await Promise.all(
+    rows.map((row) =>
+      db.from("notification_logs").insert({
+        request_id: payload.jobId,
+        worker_id: row.worker_id || null,
+        phone: row.phone || null,
+        channel: "web_push",
+        status: result.sent > 0 ? "sent" : "failed",
+        error_message: result.sent > 0 ? null : result.reason || "No matching token or Firebase job push failed"
+      })
+    )
+  );
 
   return NextResponse.json({ matched: rows.length, ...result });
 }
