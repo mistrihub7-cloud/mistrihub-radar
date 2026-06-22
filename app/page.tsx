@@ -198,7 +198,7 @@ export default async function HomePage() {
                 Find Trusted <span className="text-brand-600">Professionals Near You</span>
               </h1>
               <p className="mt-4 text-sm leading-6 text-slate-600 md:text-xl">
-                Electrical Expert, Plumbing Expert, Auto Mechanic, AC Service Expert, Driver & Car Service and more.
+                Electrical Expert, Plumbing Expert, Auto Mechanic, A/C Service Technician, Driver & Car Service and more.
               </p>
             </div>
             <div className="md:hidden">

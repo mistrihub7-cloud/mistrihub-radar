@@ -18,7 +18,8 @@ export function professionalCategoryName(name?: string | null) {
     Plumber: "Plumbing Expert",
     Mechanic: "Auto Mechanic",
     Painter: "Painting Professional",
-    "AC Repair": "AC Service Expert",
+    "AC Repair": "A/C Service Technician",
+    "AC Service Expert": "A/C Service Technician",
     Carpenter: "Woodwork Expert",
     Labour: "Skilled Professional",
     Helper: "Support Assistant",
@@ -31,7 +32,8 @@ export function professionalCategoryName(name?: string | null) {
     Mason: "Construction Mason",
     Welder: "Welding Expert",
     "RO Service": "RO Water Technician",
-    CCTV: "CCTV Security Expert",
+    CCTV: "CCTV Security Technician",
+    "CCTV Security Expert": "CCTV Security Technician",
     "Tile / Marble": "Tile & Marble Expert",
     "Tile Marble": "Tile & Marble Expert"
   };

@@ -42,10 +42,6 @@ export default async function WorkersPage({ searchParams }: { searchParams?: { s
             <h1 className="mt-1 break-words text-2xl font-black text-slate-950 md:text-3xl">Experts serving your area</h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">Nearby trusted professionals available for booking requests.</p>
 
-            <div className="mt-5 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
-              <b className="block">Emergency requests</b>
-              Matching experts in the saved service area receive website and WhatsApp notifications first. Other added professionals stay visible for discovery.
-            </div>
           </aside>
 
           <section>

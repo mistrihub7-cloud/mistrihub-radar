@@ -11,11 +11,12 @@ import { JobChat } from "./job-chat";
 import { JobReviewForm } from "./job-review-form";
 import { Icon } from "./simple-icons";
 
-const timeline = ["Requested", "Accepted", "On The Way", "In Progress", "Completed", "Declined", "Cancelled"];
+const timeline = ["Accepted", "In Progress", "Completed", "Cancelled"];
 
 function normalizeTimelineStatus(status: MockJobRequest["status"]) {
-  if (status === "Quote Sent" || status === "Quote Accepted") return "Accepted";
-  if (status === "Quote Rejected") return "Declined";
+  if (["Requested", "Need More Details", "Accepted", "Quote Sent", "Quote Accepted"].includes(status)) return "Accepted";
+  if (status === "On The Way") return "In Progress";
+  if (status === "Quote Rejected" || status === "Declined") return "Cancelled";
   return status;
 }
 
