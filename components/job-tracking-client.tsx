@@ -65,7 +65,17 @@ function formatCountdown(remainingMs: number) {
   return leftoverSeconds ? `${minutes}m ${leftoverSeconds}s` : `${minutes}m`;
 }
 
-function requestPlan(job: MockJobRequest) {
+function requestPlan(job: MockJobRequest, alertEvents: JobDispatchEvent[] = []) {
+  const directProfileRequest = alertEvents.some((event) => event.status.toLowerCase().includes("selected professional alert")) || Boolean(job.workerId && job.status === "Requested");
+  if (directProfileRequest) {
+    return [
+      { minute: 0, radius: 0, label: "Selected professional instant", statusNeedle: "Selected professional alert", admin: false },
+      { minute: 2, radius: 10, label: "10 km", statusNeedle: "Direct fallback 10km alert", admin: false },
+      { minute: 5, radius: 15, label: "15 km", statusNeedle: "Direct fallback 15km alert", admin: false },
+      { minute: 10, radius: 20, label: "20 km + admin", statusNeedle: "Direct fallback 20km admin alert", admin: true }
+    ];
+  }
+
   if (job.urgency === "Emergency") {
     return [
       { minute: 0, radius: 15, label: "15 km instant", statusNeedle: "Emergency 15km alert", admin: false },
@@ -73,12 +83,11 @@ function requestPlan(job: MockJobRequest) {
     ];
   }
 
-  if (job.workerId && job.status === "Requested") {
+  if (job.urgency === "Urgent") {
     return [
-      { minute: 0, radius: 0, label: "Selected professional instant", statusNeedle: "Selected professional alert", admin: false },
-      { minute: 2, radius: 10, label: "10 km", statusNeedle: "Direct fallback 10km alert", admin: false },
-      { minute: 5, radius: 15, label: "15 km", statusNeedle: "Direct fallback 15km alert", admin: false },
-      { minute: 10, radius: 20, label: "20 km + admin", statusNeedle: "Direct fallback 20km admin alert", admin: true }
+      { minute: 0, radius: 10, label: "10 km instant", statusNeedle: "Urgent 10km alert", admin: false },
+      { minute: 2, radius: 15, label: "15 km", statusNeedle: "Urgent 15km alert", admin: false },
+      { minute: 5, radius: 20, label: "20 km + admin", statusNeedle: "Urgent 20km admin alert", admin: true }
     ];
   }
 
@@ -100,11 +109,11 @@ function DispatchStatusCard({ events, job }: { events: JobDispatchEvent[]; job: 
   const alertEvents = events.filter((event) => event.status.toLowerCase().includes("alert"));
   const latestAlert = alertEvents[alertEvents.length - 1];
   const latestInfo = latestAlert ? parseAlertNote(latestAlert.note) : null;
-  const isOpen = ["Requested", "Need More Details"].includes(job.status);
+  const isOpen = ["Requested", "Need More Details", "Accepted", "Quote Sent"].includes(job.status);
   const isAccepted = job.status === "Accepted";
   const confirmed = ["Quote Accepted", "On The Way", "In Progress"].includes(job.status);
   const completed = job.status === "Completed";
-  const plan = requestPlan(job);
+  const plan = requestPlan(job, alertEvents);
   const completedWave = (needle: string) => alertEvents.some((event) => event.status.toLowerCase().includes(needle.toLowerCase()));
   const nextWave = plan.find((wave) => !completedWave(wave.statusNeedle));
   const nextWaveRemaining = nextWave ? new Date(job.createdAt).getTime() + nextWave.minute * 60000 - now : 0;
@@ -196,10 +205,15 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
 
   useEffect(() => {
     if (!job || typeof window === "undefined" || window.location.hash !== "#live-feed") return;
-    const timer = window.setTimeout(() => {
+    const scrollToFeed = () => {
       document.getElementById("live-feed")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 150);
-    return () => window.clearTimeout(timer);
+    };
+    const firstTimer = window.setTimeout(scrollToFeed, 150);
+    const secondTimer = window.setTimeout(scrollToFeed, 650);
+    return () => {
+      window.clearTimeout(firstTimer);
+      window.clearTimeout(secondTimer);
+    };
   }, [job?.id]);
 
   useEffect(() => {
@@ -248,7 +262,7 @@ export function JobTrackingClient({ jobId }: { jobId: string }) {
       inFlight = true;
       try {
         const latestJob = await loadJobFromSupabase(jobId);
-        if (!latestJob || !["Requested", "Need More Details"].includes(latestJob.status)) return;
+        if (!latestJob || !["Requested", "Need More Details", "Accepted", "Quote Sent"].includes(latestJob.status)) return;
         await fetch("/api/notifications/retry-job", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

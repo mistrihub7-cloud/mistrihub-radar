@@ -208,15 +208,26 @@ async function markWave(jobId: string, waveKey: string, note: string) {
   await supabaseServer.from("job_status_history").insert({ job_id: jobId, status: waveKey, note });
 }
 
-async function previouslyNotifiedUserIds(jobId: string) {
-  if (!supabaseServer) return new Set<string>();
-  const { data } = await supabaseServer
+async function previouslyNotifiedWorkers(jobId: string) {
+  if (!supabaseServer) return { userIds: new Set<string>(), workerIds: new Set<string>(), phones: new Set<string>() };
+  const [{ data: notifications }, { data: logs }] = await Promise.all([
+    supabaseServer
     .from("notifications")
     .select("user_id,message,type")
     .in("type", ["new_job_request", "whatsapp_job_alert", "browser_job_alert"])
     .ilike("message", `%${jobId}%`)
-    .range(0, 999);
-  return new Set((data || []).map((item: any) => item.user_id).filter(Boolean));
+      .range(0, 999),
+    supabaseServer
+      .from("notification_logs")
+      .select("worker_id,phone,request_id")
+      .eq("request_id", jobId)
+      .range(0, 999)
+  ]);
+  return {
+    userIds: new Set((notifications || []).map((item: any) => item.user_id).filter(Boolean)),
+    workerIds: new Set((logs || []).map((item: any) => item.worker_id).filter(Boolean)),
+    phones: new Set((logs || []).map((item: any) => normalizePhone(item.phone)).filter(Boolean))
+  };
 }
 
 async function loadMatchingWorkers(input: BookingAlertInput, radiusKm: number, maxWorkers: number, excludeAlreadyNotified: boolean) {
@@ -226,7 +237,7 @@ async function loadMatchingWorkers(input: BookingAlertInput, radiusKm: number, m
 
   const selectedCategorySlug = categorySlugFor(input.service);
   const hasCoordinates = isValidCoordinate(input.userLatitude, input.userLongitude);
-  const alreadyNotified = excludeAlreadyNotified ? await previouslyNotifiedUserIds(input.jobId) : new Set<string>();
+  const alreadyNotified = excludeAlreadyNotified ? await previouslyNotifiedWorkers(input.jobId) : null;
 
   return (data as WorkerAlertRow[])
     .map((worker) => {
@@ -234,7 +245,13 @@ async function loadMatchingWorkers(input: BookingAlertInput, radiusKm: number, m
       if (input.workerId && worker.id !== input.workerId) return null;
       if (!input.workerId && workerCategorySlug !== selectedCategorySlug) return null;
       if (normalizeStatus(worker) === "Not Available") return null;
-      if (worker.user_id && alreadyNotified.has(worker.user_id)) return null;
+      const workerPhone = normalizePhone(worker.phone || worker.whatsapp);
+      if (
+        alreadyNotified &&
+        ((worker.user_id && alreadyNotified.userIds.has(worker.user_id)) ||
+          (worker.id && alreadyNotified.workerIds.has(worker.id)) ||
+          (workerPhone && alreadyNotified.phones.has(workerPhone)))
+      ) return null;
 
       let calculatedDistance: number | undefined;
       if (hasCoordinates && isValidCoordinate(worker.latitude, worker.longitude)) {

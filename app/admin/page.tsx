@@ -129,7 +129,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
   const adminPushTokens = pushTokens.filter((token: any) => token.role === "admin");
   const openJobs = jobs.filter((job) => job.status === "Requested");
   const noResponseJobs = openJobs.filter((job) => minutesSince(job.created_at) >= 5);
-  const adminDueJobs = openJobs.filter((job) => minutesSince(job.created_at) >= (job.urgency === "Emergency" ? 2 : 10));
+  const adminDueJobs = openJobs.filter((job) => minutesSince(job.created_at) >= (job.urgency === "Emergency" ? 2 : job.urgency === "Urgent" ? 5 : 10));
   const availableWorkers = workers.filter((worker) => (worker.availability_status || "Available Today") !== "Not Available");
 
   return (
@@ -168,7 +168,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: { err
             <div>
               <h2 className="text-xl font-black">Notification Health</h2>
               <p className="mt-1 text-sm font-bold text-slate-300">
-                Admin alert normal/direct jobs me 10 minute par aur emergency jobs me 2 minute par background push karega.
+                Admin alert normal/direct jobs me 10 minute, urgent jobs me 5 minute, aur emergency jobs me 2 minute par background push karega.
               </p>
             </div>
             <span className={`rounded-full px-3 py-1 text-xs font-black ${adminPushTokens.length ? "bg-emerald-900 text-emerald-100" : "bg-red-950 text-red-100"}`}>

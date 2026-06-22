@@ -19,17 +19,6 @@ function minutesSince(value?: string | null) {
   return Math.floor((Date.now() - new Date(value).getTime()) / 60000);
 }
 
-async function hasWorkerResponse(jobId: string) {
-  if (!supabaseServer) return false;
-  const { data } = await supabaseServer
-    .from("request_messages")
-    .select("id")
-    .eq("job_id", jobId)
-    .eq("sender_role", "worker")
-    .limit(1);
-  return Boolean(data?.length);
-}
-
 function bookingInput(job: RetryJobRow): BookingAlertInput {
   return {
     jobId: job.id,
@@ -42,16 +31,29 @@ function bookingInput(job: RetryJobRow): BookingAlertInput {
   };
 }
 
+function isStillSeekingConfirmation(status?: string | null) {
+  return ["Requested", "Need More Details", "Accepted", "Quote Sent"].includes(status || "");
+}
+
+async function isDirectProfileRequest(jobId: string) {
+  if (!supabaseServer) return false;
+  const { data } = await supabaseServer
+    .from("job_status_history")
+    .select("id")
+    .eq("job_id", jobId)
+    .eq("status", "Selected professional alert")
+    .maybeSingle();
+  return Boolean(data);
+}
+
 export async function processRetryForJob(job: RetryJobRow) {
   if (!supabaseServer) return { ok: false, jobId: job.id, reason: "Supabase server config missing." };
-  if (job.status !== "Requested") return { ok: true, skipped: true, jobId: job.id, reason: `Status is ${job.status || "missing"}.` };
+  if (!isStillSeekingConfirmation(job.status)) return { ok: true, skipped: true, jobId: job.id, reason: `Booking already final or closed: ${job.status || "missing"}.` };
 
   const age = minutesSince(job.created_at);
-  if (await hasWorkerResponse(job.id)) {
-    return { ok: true, skipped: true, jobId: job.id, reason: "Professional chat response already received." };
-  }
-
   const input = bookingInput(job);
+  const directProfileRequest = Boolean(job.worker_id && (await isDirectProfileRequest(job.id)));
+
   if (job.urgency === "Emergency") {
     if (age >= 2) {
       return sendBookingAlerts(input, {
@@ -65,7 +67,7 @@ export async function processRetryForJob(job: RetryJobRow) {
     return { ok: true, skipped: true, jobId: job.id, reason: "Emergency admin wave not due yet." };
   }
 
-  if (job.worker_id) {
+  if (directProfileRequest) {
     if (age >= 10) {
       return sendBookingAlerts(input, {
         radiusKm: 20,
@@ -92,6 +94,27 @@ export async function processRetryForJob(job: RetryJobRow) {
       });
     }
     return { ok: true, skipped: true, jobId: job.id, reason: "Direct fallback wave not due yet." };
+  }
+
+  if (job.urgency === "Urgent") {
+    if (age >= 5) {
+      return sendBookingAlerts(input, {
+        radiusKm: 20,
+        maxWorkers: 20,
+        waveKey: "Urgent 20km admin alert",
+        excludeAlreadyNotified: true,
+        adminAlert: true
+      });
+    }
+    if (age >= 2) {
+      return sendBookingAlerts(input, {
+        radiusKm: 15,
+        maxWorkers: 15,
+        waveKey: "Urgent 15km alert",
+        excludeAlreadyNotified: true
+      });
+    }
+    return { ok: true, skipped: true, jobId: job.id, reason: "Urgent retry wave not due yet." };
   }
 
   if (age >= 10) {
@@ -127,7 +150,7 @@ export async function loadRetryJobs(limit = 100) {
   return supabaseServer
     .from("job_requests")
     .select("id,worker_id,service,problem_description,urgency,area,user_latitude,user_longitude,status,created_at")
-    .eq("status", "Requested")
+    .in("status", ["Requested", "Need More Details", "Accepted", "Quote Sent"])
     .order("created_at", { ascending: true })
     .range(0, limit);
 }
