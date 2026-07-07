@@ -41,7 +41,7 @@ export const categories = [
   { name: "Plumbing Expert", tone: "text-blue-600", bg: "bg-blue-50", icon: "tap" },
   { name: "Auto Mechanic", tone: "text-red-500", bg: "bg-red-50", icon: "tool" },
   { name: "Painting Professional", tone: "text-violet-600", bg: "bg-violet-50", icon: "paint" },
-  { name: "A/C Service Technician", tone: "text-sky-600", bg: "bg-sky-50", icon: "snow" },
+  { name: "AC Service Technician", tone: "text-sky-600", bg: "bg-sky-50", icon: "snow" },
   { name: "Woodwork Expert", tone: "text-orange-600", bg: "bg-orange-50", icon: "hammer" },
   { name: "Support Assistant", tone: "text-emerald-600", bg: "bg-emerald-50", icon: "worker" },
   { name: "Home Cleaning Expert", tone: "text-cyan-600", bg: "bg-cyan-50", icon: "broom" },

@@ -138,6 +138,7 @@ function categorySlugFor(name: string) {
     "Painting Professional": "painter",
     "AC Repair": "ac-repair",
     "AC Service Expert": "ac-repair",
+    "AC Service Technician": "ac-repair",
     "A/C Service Technician": "ac-repair",
     Carpenter: "carpenter",
     "Woodwork Expert": "carpenter",
